@@ -2,7 +2,7 @@ Backend setup:
 
 python3 -m venv venv
 
-source venv/bin/activate
+source venv/bin/activate  (for windows11: .\venv\Scripts\Activate.ps1 )
 
 pip3 install Django  
 
