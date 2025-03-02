@@ -12,3 +12,10 @@ python3 manage.py runserver
 
 
 Frontend setup:
+
+npm install
+
+npm install @mui/material @emotion/react @emotion/styled
+
+npm start
+
