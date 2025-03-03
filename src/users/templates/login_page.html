@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trying Login Page</title>
+</head>
+<body>
+    <h2>Enter Username and Password to Login</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <label>Username:</label>
+        <input type="text" name="username" required><br><br>
+
+        <label>Password:</label>
+        <input type="password" name="password" required><br><br>
+
+        <input type="submit" value="Hash Password">
+    </form>
+
+    {% if username %}
+        <h3>Hashed Credentials</h3>
+        <p><strong>Username:</strong> {{ username }}</p>
+        <p><strong>Salt:</strong> {{ salt }}</p>
+        <p><strong>Hashed Password:</strong> {{ password }}</p>
+    {% endif %}
+</body>
+</html>
