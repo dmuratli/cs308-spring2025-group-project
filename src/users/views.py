@@ -1,7 +1,10 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import User
 from django.http import HttpResponse
 from .forms import RegisterForm
+from django.contrib.auth import logout
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST, require_http_methods
 
 from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
@@ -39,8 +42,6 @@ def hash_checker(plaintext_pw, username): #Input: plaintext, Output: Boolean
 
 # Create your views here.
 
-
-
 def register_view(request, *args, **kwargs):
 
     form = RegisterForm()
@@ -74,7 +75,7 @@ def login_view(request, *args, **kwargs):
     is_pw_valid = False
 
     if request.method == "POST":
-        form = RegisterForm(request.POST)
+        form = RegisterForm(request.POST) # Using the same form as the register page -- is it a good idea?
         if form.is_valid():
             username = form.cleaned_data["username"]
             password = form.cleaned_data["password"]
@@ -92,3 +93,12 @@ def login_view(request, *args, **kwargs):
     }
     
     return render(request, "login_page.html", context)
+
+def logout_view(request):
+    if request.method == "POST":
+        logout(request)
+        return JsonResponse({"message": "User logged out successfully."}) # Redirect to the home page when it is implemented
+    elif request.method == "GET":
+        return render(request, "logout_confirm.html")
+    else:
+        pass
