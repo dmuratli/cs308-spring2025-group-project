@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import User
+from .models import User, Profile
 from django.http import HttpResponse
-from .forms import RegisterForm
-from django.contrib.auth import logout
+from .forms import RegisterForm, ProfileForm
+from django.contrib.auth import login, logout
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_http_methods
+from django.contrib.auth.decorators import login_required
 
 from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
@@ -63,7 +64,8 @@ def register_view(request, *args, **kwargs):
             }#sent to the page as variables into those {{}} fields in .html file
             
             
-            User.objects.create(username= username, password= hashed_password, salt= salt)
+            user = User.objects.create(username= username, password= hashed_password, salt= salt)
+            Profile.objects.create(user=user)
             print(f"username: {username}\nhashed password: {hashed_password}\nsalt: {salt}")
             
             return render(request,"register_page.html", context)
@@ -83,6 +85,10 @@ def login_view(request, *args, **kwargs):
 
             if is_pw_valid:
                 print("Hashes match - Login successful")
+
+                user = get_object_or_404(User, username=username)
+                login(request, user)  # This marks the user as authenticated in the session
+                return redirect("profile")
             else:
                 print("Wrong password")
 
@@ -102,3 +108,21 @@ def logout_view(request):
         return render(request, "logout_confirm.html")
     else:
         pass
+
+@login_required(login_url="/login/")
+def profile_view(request):
+    profile = get_object_or_404(Profile, user=request.user)
+    return render(request, "profile_page.html", {"profile": profile})
+
+@login_required(login_url="/login/")
+def profile_update_view(request):
+    profile = request.user.profile  # or get_object_or_404(Profile, user=request.user)
+    if request.method == "POST":
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("profile")
+    else:
+        form = ProfileForm(instance=profile)
+    
+    return render(request, "profile_edit.html", {"form": form})

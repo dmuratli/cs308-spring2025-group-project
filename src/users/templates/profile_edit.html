@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Profile</title>
+</head>
+<body>
+    <h1>Edit Your Profile</h1>
+    <form method="POST" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        <p>
+            {{ form.phone_number.label_tag }}<br>
+            {{ form.phone_number }}
+        </p>
+        <p>
+            {{ form.date_of_birth.label_tag }}<br>
+            {{ form.date_of_birth }}
+        </p>
+        <p>
+            {{ form.gender.label_tag }}<br>
+            {{ form.gender }}
+        </p>
+        <p>
+            {{ form.city.label_tag }}<br>
+            {{ form.city }}
+        </p>
+        <p>
+            {{ form.country.label_tag }}<br>
+            {{ form.country }}
+        </p>
+        <p>
+            {{ form.postal_code.label_tag }}<br>
+            {{ form.postal_code }}
+        </p>
+        <p>
+            {{ form.address.label_tag }}<br>
+            {{ form.address }}
+        </p>
+        <p>
+            {{ form.bio.label_tag }}<br>
+            {{ form.bio }}
+        </p>
+        <p>
+            {{ form.profile_picture.label_tag }}<br>
+            {{ form.profile_picture }}
+        </p>
+        <button type="submit">Save Changes</button>
+    </form>
+    
+    <p>
+        <a href="{% url 'profile' %}">Back to Profile</a>
+    </p>
+</body>
+</html>
