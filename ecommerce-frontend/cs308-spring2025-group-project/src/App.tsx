@@ -10,7 +10,7 @@ function App() {
     <>
       <Navbar />
       <Routes>
-        <Route path="/" element={<HomePage />} /> {/* Add the HomePage Route */}
+        <Route path="/" element={<HomePage />} /> {/* Adding the HomePage Route */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Routes>
