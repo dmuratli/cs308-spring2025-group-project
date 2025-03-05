@@ -52,17 +52,19 @@ def register_view(request, *args, **kwargs):
         if form.is_valid():  # Validate form input
             username = form.cleaned_data["username"]
             password = form.cleaned_data["password"]
+            email = form.cleaned_data["email"]
             salt, hashed_password = password_hasher(password)
 
             context = {
                 "form": form,
                 "username": username,
                 "password": hashed_password,
-                "salt": salt
+                "salt": salt,
+                "email": email
             }#sent to the page as variables into those {{}} fields in .html file
             
             
-            User.objects.create(username= username, password= hashed_password, salt= salt)
+            User.objects.create(username= username, password= hashed_password, salt= salt, email= email)
             print(f"username: {username}\nhashed password: {hashed_password}\nsalt: {salt}")
             
             return render(request,"register_page.html", context)

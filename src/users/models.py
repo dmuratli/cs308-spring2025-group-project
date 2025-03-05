@@ -7,4 +7,4 @@ class User(models.Model):
     username = models.CharField(max_length=128, blank= False, null= False, unique= True)
     password = models.CharField(max_length=128, blank= False, null= False)
     salt = models.CharField(max_length=256, blank= False, null= False)
-    
+    email = models.EmailField(max_length=256, blank=False, null=False, unique=True)
