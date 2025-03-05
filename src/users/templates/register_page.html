@@ -25,5 +25,14 @@
         <p><strong>Salt:</strong> {{ salt }}</p>
         <p><strong>Hashed Password:</strong> {{ password }}</p>
     {% endif %}
+
+    {% if error_message %}
+    <p style="color: red;"><strong>Error:</strong> {{ error_message }}</p>
+{% endif %}
+
+{% if success_message %}
+    <p style="color: green;"><strong>Success:</strong> {{ success_message }}</p>
+{% endif %}
+
 </body>
 </html>
