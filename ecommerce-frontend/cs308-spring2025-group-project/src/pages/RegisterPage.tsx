@@ -1,18 +1,42 @@
-import { Button, Container, TextField, Typography, Box } from "@mui/material";
+// src/pages/RegisterPage.tsx
+import { Button, Container, TextField, Typography, Box, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import React from "react";
+import axios from "axios";
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Registering with:", { name, email, password });
-    navigate("/login"); // Redirect to Login after registration
+    setLoading(true);
+    setError("");
+    
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/auth/register/", {
+        username,
+        email,
+        password
+      });
+      
+      console.log("Registration successful:", response.data);
+      navigate("/login"); // Redirect to login page after registration
+    } catch (err: any) {
+      if (err.response && err.response.data) {
+        setError(err.response.data.error || "Registration failed");
+      } else {
+        setError("An error occurred during registration");
+      }
+      console.error("Registration error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,17 +51,19 @@ function RegisterPage() {
         <Typography variant="h4" gutterBottom>
           Register
         </Typography>
+        
+        {error && <Alert severity="error" sx={{ width: "100%", mb: 2 }}>{error}</Alert>}
 
         <form onSubmit={handleRegister} style={{ width: "100%" }}>
           <TextField
-            label="Full Name"
+            label="Username"
             type="text"
             fullWidth
             margin="normal"
             required
             variant="outlined"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
 
           <TextField
@@ -62,8 +88,15 @@ function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Button type="submit" fullWidth variant="contained" color="primary" sx={{ mt: 2 }}>
-            Register
+          <Button 
+            type="submit" 
+            fullWidth 
+            variant="contained" 
+            color="primary" 
+            sx={{ mt: 2 }}
+            disabled={loading}
+          >
+            {loading ? "Registering..." : "Register"}
           </Button>
         </form>
 

@@ -1,17 +1,37 @@
-import { Button, Container, TextField, Typography, Box } from "@mui/material";
+// src/pages/LoginPage.tsx
+import { Button, Container, TextField, Typography, Box, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import React from "react";
+import { login } from "../api";
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Logging in with:", { email, password });
-    navigate("/"); // Redirect to Home after login
+    setLoading(true);
+    setError("");
+    
+    try {
+      const response = await login(username, password);
+      if (response) {
+        // Login successful
+        console.log("Login successful:", response);
+        navigate("/"); // Redirect to home page
+      } else {
+        setError("Login failed. Please check your credentials.");
+      }
+    } catch (err) {
+      setError("An error occurred during login.");
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,17 +46,19 @@ function LoginPage() {
         <Typography variant="h4" gutterBottom>
           Login
         </Typography>
+        
+        {error && <Alert severity="error" sx={{ width: "100%", mb: 2 }}>{error}</Alert>}
 
         <form onSubmit={handleLogin} style={{ width: "100%" }}>
           <TextField
-            label="Email"
-            type="email"
+            label="Username"
+            type="text"
             fullWidth
             margin="normal"
             required
             variant="outlined"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
 
           <TextField
@@ -50,8 +72,15 @@ function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          <Button type="submit" fullWidth variant="contained" color="primary" sx={{ mt: 2 }}>
-            Login
+          <Button 
+            type="submit" 
+            fullWidth 
+            variant="contained" 
+            color="primary" 
+            sx={{ mt: 2 }}
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
 
