@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from .models import User
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .forms import RegisterForm
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
@@ -92,8 +92,14 @@ def login_view(request, *args, **kwargs):
 
             if is_pw_valid:
                 print("Hashes match - Login successful")
+                return JsonResponse({"message": "Login successful", "status": "success"}, status=200)
             else:
                 print("Wrong password or username")
+                return JsonResponse({"error": "Invalid credentials"}, status=400)
+    
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+                
 
     # Define context outside the POST condition to prevent undefined errors
     context = {
