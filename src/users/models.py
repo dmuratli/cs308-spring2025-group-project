@@ -16,6 +16,4 @@ class Profile(models.Model):
     country = models.CharField(max_length=50, blank=True)
     postal_code = models.CharField(max_length=10, blank=True)
     address = models.CharField(max_length=150, blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
-    bio = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

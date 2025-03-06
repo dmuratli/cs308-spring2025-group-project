@@ -8,4 +8,7 @@ class RegisterForm(forms.Form):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ["phone_number", "date_of_birth", "gender", "city", "country", "postal_code", "address", "profile_picture", "bio"]
+        fields = ["phone_number", "date_of_birth", "gender", "city", "country", "postal_code", "address"]
+        widgets = {
+            "date_of_birth": forms.DateInput(attrs={"type": "date"}),
+        }
