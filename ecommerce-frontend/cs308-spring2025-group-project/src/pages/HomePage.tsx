@@ -1,316 +1,223 @@
 import React from "react";
+import { Box, Button, Container, Grid, Typography, Card, CardContent, CardMedia } from "@mui/material";
+import Navbar from "../components/Navbar"; // Navbar is now a separate component
 
 const HomePage: React.FC = () => {
   return (
-    <div style={styles.homepage}>
-      {/* Navbar */}
-      <div style={styles.navbar}>
-        <h1 style={styles.logo}>Book Store</h1>
-        <div style={styles.searchBox}>
-          <input type="text" placeholder="Search..." style={styles.searchInput} />
-          <button style={styles.searchButton}>🔍</button>
-        </div>
-        <div style={styles.buttonGroup}>
-          <button style={styles.button}>Sign Up</button>
-          <button style={styles.button}>Login</button>
-        </div>
-        <div style={styles.cartContainer}> {}
-          <span style={styles.cartIcon}>🛒</span>
-        </div>
-      </div>
-
+    <Box>
+      <Navbar />
+      
       {/* Hero Section */}
-      <div style={styles.hero}>
-        <div style={styles.heroBackground}></div>  {}
-        <h1 style={styles.heroText}>A Book Can Change Your Life</h1>
-        <button style={styles.heroButton}>Shop Now</button>
-      </div>
+      <Box
+        sx={{
+          height: "400px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+          position: "relative", // Needed for the overlay effect
+          color: "black",
+          p: 2,
+        }}
+      >
+        {/* Background Image with Transparency */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundImage:
+              "url('https://i.ibb.co/CssQMFQj/DALL-E-2025-03-06-14-57-55-A-beautiful-and-immersive-book-themed-background-image-for-an-online-book.webp')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.3, // Adjust this value to control transparency (0 = fully transparent, 1 = fully visible)
+            zIndex: -1, // Keeps the image behind the text
+          }}
+        />
+        <Typography variant="h4" fontWeight="bold"  >
+          A Book Can Change Your Life
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{
+            mt: 2,
+            backgroundColor: "#EF977F",
+            color: "white",
+            px: 4,
+            py: 1,
+            fontSize: "1rem",
+            transition: "all 0.3s",
+            "&:hover": {
+              backgroundColor: "#d46c4e",
+              transform: "scale(1.05)",
+            },
+          }}
+        >
+          Shop Now
+        </Button>
+      </Box>
 
       {/* Bestseller Section */}
-      <div style={styles.bestsellerSection}>
-        <h2 style={styles.bestsellerTitle}>Bestsellers</h2>
-        <p style={styles.bestsellerSubtitle}>
-          Do consectetur proident proident id eiusmod deserunt consequat pariat
-          ad ex velit do Lorem reprehenderit.
-        </p>
+      <Container sx={{ my: 5 }}>
+        <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
+          Bestsellers
+        </Typography>
+        <Typography variant="body1" color="text.secondary" textAlign="center" mb={4}>
+          Discover our top-rated books loved by our readers!
+        </Typography>
 
-        <div style={styles.bestsellerContainer}>
+        <Grid container spacing={3} justifyContent="center">
           {[...Array(3)].map((_, index) => (
-            <div key={index} style={styles.card}>
-              <div style={styles.placeholderImage}></div>
-              <h3 style={styles.cardTitle}>Book</h3>
-              <p style={styles.cardText}>Sample book description.</p>
-              <button style={styles.buttonOutline}>Learn more</button>
-            </div>
+            <Grid item key={index} xs={12} sm={6} md={4}>
+              <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
+                <CardMedia sx={{ height: 200, backgroundColor: "#e0e0e0" }} />
+                <CardContent>
+                  <Typography variant="h6" fontWeight="bold">
+                    Book Title
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Sample book description.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    sx={{
+                      mt: 2,
+                      transition: "all 0.3s",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                      },
+                    }}
+                  >
+                    Learn More
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
           ))}
-        </div>
-      </div>
+        </Grid>
+      </Container>
 
-       {/* Review */}
-       <div style={styles.reviewSection}>
-        <div style={styles.reviewContainer}>
-          <div style={styles.reviewImage}></div>
-          <div style={styles.reviewContent}>
-            <div style={styles.reviewStars}>⭐⭐⭐⭐⭐</div>
-            <p style={styles.reviewText}>
-              "Aliqua cupidatat id duis irure sunt exercitation voluptate cillum. 
-              Consectetur ad ex do in reprehenderit est dolor elit et exercitation do ad. 
-              Consectetur ad ex do in reprehenderit est dolor elit et exercitation."
-            </p>
-            <h4 style={styles.reviewName}>Full Name</h4>
-            <p style={styles.reviewJob}>Job Title</p>
-          </div>
-        </div>
-      </div>
-    
+      {/* Review Section */}
+      <Box sx={{ backgroundColor: "#f9f9f9", py: 5 }}>
+        <Container>
+          <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
+            What Our Readers Say
+          </Typography>
+          <Grid container spacing={4} justifyContent="center">
+            {[ 
+              { 
+                text: '"This bookstore changed my reading experience! Amazing selection and fast delivery."',
+                name: "- John Doe"
+              }, 
+              { 
+                text: '"Great books, fantastic service, and unbeatable prices!"',
+                name: "- Jane Smith"
+              }
+            ].map((review, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <Box display="flex" alignItems="center" gap={3}>
+                  {/* Ensuring same profile picture size & shape */}
+                  <Box
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      backgroundColor: "#dcdcdc",
+                      borderRadius: "50%",  // Ensures perfect circle
+                      flexShrink: 0,        // Prevents resizing
+                    }}
+                  />
+                  <Box>
+                    <Typography variant="body1">{review.text}</Typography>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      {review.name}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
 
       {/* Deal of the Week Section */}
-      <div style={styles.bestsellerSection}>
-        <h2 style={styles.bestsellerTitle}>Deal of the Week</h2>
-        <p style={styles.bestsellerSubtitle}>
+      <Container sx={{ my: 5 }}>
+        <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
+          Deal of the Week
+        </Typography>
+        <Typography variant="body1" color="text.secondary" textAlign="center" mb={4}>
           Get the best deals on our top-rated books. Limited time only!
-        </p>
-        <div style={styles.bestsellerContainer}>
+        </Typography>
+
+        <Grid container spacing={3} justifyContent="center">
           {[...Array(3)].map((_, index) => (
-            <div key={index} style={styles.card}>
-              <div style={styles.placeholderImage}></div>
-              <h3 style={styles.cardTitle}>Book</h3>
-              <p style={styles.cardText}>Limited-time book deal.</p>
-              <button style={styles.buttonOutline}>Shop Now</button>
-            </div>
+            <Grid item key={index} xs={12} sm={6} md={4}>
+              <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
+                <CardMedia sx={{ height: 200, backgroundColor: "#e0e0e0" }} />
+                <CardContent>
+                  <Typography variant="h6" fontWeight="bold">
+                    Book Title
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Limited-time book deal.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    sx={{
+                      mt: 2,
+                      transition: "all 0.3s",
+                      "&:hover": {
+                        transform: "scale(1.05)",
+                      },
+                    }}
+                  >
+                    Shop Now
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
           ))}
-        </div>
-      </div>
-      
+        </Grid>
+      </Container>
 
-      {/* Footer Section */}
-      <div style={styles.footer}>
-        <h2 style={styles.footerTitle}>Start Your Reading Journey</h2>
-        <p style={styles.footerSubtitle}>
+      {/* Footer */}
+      <Box
+        sx={{
+          backgroundColor: "#EF977F",
+          color: "white",
+          textAlign: "center",
+          p: 4,
+          mt: 5,
+          borderRadius: "10px",
+        }}
+      >
+        <Typography variant="h5" fontWeight="bold">
+          Start Your Reading Journey
+        </Typography>
+        <Typography variant="body1" mt={1}>
           Find your next favorite book and embark on an adventure through pages.
-        </p>
-        <button style={styles.footerButton}>Contact Us</button>
-      </div>
-      </div>
+        </Typography>
+        <Button
+          variant="contained"
+          sx={{
+            mt: 2,
+            backgroundColor: "white",
+            color: "#EF977F",
+            transition: "all 0.3s",
+            "&:hover": {
+              backgroundColor: "#f5f5f5",
+              transform: "scale(1.05)",
+            },
+          }}
+        >
+          Contact Us
+        </Button>
+      </Box>
+    </Box>
   );
-};
-
-const styles: Record<string, React.CSSProperties> = {
-  homepage: {
-    fontFamily: "Arial, sans-serif",
-    textAlign: "center",
-  },
-  navbar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "15px 50px",
-    backgroundColor: "#fff",
-    boxShadow: "0 0 5px rgba(0, 0, 0, 0.1)",
-    position: "fixed",
-    width: "100%",
-    top: 0,
-    zIndex: 101,
-  },
-  logo: {
-    fontSize: "24px",
-    fontWeight: "bold",
-    color: "#333",
-  },
-  searchBox: {
-    display: "flex",
-    alignItems: "center",
-    border: "1px solid #ccc",
-    borderRadius: "6px",
-    overflow: "hidden",
-    flexGrow: 1, 
-    maxWidth: "1000px", 
-  },
-  searchInput: {
-    padding: "10px",
-    border: "none",
-    outline: "none",
-    width: "200px",
-    flexGrow: 1, 
-    minWidth: "200px", 
-  },
-  searchButton: {
-    backgroundColor: "#EF977F",
-    color: "white",
-    padding: "10px",
-    border: "none",
-    cursor: "pointer",
-  },
-  button: {
-    backgroundColor: "#EF977F",
-    color: "white",
-    padding: "10px 20px",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    marginLeft: "10px",
-  },
-
-  hero: {
-    position: "relative",
-    marginTop: "80px",
-    height: "400px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  heroBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundImage: "url('https://i.ibb.co/CssQMFQj/DALL-E-2025-03-06-14-57-55-A-beautiful-and-immersive-book-themed-background-image-for-an-online-book.webp')", // 📌 Kullanıcıdan gelen resim dosyası
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    opacity: 0.5, 
-    zIndex: -1, 
-  },
-  heroText: {
-    fontSize: "32px",
-    fontWeight: "bold",
-    color: "#000", 
-  },
-  heroButton: {
-    marginTop: "10px",
-    padding: "10px 20px",
-    backgroundColor: "#EF977F",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-  bestsellerSection: {
-    marginTop: "40px",
-    padding: "50px 20px",
-    backgroundColor: "#fff",
-  },
-  bestsellerTitle: {
-    fontSize: "48px",
-    fontWeight: 700,
-    color: "#171A1F",
-    marginBottom: "10px",
-  },
-  bestsellerSubtitle: {
-    fontSize: "18px",
-    color: "#9095A1",
-    maxWidth: "600px",
-    margin: "0 auto 40px",
-  },
-  bestsellerContainer: {
-    display: "flex",
-    justifyContent: "center",
-    gap: "20px",
-    flexWrap: "wrap",
-  },
-  card: {
-    width: "350px",
-    backgroundColor: "#fff",
-    padding: "20px",
-    borderRadius: "10px",
-    boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.1)",
-    textAlign: "left",
-  },
-  placeholderImage: {
-    width: "100%",
-    height: "200px",
-    backgroundColor: "#e0e0e0",
-    borderRadius: "10px 10px 0 0",
-    marginBottom: "15px",
-  },
-  buttonOutline: {
-    width: "120px",
-    height: "44px",
-    backgroundColor: "transparent",
-    color: "#EF977F",
-    border: "1px solid #EF977F",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
-  // Review
-  reviewSection: {
-    marginTop: "50px",
-    padding: "50px 20px",
-    backgroundColor: "#f9f9f9",
-  },
-  reviewContainer: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "40px",
-  },
-  reviewImage: {
-    width: "120px",
-    height: "120px",
-    backgroundColor: "#dcdcdc",
-    borderRadius: "16px",
-  },
-  reviewContent: {
-    maxWidth: "600px",
-    textAlign: "left",
-  },
-  reviewStars: {
-    fontSize: "24px",
-    color: "#FFD700",
-  },
-  reviewText: {
-    fontSize: "20px",
-    color: "#171A1F",
-    marginBottom: "10px",
-  },
-  reviewName: {
-    fontSize: "20px",
-    fontWeight: "700",
-    color: "#171A1F",
-  },
-  reviewJob: {
-    fontSize: "18px",
-    color: "#9095A1",
-  },
-  footer: {
-    width: "100%",
-    height: "384px",
-    background: "#EF977F",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "6px",
-    marginTop: "40px",
-    padding: "20px",
-  },
-  footerTitle: {
-    fontSize: "48px",
-    fontWeight: 700,
-    color: "#6F7787",
-  },
-  footerSubtitle: {
-    fontSize: "18px",
-    color: "#424856",
-    maxWidth: "600px",
-    textAlign: "center",
-  },
-  footerButton: {
-    marginTop: "20px",
-    width: "120px",
-    height: "52px",
-    background: "#CFD2DA",
-    border: "none",
-    borderRadius: "6px",
-    fontSize: "18px",
-    cursor: "pointer",
-  },
-  footerButtonHover: {
-    background: "#A8ADB7",
-  },
-  
 };
 
 export default HomePage;
