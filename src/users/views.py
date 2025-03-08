@@ -2,6 +2,12 @@ from django.shortcuts import render, get_object_or_404
 from .models import User
 from django.http import HttpResponse
 from .forms import RegisterForm
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+
 
 from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
@@ -69,21 +75,26 @@ def register_view(request, *args, **kwargs):
         
     return render(request, "register_page.html", {"form": form})
 
-def login_view(request, *args, **kwargs):
-    form = RegisterForm()
-    is_pw_valid = False
-
+@csrf_exempt
+def login_view(request):
     if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data["username"]
-            password = form.cleaned_data["password"]
-            is_pw_valid = hash_checker(plaintext_pw=password, username=username)
+        try:
+            data = json.loads(request.body)
+            username = data.get("username")
+            password = data.get("password")
 
-            if is_pw_valid:
-                print("Hashes match - Login successful")
+            if not username or not password:
+                return JsonResponse({"error": "Username and password are required"}, status=400)
+
+            if hash_checker(password, username):
+                return JsonResponse({"message": "Login successful"}, status=200)
             else:
-                print("Wrong password")
+                return JsonResponse({"error": "Invalid credentials"}, status=401)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
+    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
 
     # Define context outside the POST condition to prevent undefined errors
     context = {
