@@ -8,3 +8,5 @@ class User(models.Model):
     password = models.CharField(max_length=128, blank= False, null= False)
     salt = models.CharField(max_length=256, blank= False, null= False)
     
+
+
