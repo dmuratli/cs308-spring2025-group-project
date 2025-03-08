@@ -1,111 +1,52 @@
-// src/pages/RegisterPage.tsx
-import { Button, Container, TextField, Typography, Box, Alert } from "@mui/material";
+import { Button, Container, TextField, Typography, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import React from "react";
-import axios from "axios";
+import React, { FormEvent } from "react";
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-    
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/auth/register/", {
-        username,
-        email,
-        password
+      const response = await fetch("http://127.0.0.1:8000/api/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: email, password }),
       });
-      
-      console.log("Registration successful:", response.data);
-      navigate("/login"); // Redirect to login page after registration
-    } catch (err: any) {
-      if (err.response && err.response.data) {
-        setError(err.response.data.error || "Registration failed");
-      } else {
-        setError("An error occurred during registration");
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Registration error:", data);
+        setError(data.detail || "Registration failed");
+        return;
       }
-      console.error("Registration error:", err);
-    } finally {
-      setLoading(false);
+
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+      navigate("/"); // Redirect to home page
+    } catch (error) {
+      console.error("Network error:", error);
+      setError("Network error. Please try again.");
     }
   };
 
   return (
     <Container maxWidth="xs">
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        height="100vh"
-      >
-        <Typography variant="h4" gutterBottom>
-          Register
-        </Typography>
-        
-        {error && <Alert severity="error" sx={{ width: "100%", mb: 2 }}>{error}</Alert>}
-
+      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
+        <Typography variant="h4" gutterBottom>Register</Typography>
+        {error && <Typography color="error">{error}</Typography>}
         <form onSubmit={handleRegister} style={{ width: "100%" }}>
-          <TextField
-            label="Username"
-            type="text"
-            fullWidth
-            margin="normal"
-            required
-            variant="outlined"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-
-          <TextField
-            label="Email"
-            type="email"
-            fullWidth
-            margin="normal"
-            required
-            variant="outlined"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <TextField
-            label="Password"
-            type="password"
-            fullWidth
-            margin="normal"
-            required
-            variant="outlined"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <Button 
-            type="submit" 
-            fullWidth 
-            variant="contained" 
-            color="primary" 
-            sx={{ mt: 2 }}
-            disabled={loading}
-          >
-            {loading ? "Registering..." : "Register"}
-          </Button>
+          <TextField label="Full Name" type="text" fullWidth margin="normal" required variant="outlined" value={name} onChange={(e) => setName(e.target.value)} />
+          <TextField label="Email" type="email" fullWidth margin="normal" required variant="outlined" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <TextField label="Password" type="password" fullWidth margin="normal" required variant="outlined" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Button type="submit" fullWidth variant="contained" color="primary" sx={{ mt: 2 }}>Register</Button>
         </form>
-
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          Already have an account?{" "}
-          <Button color="secondary" onClick={() => navigate("/login")}>
-            Login
-          </Button>
-        </Typography>
       </Box>
     </Container>
   );
