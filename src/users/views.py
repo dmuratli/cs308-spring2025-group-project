@@ -1,12 +1,9 @@
 from django.shortcuts import render, get_object_or_404
 from .models import User
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from .forms import RegisterForm
-from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
+from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
-import json
-
 
 
 from Crypto.Hash import SHA256
@@ -47,54 +44,62 @@ def hash_checker(plaintext_pw, username): #Input: plaintext, Output: Boolean
 
 
 
+@csrf_exempt
 def register_view(request, *args, **kwargs):
-
     form = RegisterForm()
-    hashed_password = None
-    salt = None
+    error_message = None  # Variable to store error messages
+    success_message = None
 
     if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():  # Validate form input
             username = form.cleaned_data["username"]
             password = form.cleaned_data["password"]
+            email = form.cleaned_data["email"]
             salt, hashed_password = password_hasher(password)
 
-            context = {
-                "form": form,
-                "username": username,
-                "password": hashed_password,
-                "salt": salt
-            }#sent to the page as variables into those {{}} fields in .html file
-            
-            
-            User.objects.create(username= username, password= hashed_password, salt= salt)
-            print(f"username: {username}\nhashed password: {hashed_password}\nsalt: {salt}")
-            
-            return render(request,"register_page.html", context)
-        
-    return render(request, "register_page.html", {"form": form})
+            try:
+                # Attempt to create the user
+                User.objects.create(username=username, password=hashed_password, salt=salt, email=email)
+                success_message = "Registration successful!"
+                print(f"username: {username}\nhashed password: {hashed_password}\nsalt: {salt}")
+
+            except IntegrityError as e:
+                if "username" in str(e):
+                    error_message = "This username is already taken. Please choose another."
+                elif "email" in str(e):
+                    error_message = "This email address is already registered. Please use another."
+
+    context = {
+        "form": form,
+        "error_message": error_message,
+        "success_message": success_message,
+    }
+
+    return render(request, "register_page.html", context)
 
 @csrf_exempt
-def login_view(request):
+def login_view(request, *args, **kwargs):
+    form = RegisterForm()
+    is_pw_valid = False
+
     if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            username = data.get("username")
-            password = data.get("password")
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["username"]
+            password = form.cleaned_data["password"]
+            is_pw_valid = hash_checker(plaintext_pw=password, username=username)
 
-            if not username or not password:
-                return JsonResponse({"error": "Username and password are required"}, status=400)
-
-            if hash_checker(password, username):
-                return JsonResponse({"message": "Login successful"}, status=200)
+            if is_pw_valid:
+                print("Hashes match - Login successful")
+                return JsonResponse({"message": "Login successful", "status": "success"}, status=200)
             else:
-                return JsonResponse({"error": "Invalid credentials"}, status=401)
-        
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+                print("Wrong password or username")
+                return JsonResponse({"error": "Invalid credentials"}, status=400)
+    
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
-    return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+                
 
     # Define context outside the POST condition to prevent undefined errors
     context = {
