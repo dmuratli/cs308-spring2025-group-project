@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'auth_api',
+    'admin_panel',
 ]
 
 MIDDLEWARE = [
@@ -136,7 +137,18 @@ REST_FRAMEWORK = {
     ),
 }
 
-CORS_ALLOW_ALL_ORIGINS = True  # Allow frontend requests (adjust for production)
+CORS_ALLOW_ALL_ORIGINS = False  # Set to False for security in production
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Allow React frontend
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True  # Allow cookies/session authentication
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
