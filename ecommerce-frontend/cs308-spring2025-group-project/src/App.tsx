@@ -1,55 +1,41 @@
 import { Routes, Route } from "react-router-dom";
+import React from "react";
+import Navbar from "./components/Navbar";
+import HomePage from "./pages/HomePage"; // Import the HomePage component
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import React from "react";
-import { Container, Typography, Button, Box } from "@mui/material";
-import Navbar from "./components/Navbar";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ManageProducts from "./pages/admin/ManageProducts";
+import ManageOrders from "./pages/admin/ManageOrders";
+import ManageUsers from "./pages/admin/ManageUsers";
+import AddProduct from "./pages/admin/AddProduct";
+import EditProduct from "./pages/admin/EditProduct"; // ✅ Import
+
+
+
+
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
     <>
       <Navbar />
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} /> {/* Adding the HomePage Route */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="*" element={<div>404 Not Found</div>} />
+        <Route path="/profile" element={<ProfilePage/>} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/products" element={<ManageProducts />} />
+        <Route path="/admin/orders" element={<ManageOrders />} />
+        <Route path="/admin/users" element={<ManageUsers />} />
+        <Route path="/admin/add-product" element={<AddProduct />} />
+        <Route path="/admin/edit-product/:id" element={<EditProduct />} />
+        
       </Routes>
     </>
   );
 }
 
 export default App;
-
-/* ✅ Home Page Component */
-function HomePage() {
-  return (
-    <Container
-      maxWidth="md"
-      sx={{
-        textAlign: "center",
-        mt: 8,
-        p: 4,
-        borderRadius: 2,
-        bgcolor: "#f5f5f5",
-        boxShadow: 3,
-      }}
-    >
-      <Typography variant="h3" gutterBottom sx={{ fontWeight: "bold", color: "#333" }}>
-        Welcome to Our Bookstore 📚
-      </Typography>
-      <Typography variant="h6" color="textSecondary" paragraph>
-        Discover the best books and explore new worlds.
-      </Typography>
-
-      {/* Buttons */}
-      <Box mt={4}>
-        <Button variant="contained" color="primary" sx={{ mx: 1 }}>
-          Browse Books
-        </Button>
-        <Button variant="outlined" color="secondary" sx={{ mx: 1 }}>
-          Contact Us
-        </Button>
-      </Box>
-    </Container>
-  );
-}
