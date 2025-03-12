@@ -1,15 +1,10 @@
-from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
+from Crypto.Hash import SHA256
+from Crypto.Random.random import getrandbits
+# Create your models here.
 
-
-class User(AbstractUser):
-    groups = models.ManyToManyField(
-        Group,
-        related_name="custom_user_groups",
-        blank=True
-    )
-    user_permissions = models.ManyToManyField(
-        Permission,
-        related_name="custom_user_permissions",
-        blank=True
-    )
+class User(models.Model):
+    username = models.CharField(max_length=128, blank= False, null= False, unique= True)
+    password = models.CharField(max_length=128, blank= False, null= False)
+    salt = models.CharField(max_length=256, blank= False, null= False)
+    email = models.EmailField(max_length=256, blank=False, null=False, unique=True)
