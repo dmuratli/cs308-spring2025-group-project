@@ -1,10 +1,15 @@
-from django.shortcuts import render, get_object_or_404
-from .models import User
-from django.http import HttpResponse, JsonResponse
-from .forms import RegisterForm
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import User, Profile
+from django.http import HttpResponse
+from .forms import RegisterForm, ProfileForm
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import login, logout
+from django.http import JsonResponse
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt
-
+from django.views.decorators.http import require_POST, require_http_methods
+from django.contrib.auth.decorators import login_required
+import json
 
 from Crypto.Hash import SHA256
 from Crypto.Random import get_random_bytes
@@ -41,11 +46,6 @@ def hash_checker(plaintext_pw, username): #Input: plaintext, Output: Boolean
 #TODO After changing salt to raw form, fix this to take raw salt instead
 
 # Create your views here.
-
-
-
-import json
-
 @csrf_exempt
 def register_view(request, *args, **kwargs):
     if request.method == "POST":
@@ -78,8 +78,6 @@ def register_view(request, *args, **kwargs):
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
-
-
 @csrf_exempt
 def login_view(request, *args, **kwargs):
     if request.method == "POST":
@@ -93,12 +91,10 @@ def login_view(request, *args, **kwargs):
 
             if not username or not password:
                 return JsonResponse({"error": "Username and password are required"}, status=400)
-
-            is_pw_valid = hash_checker(plaintext_pw=password, username=username)
-
-            if is_pw_valid:
-                print("Hashes match - Login successful")  # ✅ Debugging
-                return JsonResponse({"message": "Login successful", "status": "success"}, status=200)
+            if hash_checker(password, username):
+                user = get_object_or_404(User, username=username)
+                login(request, user)
+                return JsonResponse({"message": "Login successful"}, status=200)
             else:
                 print("Wrong password or username")  # ✅ Debugging
                 return JsonResponse({"error": "Invalid credentials"}, status=400)
@@ -108,3 +104,37 @@ def login_view(request, *args, **kwargs):
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
+    # Define context outside the POST condition to prevent undefined errors
+    context = {
+        "form": form,
+        "is_pw_valid": is_pw_valid,
+    }
+    
+    return render(request, "login_page.html", context)
+
+def logout_view(request):
+    if request.method == "POST":
+        logout(request)
+        return JsonResponse({"message": "User logged out successfully."}) # Redirect to the home page when it is implemented
+    elif request.method == "GET":
+        return render(request, "logout_confirm.html")
+    else:
+        pass
+
+@login_required(login_url="/login/")
+def profile_view(request):
+    profile = get_object_or_404(Profile, user=request.user)
+    return render(request, "profile_page.html", {"profile": profile})
+
+@login_required(login_url="/login/")
+def profile_update_view(request):
+    profile = request.user.profile  # or get_object_or_404(Profile, user=request.user)
+    if request.method == "POST":
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("profile")
+    else:
+        form = ProfileForm(instance=profile)
+    
+    return render(request, "profile_edit.html", {"form": form})
