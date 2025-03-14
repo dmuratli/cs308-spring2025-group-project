@@ -32,7 +32,7 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     try {
       // Backend API'ye logout isteği
-      const response = await fetch('http://localhost:8080/api/auth/logout', {
+      const response = await fetch('http://127.0.0.1:8000/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
         headers: {

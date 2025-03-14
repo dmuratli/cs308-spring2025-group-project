@@ -14,12 +14,14 @@ function Navbar() {
 
   const handleLogout = async () => {
     try {
-      // Backend API'ye logout isteği
-      const response = await fetch('http://localhost:8080/api/auth/logout', {
+      // Backend API'ye logout isteği - doğru port ve endpoint kullanın
+      const response = await fetch('http://127.0.0.1:8000/api/logout/', {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // Eğer bir token kullanıyorsanız, Authorization header'ı da ekleyin
+          'Authorization': `Token ${localStorage.getItem('token')}`
         }
       });
       
@@ -33,8 +35,10 @@ function Navbar() {
         
         // Kullanıcıyı ana sayfaya yönlendir
         navigate('/');
+        
+        console.log('Logout successfull');
       } else {
-        console.error('Could not Logout');
+        console.error('Could not logout');
       }
     } catch (error) {
       console.error('Logout error:', error);
