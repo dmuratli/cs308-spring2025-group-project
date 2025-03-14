@@ -15,24 +15,26 @@ function LoginPage() {
     e.preventDefault();
     
     try {
-      const response = await fetch("http://localhost:8000/api/login/", {
+      const response = await fetch("http://localhost:8000/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
-
+  
       const data = await response.json();
-
-      if (response.ok) {
+  
+      if (!response.ok) {
+        setError(data.error || "Login failed"); // Show error from backend
+      } else {
         login(); // ✅ Updates global auth state
         navigate("/");
-      } else {
-        setError(data.error || "Login failed");
       }
     } catch (error) {
       setError("Something went wrong. Please try again.");
     }
   };
+  
   
 
   return (

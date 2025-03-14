@@ -44,67 +44,67 @@ def hash_checker(plaintext_pw, username): #Input: plaintext, Output: Boolean
 
 
 
+import json
+
 @csrf_exempt
 def register_view(request, *args, **kwargs):
-    form = RegisterForm()
-    error_message = None  # Variable to store error messages
-    success_message = None
-
     if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():  # Validate form input
-            username = form.cleaned_data["username"]
-            password = form.cleaned_data["password"]
-            email = form.cleaned_data["email"]
-            salt, hashed_password = password_hasher(password)
+        try:
+            data = json.loads(request.body.decode("utf-8"))  # Parse JSON request body
+            print("Received Data:", data)  # ✅ Debugging
 
-            try:
-                # Attempt to create the user
-                User.objects.create(username=username, password=hashed_password, salt=salt, email=email)
-                success_message = "Registration successful!"
-                print(f"username: {username}\nhashed password: {hashed_password}\nsalt: {salt}")
+            form = RegisterForm(data)  # Use parsed JSON data
+            if form.is_valid():
+                username = form.cleaned_data["username"]
+                password = form.cleaned_data["password"]
+                email = form.cleaned_data["email"]
+                salt, hashed_password = password_hasher(password)
 
-            except IntegrityError as e:
-                if "username" in str(e):
-                    error_message = "This username is already taken. Please choose another."
-                elif "email" in str(e):
-                    error_message = "This email address is already registered. Please use another."
+                try:
+                    User.objects.create(username=username, password=hashed_password, salt=salt, email=email)
+                    return JsonResponse({"message": "Registration successful"}, status=201)
 
-    context = {
-        "form": form,
-        "error_message": error_message,
-        "success_message": success_message,
-    }
+                except IntegrityError as e:
+                    if "username" in str(e):
+                        return JsonResponse({"error": "This username is already taken."}, status=400)
+                    elif "email" in str(e):
+                        return JsonResponse({"error": "This email is already registered."}, status=400)
 
-    return render(request, "register_page.html", context)
+            print("Form errors:", form.errors)  # ✅ Debugging
+            return JsonResponse({"error": "Invalid form data.", "details": form.errors}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+
+
 
 @csrf_exempt
 def login_view(request, *args, **kwargs):
-    form = RegisterForm()
-    is_pw_valid = False
-
     if request.method == "POST":
-        form = RegisterForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data["username"]
-            password = form.cleaned_data["password"]
+        import json
+        try:
+            data = json.loads(request.body.decode("utf-8"))  # Parse JSON request
+            print("Received Data:", data)  # ✅ Debugging
+
+            username = data.get("username")
+            password = data.get("password")
+
+            if not username or not password:
+                return JsonResponse({"error": "Username and password are required"}, status=400)
+
             is_pw_valid = hash_checker(plaintext_pw=password, username=username)
 
             if is_pw_valid:
-                print("Hashes match - Login successful")
+                print("Hashes match - Login successful")  # ✅ Debugging
                 return JsonResponse({"message": "Login successful", "status": "success"}, status=200)
             else:
-                print("Wrong password or username")
+                print("Wrong password or username")  # ✅ Debugging
                 return JsonResponse({"error": "Invalid credentials"}, status=400)
-    
-    return JsonResponse({"error": "Invalid request"}, status=400)
 
-                
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
 
-    # Define context outside the POST condition to prevent undefined errors
-    context = {
-        "form": form,
-        "is_pw_valid": is_pw_valid,
-    }
-    
-    return render(request, "login_page.html", context)
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+

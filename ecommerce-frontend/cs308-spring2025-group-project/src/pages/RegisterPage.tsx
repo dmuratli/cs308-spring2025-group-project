@@ -9,11 +9,34 @@ function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Registering with:", { name, email, password });
-    navigate("/login"); // Redirect to Login after registration
+    
+    try {
+      const response = await fetch("http://localhost:8000/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          username: name,  // Make sure backend expects `username` not `name`
+          email,
+          password,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        console.error("Backend Error:", data);
+      } else {
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Something went wrong.", error);
+    }
   };
+  
+
 
   return (
     <Container maxWidth="sm">
