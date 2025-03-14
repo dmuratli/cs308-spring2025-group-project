@@ -1,15 +1,49 @@
-import React, { useState } from "react";
-import { AppBar, Toolbar, Button, Box, IconButton, InputBase, Badge, Menu, MenuItem } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import { AppBar, Toolbar, Button, Box, IconButton, InputBase, Badge, Menu, MenuItem, Typography } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { Link, useNavigate } from "react-router-dom";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth(); // Use AuthContext
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Kullanıcının giriş durumunu kontrol et
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      // Backend API'ye logout isteği
+      const response = await fetch('http://localhost:8080/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        // Yerel depolamadan kullanıcı bilgilerini temizle
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Login durumunu güncelle
+        setIsLoggedIn(false);
+        
+        // Kullanıcıyı ana sayfaya yönlendir
+        navigate('/');
+      } else {
+        console.error('Çıkış yapılamadı!');
+      }
+    } catch (error) {
+      console.error('Logout hatası:', error);
+    }
+  };
 
   return (
     <AppBar position="fixed" sx={{ backgroundColor: "white", boxShadow: 3 }}>
@@ -58,7 +92,7 @@ const Navbar: React.FC = () => {
 
         {/* Buttons */}
         <Box display="flex" alignItems="center">
-          {!isAuthenticated ? (
+          {!isLoggedIn ? (
             <>
               <Button
                 variant="contained"
@@ -95,7 +129,7 @@ const Navbar: React.FC = () => {
               </IconButton>
               <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
                 <MenuItem onClick={() => navigate("/profile")}>Profile</MenuItem>
-                <MenuItem onClick={logout}>Logout</MenuItem>
+                <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
             </>
           )}
