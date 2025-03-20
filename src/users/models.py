@@ -10,11 +10,6 @@ class User(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=20, blank=True)
-    date_of_birth = models.DateField(null=True, blank=True)
-    gender = models.CharField(max_length=10, blank=True)
-    city = models.CharField(max_length=50, blank=True)
-    country = models.CharField(max_length=50, blank=True)
-    postal_code = models.CharField(max_length=10, blank=True)
+    name = models.CharField(max_length=50, blank=True)
+    email = models.EmailField(max_length=256, blank=False, null=False)
     address = models.CharField(max_length=150, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)

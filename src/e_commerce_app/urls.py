@@ -19,6 +19,7 @@ urlpatterns = [
     # User Authentication Endpoints
     path('register/', register_view, name="register"),
     path('login/', login_view, name="login"),
+    path('logout/', logout_view, name="logout"),
 
     # API Endpoints
     path('api/', include(router.urls)),  # Include API endpoints from DRF Router

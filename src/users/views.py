@@ -3,6 +3,7 @@ from .models import User, Profile
 from django.http import HttpResponse
 from .forms import RegisterForm, ProfileForm
 from django.shortcuts import get_object_or_404
+from django.forms.models import model_to_dict
 from django.contrib.auth import login, logout
 from django.http import JsonResponse
 from django.db import IntegrityError
@@ -27,7 +28,6 @@ def password_hasher(plaintext_pw):# Input: plaintext pw, Output: b64 encoded sal
     return salt_encoded, hasher_object.hexdigest() # Return the salt, along with salted and hashed password
 
 #TODO Do type checks in order to use salt in raw form to reduce space consumption from ~%133 -> %100
-
 
 def hash_checker(plaintext_pw, username): #Input: plaintext, Output: Boolean
     # Retrieve the user, hash the input password with stored salt, and compare.
@@ -61,7 +61,11 @@ def register_view(request, *args, **kwargs):
                 salt, hashed_password = password_hasher(password)
 
                 try:
-                    User.objects.create(username=username, password=hashed_password, salt=salt, email=email)
+                    user = User.objects.create(username=username, password=hashed_password, salt=salt, email=email)
+                    Profile.objects.create(user=user,
+                                           name="",
+                                           email=email,
+                                           address="")
                     return JsonResponse({"message": "Registration successful"}, status=201)
 
                 except IntegrityError as e:
@@ -112,29 +116,31 @@ def login_view(request, *args, **kwargs):
     
     return render(request, "login_page.html", context)
 
+@require_POST
 def logout_view(request):
-    if request.method == "POST":
+    try:
         logout(request)
-        return JsonResponse({"message": "User logged out successfully."}) # Redirect to the home page when it is implemented
-    elif request.method == "GET":
-        return render(request, "logout_confirm.html")
-    else:
-        pass
+        return JsonResponse({"message": "Logout successful"}, status=200)
+    except Exception as e:
+        return JsonResponse({"message": "An error occurred while logging out"}, status=500)
 
 @login_required(login_url="/login/")
 def profile_view(request):
     profile = get_object_or_404(Profile, user=request.user)
-    return render(request, "profile_page.html", {"profile": profile})
+    profile_data = model_to_dict(profile)
+    return JsonResponse(profile_data, status=200)
 
 @login_required(login_url="/login/")
 def profile_update_view(request):
-    profile = request.user.profile  # or get_object_or_404(Profile, user=request.user)
-    if request.method == "POST":
-        form = ProfileForm(request.POST, instance=profile)
-        if form.is_valid():
-            form.save()
-            return redirect("profile")
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON."}, status=400)
+    profile = get_object_or_404(Profile, user=request.user)
+    form = ProfileForm(data, instance=profile)
+    if form.is_valid():
+        form.save()
+        updated_profile = model_to_dict(profile)
+        return JsonResponse(updated_profile, status=200)
     else:
-        form = ProfileForm(instance=profile)
-    
-    return render(request, "profile_edit.html", {"form": form})
+        return JsonResponse(form.errors, status=400)

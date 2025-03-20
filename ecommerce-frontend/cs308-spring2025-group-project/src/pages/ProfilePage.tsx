@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
+import { getCSRFToken } from "../context/AuthContext";
 import {
   Container,
   Typography,
@@ -259,124 +260,183 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
 });
 
 const ProfilePage: React.FC = () => {
-  // Fake user data (will be stored in state)
   const [userData, setUserData] = useState<UserData>({
-    name: "John Doe",
-    email: "john@example.com",
-    address: "123 Main St, New York, USA",
+    name: "",
+    email: "",
+    address: "",
   });
-
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Fake order history (mock data for now)
-  const orderHistory = useMemo<Order[]>(() => [
-    { id: 1, date: "March 5, 2024", total: "$39.99", status: "Delivered" },
-    { id: 2, date: "February 20, 2024", total: "$24.99", status: "In Transit" },
-    { id: 3, date: "February 10, 2024", total: "$12.99", status: "Processing" },
-  ], []);
+  // Fetch profile data from the API when the component mounts
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/profile/", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+        } else {
+          console.error("Failed to fetch profile data:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfileData();
+  }, []);
 
   // Handle input changes when editing profile using useCallback
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUserData(prev => ({ ...prev, [name]: value }));
+    setUserData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  // Toggle edit mode with useCallback
+  // Toggle edit mode
   const toggleEditMode = useCallback(() => {
-    setIsEditing(prev => !prev);
+    setIsEditing((prev) => !prev);
   }, []);
+
+  // Save changes by sending updated data to the backend
+  const handleSaveChanges = async () => {
+    try {
+      const response = await fetch("http://localhost:8000/profile/edit/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+        },
+        credentials: "include",
+        body: JSON.stringify(userData),
+      });
+      if (response.ok) {
+        const updatedData = await response.json();
+        setUserData(updatedData);
+        setIsEditing(false);
+      } else {
+        console.error("Failed to update profile:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
+  };
 
   // Get user initials for avatar - memoized
-  const userInitials = useMemo(() => 
-    userData.name
-      .split(" ")
-      .map(n => n[0])
-      .join("")
-      .toUpperCase(),
+  const userInitials = useMemo(
+    () =>
+      userData.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase(),
     [userData.name]
   );
 
-  // Array of status types
-  const statusTypes = useMemo<string[]>(() => ["In Transit", "Processing", "Delivered", "Refunded"], []);
+  // Array of status types (this can be replaced with real data if available)
+  const statusTypes = useMemo<string[]>(
+    () => ["In Transit", "Processing", "Delivered", "Refunded"],
+    []
+  );
 
   // Profile information form
-  const profileForm = useMemo(() => (
-    <Fade in={true}>
-      <Box component="form" sx={{ '& .MuiTextField-root': styles.textFieldStyles }}>
-        <TextField
-          label="Full Name"
-          name="name"
-          fullWidth
-          variant="outlined"
-          value={userData.name}
-          onChange={handleInputChange}
-        />
-        <TextField
-          label="Email"
-          name="email"
-          fullWidth
-          variant="outlined"
-          value={userData.email}
-          onChange={handleInputChange}
-        />
-        <TextField
-          label="Address"
-          name="address"
-          fullWidth
-          variant="outlined"
-          value={userData.address}
-          onChange={handleInputChange}
-        />
-      </Box>
-    </Fade>
-  ), [userData, handleInputChange]);
+  const profileForm = useMemo(
+    () => (
+      <Fade in={true}>
+        <Box component="form" sx={{ "& .MuiTextField-root": styles.textFieldStyles }}>
+          <TextField
+            label="Full Name"
+            name="name"
+            fullWidth
+            variant="outlined"
+            value={userData.name}
+            onChange={handleInputChange}
+          />
+          <TextField
+            label="Email"
+            name="email"
+            fullWidth
+            variant="outlined"
+            value={userData.email}
+            onChange={handleInputChange}
+          />
+          <TextField
+            label="Address"
+            name="address"
+            fullWidth
+            variant="outlined"
+            value={userData.address}
+            onChange={handleInputChange}
+          />
+        </Box>
+      </Fade>
+    ),
+    [userData, handleInputChange]
+  );
 
   // Profile information view
-  const profileInfo = useMemo(() => (
-    <Box sx={{ mb: 3 }}>
-      <Grid container spacing={0}>
-        <Grid item xs={3} sx={{ pr: 1 }}>
-          <Typography color="text.secondary" variant="body1">
-            Name:
-          </Typography>
+  const profileInfo = useMemo(
+    () => (
+      <Box sx={{ mb: 3 }}>
+        <Grid container spacing={0}>
+          <Grid item xs={3} sx={{ pr: 1 }}>
+            <Typography color="text.secondary" variant="body1">
+              Name:
+            </Typography>
+          </Grid>
+          <Grid item xs={9}>
+            <Typography fontWeight="medium" variant="body1">
+              {userData.name}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={3} sx={{ pr: 1, mt: 1.5 }}>
+            <Typography color="text.secondary" variant="body1">
+              Email:
+            </Typography>
+          </Grid>
+          <Grid item xs={9} sx={{ mt: 1.5 }}>
+            <Typography fontWeight="medium" variant="body1">
+              {userData.email}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={3} sx={{ pr: 1, mt: 1.5 }}>
+            <Typography color="text.secondary" variant="body1">
+              Address:
+            </Typography>
+          </Grid>
+          <Grid item xs={9} sx={{ mt: 1.5 }}>
+            <Typography fontWeight="medium" variant="body1">
+              {userData.address}
+            </Typography>
+          </Grid>
         </Grid>
-        <Grid item xs={9}>
-          <Typography fontWeight="medium" variant="body1">
-            {userData.name}
-          </Typography>
-        </Grid>
-        
-        <Grid item xs={3} sx={{ pr: 1, mt: 1.5 }}>
-          <Typography color="text.secondary" variant="body1">
-            Email:
-          </Typography>
-        </Grid>
-        <Grid item xs={9} sx={{ mt: 1.5 }}>
-          <Typography fontWeight="medium" variant="body1">
-            {userData.email}
-          </Typography>
-        </Grid>
-        
-        <Grid item xs={3} sx={{ pr: 1, mt: 1.5 }}>
-          <Typography color="text.secondary" variant="body1">
-            Address:
-          </Typography>
-        </Grid>
-        <Grid item xs={9} sx={{ mt: 1.5 }}>
-          <Typography fontWeight="medium" variant="body1">
-            {userData.address}
-          </Typography>
-        </Grid>
-      </Grid>
-    </Box>
-  ), [userData]);
+      </Box>
+    ),
+    [userData]
+  );
+
+  if (loading) {
+    return (
+      <Container sx={{ mt: 12, minHeight: "80vh", mb: 8 }}>
+        <Typography variant="h6" textAlign="center">
+          Loading profile...
+        </Typography>
+      </Container>
+    );
+  }
 
   return (
     <Container sx={{ mt: 12, minHeight: "80vh", mb: 8 }}>
-      <Typography 
-        variant="h4" 
-        fontWeight="bold" 
-        gutterBottom 
+      <Typography
+        variant="h4"
+        fontWeight="bold"
+        gutterBottom
         textAlign="center"
         sx={styles.headerText}
       >
@@ -385,14 +445,9 @@ const ProfilePage: React.FC = () => {
 
       {/* Profile Info */}
       <Fade in={true} timeout={800}>
-        <Paper 
-          elevation={3} 
-          sx={{ ...styles.paperStyles, mt: 6, maxWidth: 600, mx: "auto" }}
-        >
+        <Paper elevation={3} sx={{ ...styles.paperStyles, mt: 6, maxWidth: 600, mx: "auto" }}>
           <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-            <Avatar sx={styles.avatarStyles}>
-              {userInitials}
-            </Avatar>
+            <Avatar sx={styles.avatarStyles}>{userInitials}</Avatar>
             <Box>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
                 {userData.name}
@@ -414,7 +469,7 @@ const ProfilePage: React.FC = () => {
                 variant="contained"
                 startIcon={<SaveIcon />}
                 sx={styles.savedButton}
-                onClick={toggleEditMode}
+                onClick={handleSaveChanges}
               >
                 Save Changes
               </Button>
@@ -434,26 +489,19 @@ const ProfilePage: React.FC = () => {
 
       {/* Order History */}
       <Fade in={true} timeout={1000}>
-        <Paper 
-          elevation={3} 
-          sx={{ ...styles.paperStyles, mt: 6, maxWidth: 600, mx: "auto" }}
-        >
+        <Paper elevation={3} sx={{ ...styles.paperStyles, mt: 6, maxWidth: 600, mx: "auto" }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Order History
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Your recent purchases organized by status
           </Typography>
-          
+
           <Divider sx={{ mb: 3 }} />
-          
+
           {/* Group orders by status */}
           {statusTypes.map((status) => (
-            <OrderStatusSection 
-              key={status} 
-              status={status} 
-              orders={orderHistory} 
-            />
+            <OrderStatusSection key={status} status={status} orders={[]} />
           ))}
         </Paper>
       </Fade>
