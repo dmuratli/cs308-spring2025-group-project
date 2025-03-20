@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Confirm Logout</title>
+</head>
+<body>
+    <h1>Are you sure you want to log out?</h1>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <button type="submit">Yes, log me out</button>
+    </form>
+    <p>
+        <a href="{% url 'login' %}">No, take me back</a> <!--Replace the url with "home" when the home page is implemented (or maybe the page the user was browsing prior to logout)-->
+    </p>
+</body>
+</html>
