@@ -1,8 +1,10 @@
 import React from "react";
 import { Box, Button, Container, Grid, Typography, Card, CardContent, CardMedia } from "@mui/material";
 import Navbar from "../components/Navbar"; // Navbar is now a separate component
+import { useNavigate } from "react-router-dom";
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <Box>
       <Navbar />
@@ -37,11 +39,12 @@ const HomePage: React.FC = () => {
             zIndex: -1, // Keeps the image behind the text
           }}
         />
-        <Typography variant="h4" fontWeight="bold"  >
+        <Typography variant="h4" fontWeight="bold">
           A Book Can Change Your Life
         </Typography>
         <Button
           variant="contained"
+          onClick={() => navigate("/products")}
           sx={{
             mt: 2,
             backgroundColor: "#EF977F",

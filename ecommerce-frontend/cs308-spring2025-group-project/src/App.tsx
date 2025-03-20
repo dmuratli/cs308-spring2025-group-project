@@ -10,11 +10,13 @@ import ManageOrders from "./pages/admin/ManageOrders";
 import ManageUsers from "./pages/admin/ManageUsers";
 import AddProduct from "./pages/admin/AddProduct";
 import EditProduct from "./pages/admin/EditProduct"; // ✅ Import
+import ProductPage from "./pages/ProductPage"; // ✅ Import
 
 
 
 
 import ProfilePage from "./pages/ProfilePage";
+import BookDetailsPage from "./pages/BookDetailPage";
 
 function App() {
   return (
@@ -32,6 +34,9 @@ function App() {
         <Route path="/admin/users" element={<ManageUsers />} />
         <Route path="/admin/add-product" element={<AddProduct />} />
         <Route path="/admin/edit-product/:id" element={<EditProduct />} />
+        <Route path="/products" element={<ProductPage/>} />
+        <Route path="/products/:title-:author" element={<BookDetailsPage />} />
+
         
       </Routes>
     </>
