@@ -14,6 +14,9 @@ const ProductPage: React.FC = () => {
     price: number;
     stock: number;
     cover_image?: string;
+    pages: number; // Sayfa sayısı sıralamak için gerekli
+    created_at: string; //  Tarih sıralamak için gerekli
+    ordered_count: number; //Popülerlik icin
   }
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -30,17 +33,29 @@ const ProductPage: React.FC = () => {
   
   const sortedProducts = () => {
     let sorted = [...products];
-
-    if (sortOption === "") return products; 
-
+  
+    if (sortOption === "") return products;
+  
     if (sortOption === "price-low") {
       sorted.sort((a, b) => a.price - b.price);
     } else if (sortOption === "price-high") {
       sorted.sort((a, b) => b.price - a.price);
-    } 
+    } else if (sortOption === "pages-low") {  
+      sorted.sort((a, b) => (a.pages ?? 0) - (b.pages ?? 0)); 
+    } else if (sortOption === "pages-high") { 
+      sorted.sort((a, b) => (b.pages ?? 0) - (a.pages ?? 0));
+    } else if (sortOption === "newest") {     
+      sorted.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()); // 
+    } else if (sortOption === "oldest") {     
+      sorted.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+    }
+    else if (sortOption === "popularity") {     
+      sorted.sort((a, b) => (b.ordered_count ?? 0) - (a.ordered_count ?? 0)); 
+    }    
     return sorted; 
   };
-
+  
+  
 
   const formatUrl = (title: string, author: string) => {
     return `/product/${title.toLowerCase().replace(/\s+/g, "-")}-${author.toLowerCase().replace(/\s+/g, "-")}`;
@@ -64,9 +79,13 @@ const ProductPage: React.FC = () => {
             label="Sort By"
             onChange={(e) => setSortOption(e.target.value)} // Seçim yapılınca direkt sıralanacak
           >
-            <MenuItem value="">Popularity</MenuItem>
+            <MenuItem value="popularity">Popularity</MenuItem> 
             <MenuItem value="price-low">Price: Low to High</MenuItem>
             <MenuItem value="price-high">Price: High to Low</MenuItem>
+            <MenuItem value="pages-low">Pages: Low to High</MenuItem>  
+            <MenuItem value="pages-high">Pages: High to Low</MenuItem> 
+            <MenuItem value="newest">Newest Arrivals</MenuItem>        
+            <MenuItem value="oldest">Oldest Arrivals</MenuItem>        
           </Select>
         </FormControl>
       </Box>
