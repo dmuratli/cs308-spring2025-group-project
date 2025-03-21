@@ -5,6 +5,8 @@ python3 -m venv venv
 
 source venv/bin/activate (for windows11: .\venv\Scripts\Activate.ps1 )
 
+pip install -r requirements.txt
+
 pip3 install Django
 
 pip3 install pycryptodome
