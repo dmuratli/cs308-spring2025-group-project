@@ -1,92 +1,50 @@
-import { Button, Container, TextField, Typography, Box, Paper } from "@mui/material";
+import { Button, Container, TextField, Typography, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import React from "react";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import React, { FormEvent } from "react";
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const { login } = useAuth(); // Use AuthContext
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    
     try {
-      const response = await fetch("http://localhost:8000/login/", {
+      const response = await fetch("http://127.0.0.1:8000/api/token/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: email, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
-        setError(data.error || "Login failed"); // Show error from backend
-      } else {
-        login(); // ✅ Updates global auth state
-        navigate("/");
+        console.error("Login error:", data);
+        setError(data.detail || "Login failed");
+        return;
       }
+
+      localStorage.setItem("access_token", data.access);
+      localStorage.setItem("refresh_token", data.refresh);
+      navigate("/"); // Redirect to home page
     } catch (error) {
-      setError("Something went wrong. Please try again.");
+      console.error("Network error:", error);
+      setError("Network error. Please try again.");
     }
   };
-  
-  
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="xs">
       <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
-        <Paper elevation={3} sx={{ p: 4, width: "100%", maxWidth: 400, textAlign: "center" }}>
-          <Typography variant="h4" fontWeight="bold" color="#EF977F" gutterBottom>
-            Login
-          </Typography>
-
-          {error && <Typography color="error">{error}</Typography>}
-
-          <form onSubmit={handleLogin} style={{ width: "100%" }}>
-            <TextField
-              label="Username"
-              type="text"
-              fullWidth
-              margin="normal"
-              required
-              variant="outlined"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-
-            <TextField
-              label="Password"
-              type="password"
-              fullWidth
-              margin="normal"
-              required
-              variant="outlined"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 2, backgroundColor: "#EF977F", "&:hover": { backgroundColor: "#d46c4e" } }}
-            >
-              Login
-            </Button>
-          </form>
-
-          <Typography variant="body2" sx={{ mt: 2 }}>
-            Don't have an account?{" "}
-            <Button color="secondary" onClick={() => navigate("/register")}>
-              Register
-            </Button>
-          </Typography>
-        </Paper>
+        <Typography variant="h4" gutterBottom>Login</Typography>
+        {error && <Typography color="error">{error}</Typography>}
+        <form onSubmit={handleLogin} style={{ width: "100%" }}>
+          <TextField label="Email" type="email" fullWidth margin="normal" required variant="outlined" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <TextField label="Password" type="password" fullWidth margin="normal" required variant="outlined" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Button type="submit" fullWidth variant="contained" color="primary" sx={{ mt: 2 }}>Login</Button>
+        </form>
       </Box>
     </Container>
   );

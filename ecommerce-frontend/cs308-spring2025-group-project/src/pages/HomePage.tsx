@@ -1,226 +1,69 @@
-import React from "react";
-import { Box, Button, Container, Grid, Typography, Card, CardContent, CardMedia } from "@mui/material";
-import Navbar from "../components/Navbar"; // Navbar is now a separate component
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 
 const HomePage: React.FC = () => {
-  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    setIsAuthenticated(!!token);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setIsAuthenticated(false);
+  };
+
   return (
-    <Box>
-      <Navbar />
-      
-      {/* Hero Section */}
-      <Box
-        sx={{
-          height: "400px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          textAlign: "center",
-          position: "relative", // Needed for the overlay effect
-          color: "black",
-          p: 2,
-        }}
-      >
-        {/* Background Image with Transparency */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundImage:
-              "url('https://i.ibb.co/CssQMFQj/DALL-E-2025-03-06-14-57-55-A-beautiful-and-immersive-book-themed-background-image-for-an-online-book.webp')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.3, // Adjust this value to control transparency (0 = fully transparent, 1 = fully visible)
-            zIndex: -1, // Keeps the image behind the text
-          }}
-        />
-        <Typography variant="h4" fontWeight="bold">
-          A Book Can Change Your Life
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={() => navigate("/products")}
-          sx={{
-            mt: 2,
-            backgroundColor: "#EF977F",
-            color: "white",
-            px: 4,
-            py: 1,
-            fontSize: "1rem",
-            transition: "all 0.3s",
-            "&:hover": {
-              backgroundColor: "#d46c4e",
-              transform: "scale(1.05)",
-            },
-          }}
-        >
-          Shop Now
-        </Button>
-      </Box>
-
-      {/* Bestseller Section */}
-      <Container sx={{ my: 5 }}>
-        <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
-          Bestsellers
-        </Typography>
-        <Typography variant="body1" color="text.secondary" textAlign="center" mb={4}>
-          Discover our top-rated books loved by our readers!
-        </Typography>
-
-        <Grid container spacing={3} justifyContent="center">
-          {[...Array(3)].map((_, index) => (
-            <Grid item key={index} xs={12} sm={6} md={4}>
-              <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-                <CardMedia sx={{ height: 200, backgroundColor: "#e0e0e0" }} />
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold">
-                    Book Title
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Sample book description.
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      mt: 2,
-                      transition: "all 0.3s",
-                      "&:hover": {
-                        transform: "scale(1.05)",
-                      },
-                    }}
-                  >
-                    Learn More
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-
-      {/* Review Section */}
-      <Box sx={{ backgroundColor: "#f9f9f9", py: 5 }}>
-        <Container>
-          <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
-            What Our Readers Say
-          </Typography>
-          <Grid container spacing={4} justifyContent="center">
-            {[ 
-              { 
-                text: '"This bookstore changed my reading experience! Amazing selection and fast delivery."',
-                name: "- John Doe"
-              }, 
-              { 
-                text: '"Great books, fantastic service, and unbeatable prices!"',
-                name: "- Jane Smith"
-              }
-            ].map((review, index) => (
-              <Grid item xs={12} md={6} key={index}>
-                <Box display="flex" alignItems="center" gap={3}>
-                  {/* Ensuring same profile picture size & shape */}
-                  <Box
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      backgroundColor: "#dcdcdc",
-                      borderRadius: "50%",  // Ensures perfect circle
-                      flexShrink: 0,        // Prevents resizing
-                    }}
-                  />
-                  <Box>
-                    <Typography variant="body1">{review.text}</Typography>
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      {review.name}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
-
-
-      {/* Deal of the Week Section */}
-      <Container sx={{ my: 5 }}>
-        <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
-          Deal of the Week
-        </Typography>
-        <Typography variant="body1" color="text.secondary" textAlign="center" mb={4}>
-          Get the best deals on our top-rated books. Limited time only!
-        </Typography>
-
-        <Grid container spacing={3} justifyContent="center">
-          {[...Array(3)].map((_, index) => (
-            <Grid item key={index} xs={12} sm={6} md={4}>
-              <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-                <CardMedia sx={{ height: 200, backgroundColor: "#e0e0e0" }} />
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold">
-                    Book Title
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Limited-time book deal.
-                  </Typography>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      mt: 2,
-                      transition: "all 0.3s",
-                      "&:hover": {
-                        transform: "scale(1.05)",
-                      },
-                    }}
-                  >
-                    Shop Now
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-
-      {/* Footer */}
-      <Box
-        sx={{
-          backgroundColor: "#EF977F",
-          color: "white",
-          textAlign: "center",
-          p: 4,
-          mt: 5,
-          borderRadius: "10px",
-        }}
-      >
-        <Typography variant="h5" fontWeight="bold">
-          Start Your Reading Journey
-        </Typography>
-        <Typography variant="body1" mt={1}>
-          Find your next favorite book and embark on an adventure through pages.
-        </Typography>
-        <Button
-          variant="contained"
-          sx={{
-            mt: 2,
-            backgroundColor: "white",
-            color: "#EF977F",
-            transition: "all 0.3s",
-            "&:hover": {
-              backgroundColor: "#f5f5f5",
-              transform: "scale(1.05)",
-            },
-          }}
-        >
-          Contact Us
-        </Button>
-      </Box>
-    </Box>
+    <div style={styles.homepage}>
+      <div style={styles.navbar}>
+        <h1 style={styles.logo}>Book Store</h1>
+        <div style={styles.buttonGroup}>
+          {isAuthenticated ? (
+            <button style={styles.button} onClick={handleLogout}>Logout</button>
+          ) : (
+            <>
+              <button style={styles.button} onClick={() => window.location.href = "/register"}>Sign Up</button>
+              <button style={styles.button} onClick={() => window.location.href = "/login"}>Login</button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   );
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  homepage: {
+    fontFamily: "Arial, sans-serif",
+    textAlign: "center",
+  },
+  navbar: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "15px 50px",
+    backgroundColor: "#fff",
+    boxShadow: "0 0 5px rgba(0, 0, 0, 0.1)",
+    position: "fixed",
+    width: "100%",
+    top: 0,
+    zIndex: 101,
+  },
+  logo: {
+    fontSize: "24px",
+    fontWeight: "bold",
+    color: "#333",
+  },
+  button: {
+    backgroundColor: "#EF977F",
+    color: "white",
+    padding: "10px 20px",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    marginLeft: "10px",
+  },
 };
 
 export default HomePage;
