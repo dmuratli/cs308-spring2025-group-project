@@ -25,6 +25,15 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/user/', user_profile_view, name='user_profile'),
     path('admin/', admin.site.urls),
+    path('logout/', logout_view, name="logout"),
+
+    # API Endpoints
+    path('api/', include(router.urls)),  # Include API endpoints from DRF Router
+    path('api-auth/', include('auth_api.urls')),  # Include DRF authentication URLs
+
+    # User Profile Endpoints
+    path("profile/", profile_view, name="profile"),
+    path("profile/edit/", profile_update_view, name="profile_edit"),
 ]
 
 

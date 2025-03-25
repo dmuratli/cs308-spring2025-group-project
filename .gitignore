@@ -1,20 +1,37 @@
-# Ignore the virtual environment
-venv/
-
-# Ignore compiled Python files
+# Byte-compiled / optimised / DLL files
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
 
-# Ignore environment variables
+# Distribution / packaging
+build/
+dist/
+eggs/
+*.egg-info/
+.egg/
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
 .env
 
-# Ignore database files
-*.sqlite3
+# Django stuff
+*.log
+*.pot
+*.pyc
+*.swp
+media/
+staticfiles/
 
-# Ignore IDE-specific files
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# VSCode or other IDE
 .vscode/
 .idea/
-*.swp
-.DS_Store
-db.sqlite3
+
+# DB
+*.sqlite3
