@@ -14,7 +14,6 @@ import ProductPage from "./pages/ProductPage"; // ✅ Import
 
 
 
-
 import ProfilePage from "./pages/ProfilePage";
 import BookDetailsPage from "./pages/BookDetailPage";
 
@@ -35,7 +34,7 @@ function App() {
         <Route path="/admin/add-product" element={<AddProduct />} />
         <Route path="/admin/edit-product/:id" element={<EditProduct />} />
         <Route path="/products" element={<ProductPage/>} />
-        <Route path="/products/:title-:author" element={<BookDetailsPage />} />
+        <Route path="/products/:title_:author" element={<BookDetailsPage />} />
 
         
       </Routes>
