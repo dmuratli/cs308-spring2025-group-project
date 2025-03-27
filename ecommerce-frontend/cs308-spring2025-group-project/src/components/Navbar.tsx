@@ -1,15 +1,51 @@
 import React, { useState } from "react";
-import { AppBar, Toolbar, Button, Box, IconButton, InputBase, Badge, Menu, MenuItem } from "@mui/material";
+import { AppBar, Toolbar, Button, Box, IconButton, InputBase, Badge, Menu, MenuItem, Paper } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { useAuth } from "../context/AuthContext";
+import axios from "axios";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth(); // Use AuthContext
+  const { isAuthenticated, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [openDropdown, setOpenDropdown] = useState(false);
+
+  // ✅ Her yazıldığında çağrılan search fonksiyonu
+  const handleSearch = async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setOpenDropdown(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/products/?search=${searchQuery}`);
+      setSearchResults(response.data);
+      setOpenDropdown(true);
+    } catch (error) {
+      console.error("Search Error:", error);
+      setSearchResults([]);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleSearch(query); // Enter'a basınca da ara
+    }
+  };
+
+  // ✅ Detay sayfasına yönlendirme: title ve author ile
+  const handleResultClick = (product: any) => {
+    const formattedTitle = product.title.toLowerCase().replace(/\s+/g, "-");
+    const formattedAuthor = product.author.toLowerCase().replace(/\s+/g, "-");
+    navigate(`/product/${formattedTitle}-${formattedAuthor}`);
+    setOpenDropdown(false);
+  };
 
   return (
     <AppBar position="fixed" sx={{ backgroundColor: "white", boxShadow: 3 }}>
@@ -29,31 +65,58 @@ const Navbar: React.FC = () => {
         </Button>
 
         {/* Search Bar */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            overflow: "hidden",
-            px: 2,
-            width: { xs: "75%", md: "50%" },
-            boxShadow: 1,
-          }}
-        >
-          <InputBase
-            placeholder="Search for books..."
+        <Box sx={{ position: "relative", width: { xs: "75%", md: "50%" } }}>
+          <Paper
             sx={{
-              flex: 1,
-              px: 1,
-              py: 1,
-              fontSize: "1rem",
-              "&::placeholder": { color: "#666" },
+              display: "flex",
+              alignItems: "center",
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              overflow: "hidden",
+              px: 2,
+              boxShadow: 1,
             }}
-          />
-          <IconButton type="submit">
-            <SearchIcon />
-          </IconButton>
+          >
+            <InputBase
+              placeholder="Search for books..."
+              sx={{ flex: 1, px: 1, py: 1, fontSize: "1rem", "&::placeholder": { color: "#666" } }}
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                handleSearch(e.target.value); // ✅ Anlık arama
+              }}
+              onKeyDown={handleKeyDown}
+            />
+            <IconButton onClick={() => handleSearch(query)}>
+              <SearchIcon />
+            </IconButton>
+          </Paper>
+
+          {/* Dropdown Search Results */}
+          {openDropdown && (
+            <Paper
+              sx={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                width: "100%",
+                maxHeight: "250px",
+                overflowY: "auto",
+                boxShadow: 3,
+                zIndex: 10,
+              }}
+            >
+              {searchResults.length > 0 ? (
+                searchResults.map((product) => (
+                  <MenuItem key={product.id} onClick={() => handleResultClick(product)}>
+                    {product.title} - {product.author}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No results found</MenuItem>
+              )}
+            </Paper>
+          )}
         </Box>
 
         {/* Buttons */}
@@ -89,7 +152,6 @@ const Navbar: React.FC = () => {
             </>
           ) : (
             <>
-              {/* Profile Icon */}
               <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ ml: 1, "&:hover": { transform: "scale(1.1)" } }}>
                 <AccountCircleIcon sx={{ fontSize: 30, color: "#EF977F" }} />
               </IconButton>
