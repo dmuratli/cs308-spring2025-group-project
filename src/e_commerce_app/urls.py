@@ -31,7 +31,7 @@ urlpatterns = [
     path('api/user/', user_profile_view, name='user_profile'),
     path('admin/', admin.site.urls),
     # path('logout/', logout_view, name="logout"),
-    path("logout/", logout_view, name="logout"),
+    path("api/logout/", logout_view, name="logout"),
 
     # API Endpoints
     path('api/', include(router.urls)),  # Include API endpoints from DRF Router
