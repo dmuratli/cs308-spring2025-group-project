@@ -39,6 +39,8 @@ urlpatterns = [
     # User Profile Endpoints
     #path("profile/", profile_view, name="profile"),
     #path("profile/edit/", profile_update_view, name="profile_edit"),
+
+    path('cart/', include('cart.urls')),
 ]
 
 

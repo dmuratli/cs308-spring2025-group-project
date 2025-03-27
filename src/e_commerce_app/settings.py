@@ -47,6 +47,8 @@ INSTALLED_APPS = [
 
     # our apps
     'users',
+    'admin_panel',
+    'cart',
 ]
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
