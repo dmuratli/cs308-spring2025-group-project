@@ -2,7 +2,7 @@ import { Button, Container, TextField, Typography, Box, Paper } from "@mui/mater
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import React from "react";
-import { useAuth } from "../context/AuthContext"; // Import useAuth
+import { useAuth } from "../context/AuthContext";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -13,29 +13,28 @@ function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const response = await fetch("http://localhost:8000/login/", {
+      const response = await fetch("http://localhost:8000/api/token/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
-        setError(data.error || "Login failed"); // Show error from backend
+        setError(data.detail || "Login failed");
       } else {
-        login(); // ✅ Updates global auth state
+        localStorage.setItem("access_token", data.access);
+        localStorage.setItem("refresh_token", data.refresh);
+        login();
         navigate("/");
       }
     } catch (error) {
       setError("Something went wrong. Please try again.");
     }
   };
-  
-  
 
   return (
     <Container maxWidth="sm">
@@ -81,10 +80,8 @@ function LoginPage() {
           </form>
 
           <Typography variant="body2" sx={{ mt: 2 }}>
-            Don't have an account?{" "}
-            <Button color="secondary" onClick={() => navigate("/register")}>
-              Register
-            </Button>
+            Don't have an account? {" "}
+            <Button color="secondary" onClick={() => navigate("/register")}>Register</Button>
           </Typography>
         </Paper>
       </Box>

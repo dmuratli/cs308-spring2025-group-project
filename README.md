@@ -11,8 +11,6 @@ pip3 install Django
 
 pip3 install pycryptodome
 
-python -m pip install Pillow
-
 python3 manage.py runserver
 ```
 
@@ -22,8 +20,6 @@ python3 manage.py runserver
 npm install
 
 npm install @mui/material @emotion/react @emotion/styled
-
-npm install react-router-dom
 
 npm start
 ```
