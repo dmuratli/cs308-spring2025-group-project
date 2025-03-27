@@ -48,22 +48,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      const response = await fetch("http://localhost:8000/logout/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCSRFToken(),
-        },
-        credentials: "include",
-      });
+      const refreshToken = localStorage.getItem("refresh_token");
+      const accessToken = localStorage.getItem("access_token");
   
-      if (response.ok) {
-        localStorage.removeItem("isAuthenticated");
-        setIsAuthenticated(false);
-        window.location.href = "/";
-      } else {
-        console.error("Failed to logout on server:", response.statusText);
+      if (refreshToken && accessToken) {
+        const response = await fetch("http://localhost:8000/api/logout/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ refresh: refreshToken }),
+        });
+  
+        if (!response.ok) {
+          console.error("Backend logout failed:", await response.text());
+        }
       }
+  
+      // Clean up regardless of backend response
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("isAuthenticated");
+      setIsAuthenticated(false);
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
     }

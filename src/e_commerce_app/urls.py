@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from users.views import register_view, user_profile_view
+from users.views import register_view, user_profile_view, logout_view
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/user/', user_profile_view, name='user_profile'),
     path('admin/', admin.site.urls),
     # path('logout/', logout_view, name="logout"),
+    path("logout/", logout_view, name="logout"),
 
     # API Endpoints
     path('api/', include(router.urls)),  # Include API endpoints from DRF Router

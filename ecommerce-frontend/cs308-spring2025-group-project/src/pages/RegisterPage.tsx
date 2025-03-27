@@ -2,11 +2,13 @@ import { Button, Container, TextField, Typography, Box, Paper } from "@mui/mater
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import React from "react";
+import { Email } from "@mui/icons-material";
 
 function RegisterPage() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -16,7 +18,7 @@ function RegisterPage() {
       const response = await fetch("http://localhost:8000/api/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: name, password }),
+        body: JSON.stringify({ username: name, password, email }),
       });
 
       const data = await response.json();
@@ -65,6 +67,17 @@ function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            <TextField
+              label="Email"
+              type="email"
+              fullWidth
+              margin="normal"
+              required
+              variant="outlined"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+
 
             <Button
               type="submit"
