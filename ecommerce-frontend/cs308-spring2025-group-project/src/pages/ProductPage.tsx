@@ -9,6 +9,7 @@ import {
   CardMedia,
   Button,
   CardActions,
+  Rating,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -43,6 +44,15 @@ const ProductPage: React.FC = () => {
       .replace(/\s+/g, "-")}`;
   };
 
+  const handleRatingChange = (index: number, newValue: number | null) => {
+    if (newValue === null) return;
+    setProducts((prevProducts) => {
+      const updated = [...prevProducts];
+      updated[index] = { ...updated[index], rating: newValue };
+      return updated;
+    });
+  };
+
   return (
     <Box>
       <Navbar />
@@ -51,7 +61,7 @@ const ProductPage: React.FC = () => {
           Our Book Collection
         </Typography>
         <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <Grid
               item
               key={`${product.title}-${product.author}`}
@@ -89,6 +99,15 @@ const ProductPage: React.FC = () => {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                     {product.genre} | {product.language}
                   </Typography>
+                  {product.canRate ? (
+                    <Rating
+                      name={`rating-${index}`}
+                      value={product.rating}
+                      onChange={(event, newValue) => handleRatingChange(index, newValue)}
+                    />
+                  ) : (
+                    <Rating name={`rating-${index}`} value={product.rating} readOnly />
+                  )}
                   <Typography variant="h6" color="primary" mt={2}>
                     ${product.price}
                   </Typography>
