@@ -27,8 +27,9 @@ const ProductPage: React.FC = () => {
   }, []);
 
   const formatUrl = (title: string, author: string) => {
-    return `/product/${title.toLowerCase().replace(/\s+/g, "-")}-${author.toLowerCase().replace(/\s+/g, "-")}`;
+    return `/products/${title.toLowerCase().replace(/\s+/g, "-")}-${author.toLowerCase().replace(/\s+/g, "-")}`;
   };
+  
 
   return (
     <Box>

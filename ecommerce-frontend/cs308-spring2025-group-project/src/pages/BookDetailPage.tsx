@@ -16,17 +16,19 @@ const BookDetailsPage: React.FC = () => {
     cover_image?: string;
   }
 
-  const { title, author } = useParams<{ title: string; author: string }>();
+  const { slug } = useParams<{ slug: string }>();
+
   const [product, setProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    if (title && author) {
+    if (slug) {
       axios
-        .get(`http://localhost:8000/api/products/${title}-${author}/`)
+        .get(`http://localhost:8000/api/products/${slug}/`)
         .then((response) => setProduct(response.data))
         .catch((error) => console.error("Error fetching product:", error));
     }
-  }, [title, author]);
+  }, [slug]);
+  
 
   if (!product) {
     return <Typography textAlign="center" mt={5}>Loading...</Typography>;
