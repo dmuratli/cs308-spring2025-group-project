@@ -219,7 +219,7 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
   );
   
   // Only show sections that have orders (except for "Refunded" which shows empty state)
-  if (filteredOrders.length === 0 && status !== "Refunded") return null;
+  // if (filteredOrders.length === 0 && status !== "Refunded") return null;
   
   return (
     <Box sx={{ mb: 4 }}>
