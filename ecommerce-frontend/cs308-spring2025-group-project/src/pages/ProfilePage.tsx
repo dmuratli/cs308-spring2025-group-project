@@ -8,26 +8,27 @@ import {
   Box,
   Paper,
   Grid,
-  List,
-  ListItem,
-  ListItemText,
   Divider,
   Avatar,
   Fade,
+  List,
+  ListItem,
+  ListItemText,
   keyframes,
 } from "@mui/material";
-import { 
-  Edit as EditIcon, 
-  Save as SaveIcon, 
-  LocalShipping as ShippingIcon, 
-  Inventory as InventoryIcon, 
+import {
+  Edit as EditIcon,
+  Save as SaveIcon,
+  LocalShipping as ShippingIcon,
+  Inventory as InventoryIcon,
   CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 
-// Define types for our data models
-interface UserData {
-  name: string;
+// --- Types --- //
+interface ProfileData {
+  username: string; // from request.user.username
+  name: string;     // full name stored in Profile (can be empty)
   email: string;
   address: string;
 }
@@ -39,7 +40,7 @@ interface Order {
   status: string;
 }
 
-// Create a horizontal loop animation for the truck
+// --- Animations & Styled Components --- //
 const truckLoopAnimation = keyframes`
   0% { transform: translateX(-20px); opacity: 0; }
   10% { transform: translateX(0); opacity: 1; }
@@ -47,13 +48,12 @@ const truckLoopAnimation = keyframes`
   100% { transform: translateX(60px); opacity: 0; }
 `;
 
-// Create a styled ShippingIcon that moves in a loop
 const MovingTruck = styled(ShippingIcon)(({ theme }) => ({
   animation: `${truckLoopAnimation} 2s infinite`,
   color: "#2196f3",
 }));
 
-// Predefined style objects to prevent recreating on each render
+// --- Styles --- //
 const styles = {
   headerText: {
     position: "relative",
@@ -70,102 +70,78 @@ const styles = {
       height: "3px",
       background: "linear-gradient(45deg, #EF977F 30%, #f5b39e 90%)",
       borderRadius: "4px",
-    }
+    },
   },
   paperStyles: {
     p: 4,
     borderRadius: "12px",
     transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
     "&:hover": {
-      boxShadow: "rgba(239, 151, 127, 0.1) 0px 10px 20px, rgba(239, 151, 127, 0.08) 0px 6px 6px",
-      transform: "translateY(-4px)"
+      boxShadow:
+        "rgba(239, 151, 127, 0.1) 0px 10px 20px, rgba(239, 151, 127, 0.08) 0px 6px 6px",
+      transform: "translateY(-4px)",
     },
-    borderLeft: "4px solid #EF977F"
+    borderLeft: "4px solid #EF977F",
   },
   avatarStyles: {
-    width: 64, 
-    height: 64, 
+    width: 64,
+    height: 64,
     background: "linear-gradient(45deg, #EF977F 30%, #d46c4e 90%)",
     color: "white",
-    mr: 2,
+    marginRight: 2,
     fontSize: "1.5rem",
     fontWeight: "bold",
-    boxShadow: "0 4px 8px rgba(239, 151, 127, 0.3)"
+    boxShadow: "0 4px 8px rgba(239, 151, 127, 0.3)",
   },
   savedButton: {
     background: "linear-gradient(45deg, #EF977F 30%, #d46c4e 90%)",
-    "&:hover": { 
-      background: "linear-gradient(45deg, #d46c4e 30%, #c05c3e 90%)" 
+    "&:hover": {
+      background: "linear-gradient(45deg, #d46c4e 30%, #c05c3e 90%)",
     },
     borderRadius: "8px",
     boxShadow: "0 4px 8px rgba(239, 151, 127, 0.3)",
-    px: 3,
-    py: 1
+    paddingX: 3,
+    paddingY: 1,
   },
   editButton: {
-    borderColor: "#EF977F", 
+    borderColor: "#EF977F",
     color: "#EF977F",
     "&:hover": {
       borderColor: "#d46c4e",
-      backgroundColor: "rgba(239, 151, 127, 0.20)"
+      backgroundColor: "rgba(239, 151, 127, 0.20)",
     },
     borderRadius: "8px",
-    px: 3,
-    py: 1
+    paddingX: 3,
+    paddingY: 1,
   },
-  textFieldStyles: { 
-    mb: 3,
+  textFieldStyles: {
+    marginBottom: 3,
     "& .MuiOutlinedInput-root": {
       "&.Mui-focused fieldset": {
-        borderColor: "#EF977F"
+        borderColor: "#EF977F",
       },
       "&:hover fieldset": {
-        borderColor: "#f5b39e"
-      }
+        borderColor: "#f5b39e",
+      },
     },
     "& .MuiInputLabel-root.Mui-focused": {
-      color: "#EF977F"
-    }
+      color: "#EF977F",
+    },
   },
-  listItemHover: {
-    py: 2,
-    transition: "all 0.2s ease",
-    "&:hover": {
-      backgroundColor: "rgba(0, 0, 0, 0.03)",
-      borderRadius: "8px"
-    }
-  },
-  statusIconContainer: {
-    mr: 1,
-    width: "30px",  
-    position: "relative",
-    overflow: "hidden"
-  }
 };
 
-// Status colors map
+// --- Order History Components --- //
 const STATUS_COLORS: Record<string, string> = {
-  "Delivered": "#4caf50",
+  Delivered: "#4caf50",
   "In Transit": "#2196f3",
-  "Processing": "#ff9800",
-  "Refunded": "#f44336"
+  Processing: "#ff9800",
+  Refunded: "#f44336",
 };
 
-// Component props interfaces
 interface StatusIconProps {
   status: string;
 }
 
-interface OrderItemProps {
-  order: Order;
-}
-
-interface OrderStatusSectionProps {
-  status: string;
-  orders: Order[];
-}
-
-// Memoized Status Icon component
 const StatusIcon: React.FC<StatusIconProps> = React.memo(({ status }) => {
   switch (status) {
     case "Delivered":
@@ -181,10 +157,13 @@ const StatusIcon: React.FC<StatusIconProps> = React.memo(({ status }) => {
   }
 });
 
-// Order item component to reduce re-renders
+interface OrderItemProps {
+  order: Order;
+}
+
 const OrderItem: React.FC<OrderItemProps> = React.memo(({ order }) => (
-  <React.Fragment>
-    <ListItem alignItems="flex-start" sx={styles.listItemHover}>
+  <>
+    <ListItem alignItems="flex-start" sx={{ paddingY: 2, transition: "all 0.2s ease", "&:hover": { backgroundColor: "rgba(0,0,0,0.03)", borderRadius: "8px" } }}>
       <ListItemText
         primary={
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -197,61 +176,41 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order }) => (
           </Box>
         }
         secondary={
-          <Typography
-            component="span"
-            variant="body2"
-            sx={{ display: 'block', fontWeight: "medium", mt: 0.5 }}
-          >
+          <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: "medium", marginTop: 0.5 }}>
             Total: {order.total}
           </Typography>
         }
       />
     </ListItem>
-    <Divider component="li" sx={{ opacity: 0.4 }} />
-  </React.Fragment>
+    <Divider sx={{ opacity: 0.4 }} />
+  </>
 ));
 
-// Order status section component
+interface OrderStatusSectionProps {
+  status: string;
+  orders: Order[];
+}
+
 const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ status, orders }) => {
-  const filteredOrders = useMemo(() => 
-    orders.filter(order => order.status === status), 
-    [orders, status]
-  );
-  
-  // Only show sections that have orders (except for "Refunded" which shows empty state)
-  // if (filteredOrders.length === 0 && status !== "Refunded") return null;
-  
+  const filteredOrders = useMemo(() => orders.filter(order => order.status === status), [orders, status]);
   return (
-    <Box sx={{ mb: 4 }}>
-      <Box 
-        sx={{ 
-          display: "flex", 
-          alignItems: "center", 
-          mb: 2,
-          pb: 1,
-          borderBottom: "1px dashed rgba(0,0,0,0.1)"
-        }}
-      >
-        <Box sx={styles.statusIconContainer}>
+    <Box sx={{ marginBottom: 4 }}>
+      <Box sx={{ display: "flex", alignItems: "center", marginBottom: 2, paddingBottom: 1, borderBottom: "1px dashed rgba(0,0,0,0.1)" }}>
+        <Box sx={{ marginRight: 1, width: "30px", position: "relative", overflow: "hidden" }}>
           <StatusIcon status={status} />
         </Box>
-        <Typography 
-          variant="subtitle1" 
-          fontWeight="bold"
-          sx={{ color: STATUS_COLORS[status] || "#9e9e9e" }}
-        >
+        <Typography variant="subtitle1" fontWeight="bold" sx={{ color: STATUS_COLORS[status] || "#9e9e9e" }}>
           {status} {filteredOrders.length > 0 && `(${filteredOrders.length})`}
         </Typography>
       </Box>
-      
       {filteredOrders.length > 0 ? (
-        <List sx={{ width: '100%' }}>
+        <List sx={{ width: "100%" }}>
           {filteredOrders.map(order => (
             <OrderItem key={order.id} order={order} />
           ))}
         </List>
       ) : (
-        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", pl: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic", paddingLeft: 2 }}>
           No {status.toLowerCase()} orders
         </Typography>
       )}
@@ -259,8 +218,10 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
   );
 });
 
+// --- Profile Page Component --- //
 const ProfilePage: React.FC = () => {
-  const [userData, setUserData] = useState<UserData>({
+  const [profileData, setProfileData] = useState<ProfileData>({
+    username: "",
     name: "",
     email: "",
     address: "",
@@ -268,17 +229,22 @@ const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetch profile data from the API when the component mounts
+  // Fetch profile data on mount
   useEffect(() => {
     const fetchProfileData = async () => {
+      const accessToken = localStorage.getItem("access_token");
       try {
         const response = await fetch("http://localhost:8000/profile/", {
           method: "GET",
           credentials: "include",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+          },
         });
         if (response.ok) {
           const data = await response.json();
-          setUserData(data);
+          // Expect data to include: { username, name, email, address }
+          setProfileData(data);
         } else {
           console.error("Failed to fetch profile data:", response.statusText);
         }
@@ -291,10 +257,10 @@ const ProfilePage: React.FC = () => {
     fetchProfileData();
   }, []);
 
-  // Handle input changes when editing profile using useCallback
+  // Handle input changes when editing profile
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUserData((prev) => ({ ...prev, [name]: value }));
+    setProfileData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
   // Toggle edit mode
@@ -302,21 +268,28 @@ const ProfilePage: React.FC = () => {
     setIsEditing((prev) => !prev);
   }, []);
 
-  // Save changes by sending updated data to the backend
+  // Save changes to profile
   const handleSaveChanges = async () => {
+    const accessToken = localStorage.getItem("access_token");
     try {
       const response = await fetch("http://localhost:8000/profile/edit/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": getCSRFToken(),
+          "Authorization": `Bearer ${accessToken}`,
         },
         credentials: "include",
-        body: JSON.stringify(userData),
+        body: JSON.stringify({
+          // Only update editable profile fields; username remains unchanged.
+          name: profileData.name,
+          email: profileData.email,
+          address: profileData.address,
+        }),
       });
       if (response.ok) {
         const updatedData = await response.json();
-        setUserData(updatedData);
+        setProfileData((prev) => ({ ...prev, ...updatedData }));
         setIsEditing(false);
       } else {
         console.error("Failed to update profile:", response.statusText);
@@ -326,104 +299,18 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // Get user initials for avatar - memoized
-  const userInitials = useMemo(
-    () =>
-      userData.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase(),
-    [userData.name]
-  );
+  // Compute initials for the Avatar from username
+  const userInitials = useMemo(() => {
+    return profileData.username ? profileData.username.charAt(0).toUpperCase() : "U";
+  }, [profileData.username]);
 
-  // Array of status types (this can be replaced with real data if available)
-  const statusTypes = useMemo<string[]>(
-    () => ["In Transit", "Processing", "Delivered", "Refunded"],
-    []
-  );
-
-  // Profile information form
-  const profileForm = useMemo(
-    () => (
-      <Fade in={true}>
-        <Box component="form" sx={{ "& .MuiTextField-root": styles.textFieldStyles }}>
-          <TextField
-            label="Full Name"
-            name="name"
-            fullWidth
-            variant="outlined"
-            value={userData.name}
-            onChange={handleInputChange}
-          />
-          <TextField
-            label="Email"
-            name="email"
-            fullWidth
-            variant="outlined"
-            value={userData.email}
-            onChange={handleInputChange}
-          />
-          <TextField
-            label="Address"
-            name="address"
-            fullWidth
-            variant="outlined"
-            value={userData.address}
-            onChange={handleInputChange}
-          />
-        </Box>
-      </Fade>
-    ),
-    [userData, handleInputChange]
-  );
-
-  // Profile information view
-  const profileInfo = useMemo(
-    () => (
-      <Box sx={{ mb: 3 }}>
-        <Grid container spacing={0}>
-          <Grid item xs={3} sx={{ pr: 1 }}>
-            <Typography color="text.secondary" variant="body1">
-              Name:
-            </Typography>
-          </Grid>
-          <Grid item xs={9}>
-            <Typography fontWeight="medium" variant="body1">
-              {userData.name}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={3} sx={{ pr: 1, mt: 1.5 }}>
-            <Typography color="text.secondary" variant="body1">
-              Email:
-            </Typography>
-          </Grid>
-          <Grid item xs={9} sx={{ mt: 1.5 }}>
-            <Typography fontWeight="medium" variant="body1">
-              {userData.email}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={3} sx={{ pr: 1, mt: 1.5 }}>
-            <Typography color="text.secondary" variant="body1">
-              Address:
-            </Typography>
-          </Grid>
-          <Grid item xs={9} sx={{ mt: 1.5 }}>
-            <Typography fontWeight="medium" variant="body1">
-              {userData.address}
-            </Typography>
-          </Grid>
-        </Grid>
-      </Box>
-    ),
-    [userData]
-  );
+  // Dummy order data (replace with real data as needed)
+  const dummyOrders: Order[] = [];
+  const statusTypes = useMemo<string[]>(() => ["In Transit", "Processing", "Delivered", "Refunded"], []);
 
   if (loading) {
     return (
-      <Container sx={{ mt: 12, minHeight: "80vh", mb: 8 }}>
+      <Container sx={{ marginTop: 12, minHeight: "80vh", marginBottom: 8 }}>
         <Typography variant="h6" textAlign="center">
           Loading profile...
         </Typography>
@@ -432,7 +319,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <Container sx={{ mt: 12, minHeight: "80vh", mb: 8 }}>
+    <Container sx={{ marginTop: 12, minHeight: "80vh", marginBottom: 8 }}>
       <Typography
         variant="h4"
         fontWeight="bold"
@@ -443,26 +330,109 @@ const ProfilePage: React.FC = () => {
         My Profile
       </Typography>
 
-      {/* Profile Info */}
       <Fade in={true} timeout={800}>
-        <Paper elevation={3} sx={{ ...styles.paperStyles, mt: 6, maxWidth: 600, mx: "auto" }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+        <Paper elevation={3} sx={{ ...styles.paperStyles, marginTop: 6, maxWidth: 600, marginX: "auto" }}>
+          <Box sx={{ display: "flex", alignItems: "center", marginBottom: 3 }}>
             <Avatar sx={styles.avatarStyles}>{userInitials}</Avatar>
             <Box>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
-                {userData.name}
+                {profileData.username}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Manage your personal information
+                This is your login username.
               </Typography>
             </Box>
           </Box>
 
-          <Divider sx={{ mb: 3 }} />
+          <Divider sx={{ marginBottom: 3 }} />
 
-          {isEditing ? profileForm : profileInfo}
+          {isEditing ? (
+            <Fade in={true}>
+              <Box component="form" sx={{ "& .MuiTextField-root": styles.textFieldStyles }}>
+                {/* Username displayed as read-only */}
+                <TextField
+                  label="Username"
+                  name="username"
+                  fullWidth
+                  variant="outlined"
+                  value={profileData.username}
+                  disabled
+                />
+                {/* Full Name field: initially blank if not set */}
+                <TextField
+                  label="Full Name"
+                  name="name"
+                  fullWidth
+                  variant="outlined"
+                  placeholder="Enter your full name"
+                  value={profileData.name}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  label="Email"
+                  name="email"
+                  fullWidth
+                  variant="outlined"
+                  value={profileData.email}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  label="Address"
+                  name="address"
+                  fullWidth
+                  variant="outlined"
+                  value={profileData.address}
+                  onChange={handleInputChange}
+                />
+              </Box>
+            </Fade>
+          ) : (
+            <Box sx={{ marginBottom: 3 }}>
+              <Grid container spacing={1}>
+                <Grid item xs={4}>
+                  <Typography color="text.secondary" variant="body1">
+                    Username:
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Typography fontWeight="medium" variant="body1">
+                    {profileData.username}
+                  </Typography>
+                </Grid>
+                <Grid item xs={4}>
+                  <Typography color="text.secondary" variant="body1">
+                    Full Name:
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Typography fontWeight="medium" variant="body1">
+                    {profileData.name || "(NOT SET)"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={4}>
+                  <Typography color="text.secondary" variant="body1">
+                    Email:
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Typography fontWeight="medium" variant="body1">
+                    {profileData.email}
+                  </Typography>
+                </Grid>
+                <Grid item xs={4}>
+                  <Typography color="text.secondary" variant="body1">
+                    Address:
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Typography fontWeight="medium" variant="body1">
+                    {profileData.address || "(NOT SET)"}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          )}
 
-          {/* Edit and Save Buttons */}
           <Box mt={4} display="flex" justifyContent="flex-end">
             {isEditing ? (
               <Button
@@ -487,21 +457,18 @@ const ProfilePage: React.FC = () => {
         </Paper>
       </Fade>
 
-      {/* Order History */}
+      {/* Order History Section */}
       <Fade in={true} timeout={1000}>
-        <Paper elevation={3} sx={{ ...styles.paperStyles, mt: 6, maxWidth: 600, mx: "auto" }}>
+        <Paper elevation={3} sx={{ ...styles.paperStyles, marginTop: 6, maxWidth: 600, marginX: "auto" }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>
             Order History
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 3 }}>
             Your recent purchases organized by status
           </Typography>
-
-          <Divider sx={{ mb: 3 }} />
-
-          {/* Group orders by status */}
+          <Divider sx={{ marginBottom: 3 }} />
           {statusTypes.map((status) => (
-            <OrderStatusSection key={status} status={status} orders={[]} />
+            <OrderStatusSection key={status} status={status} orders={dummyOrders} />
           ))}
         </Paper>
       </Fade>

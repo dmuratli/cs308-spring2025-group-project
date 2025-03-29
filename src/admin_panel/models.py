@@ -50,6 +50,5 @@ class Product(models.Model):
             self.slug = slugify(f"{self.title}-{self.author}")
         super().save(*args, **kwargs)
 
-
     def __str__(self):
         return self.title
