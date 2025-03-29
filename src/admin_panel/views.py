@@ -9,8 +9,19 @@ from django.shortcuts import get_object_or_404
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    parser_classes = (MultiPartParser, FormParser)  # ✅ Allow file uploads
-    lookup_field = 'slug'  # 👈 ADD THIS LINE
+    parser_classes = (MultiPartParser, FormParser)
+    lookup_field = 'slug'
+
+    # Uncomment the following method for debugging:
+    # def create(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     if serializer.is_valid():
+    #         self.perform_create(serializer)
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     else:
+    #         # Log the errors for debugging
+    #         print(serializer.errors)
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -19,8 +30,6 @@ class OrderViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
-
 
 @api_view(['GET'])
 def product_detail_by_slug(request, slug):

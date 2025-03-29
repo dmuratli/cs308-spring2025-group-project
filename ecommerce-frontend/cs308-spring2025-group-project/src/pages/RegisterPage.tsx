@@ -18,7 +18,7 @@ function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          username: name,  // Make sure backend expects `username` not `name`
+          username: name,
           email,
           password,
         }),

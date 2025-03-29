@@ -6,13 +6,13 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
+        read_only_fields = ["created-at", "slug"]
 
     def validate_isbn(self, value):
         """Ensure ISBN is exactly 13 digits."""
         if not value.isdigit() or len(value) != 13:
             raise serializers.ValidationError("ISBN must be exactly 13 digits.")
         return value
-
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:

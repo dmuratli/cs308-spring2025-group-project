@@ -118,20 +118,70 @@ return (
     </Box>
 
       <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
-        {sortedProducts().map((product) => (
-          <Grid item key={product.title} xs={12} sm={6} md={4} lg={3}>
+        {sortedProducts().map((product, index) => (
+          <Grid
+          item
+          key={`${product.title}-${product.author}`}
+          xs={12}
+          sm={6}
+          md={4}
+          lg={3}
+        >
+          <Fade in={true} timeout={1000} style={{ transitionDelay: `${index * 200}ms` }}>
             <Card
-              sx={{ boxShadow: 5, borderRadius: 3, transition: "all 0.3s", "&:hover": { transform: "scale(1.02)" } }}
+              sx={{
+                boxShadow: 5,
+                borderRadius: 3,
+                cursor: "pointer",
+                position: "relative",
+                transition: "transform 0.3s, box-shadow 0.3s",
+                "&:hover": {
+                  transform: "scale(1.02)",
+                  boxShadow: "0 0 15px 4px #EF977F",
+                },
+                "&:hover .product-image": {
+                  transform: "scale(1.05)",
+                },
+              }}
               onClick={() => navigate(formatUrl(product.title, product.author))}
             >
-              <CardMedia
-                component="img"
-                height="250"
-                image={product.cover_image || "https://via.placeholder.com/250"}
-                alt={product.title}
-                sx={{ borderRadius: "8px 8px 0 0" }}
-              />
-              <CardContent sx={{ textAlign: "center" }}>
+              <Box sx={{ position: "relative" }}>
+                <CardMedia
+                  component="img"
+                  className="product-image"
+                  image={product.cover_image || "https://via.placeholder.com/250"}
+                  alt={product.title}
+                  sx={{
+                    width: "100%",
+                    height: { xs: 200, sm: 250 },
+                    objectFit: "cover",
+                    borderRadius: "8px 8px 0 0",
+                    transition: "transform 0.3s",
+                  }}
+                />
+                {product.stock === 0 && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      bgcolor: "rgba(0, 0, 0, 0.5)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                      fontSize: "1.5rem",
+                      fontWeight: "bold",
+                      borderRadius: "8px 8px 0 0",
+                    }}
+                  >
+                    Out of Stock
+                  </Box>
+                )}
+              </Box>
+              <CardContent sx={{ textAlign: "center", p: 2 }}>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   {product.title}
                 </Typography>
@@ -141,27 +191,49 @@ return (
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                   {product.genre} | {product.language}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ height: 40, overflow: "hidden" }}>
-                  {product.description.length > 80 ? product.description.substring(0, 80) + "..." : product.description}
-                </Typography>
+                {product.canRate ? (
+                  <Rating
+                    name={`rating-${index}`}
+                    value={product.rating}
+                    onChange={(event, newValue) => handleRatingChange(index, newValue)}
+                  />
+                ) : (
+                  <Rating name={`rating-${index}`} value={product.rating} readOnly />
+                )}
                 <Typography variant="h6" color="primary" mt={2}>
                   ${product.price}
                 </Typography>
                 <Button
                   variant="contained"
                   fullWidth
-                  sx={{ mt: 2, backgroundColor: "#EF977F", color: "white", "&:hover": { backgroundColor: "#d46c4e" } }}
+                  sx={{
+                    mt: 2,
+                    backgroundColor: "#EF977F",
+                    color: "white",
+                    "&:hover": { backgroundColor: "#d46c4e" },
+                  }}
                   disabled={product.stock === 0}
                 >
                   {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                 </Button>
               </CardContent>
+              <CardActions sx={{ justifyContent: "center", pb: 2 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                  startIcon={<FavoriteBorderIcon />}
+                >
+                  Wishlist
+                </Button>
+              </CardActions>
             </Card>
-          </Grid>
-        ))}
-      </Grid>
-    </Container>
-  </Box>
+          </Fade>
+        </Grid>
+      ))}
+    </Grid>
+  </Container>
+</Box>
 );
 };
 
