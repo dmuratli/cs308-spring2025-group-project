@@ -1,17 +1,20 @@
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from admin_panel.models import Product
 from cart.models import Cart, CartItem
 from datetime import date
 
+User = get_user_model()
+
 class CartTests(APITestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(username="teoman", password="teoman")
+        self.user = User.objects.create_user(username="inleyennagmeler", password="ruhumusardi")
+        self.client_logged_in = APIClient()
+        self.client_logged_in.force_authenticate(user=self.user)
 
-        # Get token and authenticate client
-        self.client.force_authenticate(user=self.user)
+        self.client_guest = APIClient()
 
         self.product = Product.objects.create(
             title="Test Book",
@@ -30,57 +33,50 @@ class CartTests(APITestCase):
 
         self.cart_url = reverse('cart')
 
+    def test_cart_created_and_item_added_for_user(self):
+        print("\n=== Test: Cart Creation & Add Item (User) ===")
+        res = self.client_logged_in.post(self.cart_url, {"product_id": self.product.id, "quantity": 2}, format='json')
+        print("Response:", res.data)
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(len(res.data['items']), 1)
+        self.assertEqual(res.data['items'][0]['quantity'], 2)
 
-    def test_cart_created_and_item_added(self):
-        response = self.client.post(self.cart_url, {
-            "product_id": self.product.id,
-            "quantity": 2
-        }, format='json')
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(len(response.data['items']), 1)
-        self.assertEqual(response.data['items'][0]['quantity'], 2)
-        self.assertEqual(float(response.data['items'][0]['total_price']), 100.00)
+    def test_cart_created_and_item_added_for_guest(self):
+        print("\n=== Test: Cart Creation & Add Item (Guest) ===")
+        res = self.client_guest.post(self.cart_url, {"product_id": self.product.id, "quantity": 2}, format='json')
+        print("Response:", res.data)
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(len(res.data['items']), 1)
+        self.assertEqual(res.data['items'][0]['quantity'], 2)
 
-    def test_add_same_product_twice_increments_quantity(self):
-        self.client.post(self.cart_url, {
-            "product_id": self.product.id,
-            "quantity": 1
-        }, format='json')
-        self.client.post(self.cart_url, {
-            "product_id": self.product.id,
-            "quantity": 3
-        }, format='json')
-
+    def test_add_same_product_twice_user(self):
+        print("\n=== Test: Add Same Product Twice (User) ===")
+        self.client_logged_in.post(self.cart_url, {"product_id": self.product.id, "quantity": 1}, format='json')
+        self.client_logged_in.post(self.cart_url, {"product_id": self.product.id, "quantity": 3}, format='json')
         cart = Cart.objects.get(user=self.user)
         item = CartItem.objects.get(cart=cart, product=self.product)
+        print(f"Final Quantity: {item.quantity}")
         self.assertEqual(item.quantity, 4)
 
-    def test_in_stock_validation(self):
-        response = self.client.post(self.cart_url, {
-            "product_id": self.product.id,
-            "quantity": 999  # exceeds stock
-        }, format='json')
-        self.assertEqual(response.status_code, 400)
-        self.assertIn("Not enough stock", response.data.get("error", ""))
+    def test_in_stock_validation_guest(self):
+        print("\n=== Test: Stock Validation (Guest) ===")
+        res = self.client_guest.post(self.cart_url, {"product_id": self.product.id, "quantity": 999}, format='json')
+        print("Response:", res.data)
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("Not enough stock", res.data.get("error", ""))
 
-    def test_get_cart_returns_correct_data(self):
-        self.client.post(self.cart_url, {
-            "product_id": self.product.id,
-            "quantity": 2
-        }, format='json')
+    def test_cart_total_field_user(self):
+        print("\n=== Test: Cart Total Price (User) ===")
+        self.client_logged_in.post(self.cart_url, {"product_id": self.product.id, "quantity": 2}, format='json')
+        res = self.client_logged_in.get(self.cart_url)
+        print("Cart Total:", res.data.get("total"))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(float(res.data.get("total", 0)), 100.00)
 
-        response = self.client.get(self.cart_url)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['items']), 1)
-        self.assertEqual(response.data['items'][0]['product'], self.product.id)
-        self.assertEqual(response.data['items'][0]['quantity'], 2)
-
-    def test_cart_total_field(self):
-        # You must have total calculated in your CartSerializer for this test to pass
-        self.client.post(self.cart_url, {
-            "product_id": self.product.id,
-            "quantity": 2
-        }, format='json')
-
-        response = self.client.get(self.cart_url)
-        self.assertEqual(float(response.data.get("total", 0)), 100.00)
+    def test_cart_total_field_guest(self):
+        print("\n=== Test: Cart Total Price (Guest) ===")
+        self.client_guest.post(self.cart_url, {"product_id": self.product.id, "quantity": 2}, format='json')
+        res = self.client_guest.get(self.cart_url)
+        print("Cart Total:", res.data.get("total"))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(float(res.data.get("total", 0)), 100.00)

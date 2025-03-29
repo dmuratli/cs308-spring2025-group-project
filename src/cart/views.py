@@ -5,12 +5,23 @@ from .models import Cart, CartItem
 from admin_panel.models import Product
 from .serializers import CartSerializer
 from django.shortcuts import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 
 class CartView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     def get_cart(self, request):
-        cart, created = Cart.objects.get_or_create(user=request.user, is_active=True)
+        if request.user.is_authenticated:
+            # Authenticated: use user field
+            cart, created = Cart.objects.get_or_create(user=request.user, is_active=True)
+        else:
+            # Guest: use session_key
+            session_key = request.session.session_key
+            if not session_key:
+                request.session.create()
+                session_key = request.session.session_key
+
+            cart, created = Cart.objects.get_or_create(session_key=session_key, is_active=True)
+
         return cart
 
     def get(self, request):
