@@ -36,6 +36,7 @@ urlpatterns = [
     path('api/register/', register_view, name="register"),
     path('logout/', logout_view, name="logout"),
     path('api/csrf/', get_csrf_token, name='get_csrf'),
+    path('cart/', include('cart.urls')),
 
     # User Profile
     path('profile/', profile_view, name="profile"),
