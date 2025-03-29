@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 
 # Create your models here.
 # Product Model
@@ -29,6 +30,7 @@ class User(models.Model):
         return self.name
 
 
+
 class Product(models.Model):
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
@@ -43,6 +45,14 @@ class Product(models.Model):
     pages = models.IntegerField()
     language = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(f"{self.title}-{self.author}")
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return self.title

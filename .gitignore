@@ -35,3 +35,8 @@ Thumbs.db
 
 # DB
 *.sqlite3
+
+# Images
+*.jpeg
+*.jpg
+*.png

@@ -3,34 +3,51 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
-from users.views import register_view, login_view, logout_view, profile_view, profile_update_view
-from admin_panel.views import ProductViewSet, OrderViewSet, UserViewSet  # Import views
 
-# Create API Router
+from users.views import (
+    register_view,
+    login_view,
+    logout_view,
+    profile_view,
+    profile_update_view,
+)
+
+from admin_panel.views import (
+    ProductViewSet,
+    OrderViewSet,
+    UserViewSet,
+    product_detail_by_slug,  # ✅ Import the slug-based view
+)
+
+# DRF Router
 router = DefaultRouter()
-router.register(r'products', ProductViewSet)  # /api/products/
-router.register(r'orders', OrderViewSet)  # /api/orders/
-router.register(r'users', UserViewSet)  # /api/users/
+router.register(r'products', ProductViewSet)
+router.register(r'orders', OrderViewSet)
+router.register(r'users', UserViewSet)
 
 urlpatterns = [
-    # Admin Panel
+    # Django Admin
     path('admin/', admin.site.urls),
 
-    # User Authentication Endpoints
+    # Authentication
     path('register/', register_view, name="register"),
     path('login/', login_view, name="login"),
     path('logout/', logout_view, name="logout"),
 
-    # API Endpoints
-    path('api/', include(router.urls)),  # Include API endpoints from DRF Router
-    path('api-auth/', include('auth_api.urls')),  # Include DRF authentication URLs
+    # User Profile
+    path('profile/', profile_view, name="profile"),
+    path('profile/edit/', profile_update_view, name="profile_edit"),
 
-    # User Profile Endpoints
-    path("profile/", profile_view, name="profile"),
-    path("profile/edit/", profile_update_view, name="profile_edit"),
+    # DRF API (list, create, update, delete)
+    path('api/', include(router.urls)),
+
+    # Detail view by slug for BookDetailsPage
+    path('api/products/<slug:slug>/', product_detail_by_slug, name="product-detail-slug"),
+
+    # DRF browsable API auth (optional)
+    path('api-auth/', include('auth_api.urls')),
 ]
 
-# Serve uploaded media files in development mode
+# Media file support in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

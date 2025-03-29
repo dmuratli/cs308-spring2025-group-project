@@ -1,8 +1,25 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Box, Container, Grid, Typography, Card, CardContent, CardMedia, Button } from "@mui/material";
+import {
+  Box,
+  Container,
+  Grid,
+  Typography,
+  Card,
+  CardContent,
+  CardMedia,
+  Button,
+  CardActions,
+  Rating,
+  Fade,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import axios from "axios";
 
 const ProductPage: React.FC = () => {
   interface Product {
@@ -14,76 +31,138 @@ const ProductPage: React.FC = () => {
     price: number;
     stock: number;
     cover_image?: string;
-  }
+    rating: number;
+    canRate: boolean;
+    pages: number;
+    created_at: string;
+    ordered_count: number;
+}
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const navigate = useNavigate();
+const [products, setProducts] = useState<Product[]>([]);
+const navigate = useNavigate();
+const [sortOption, setSortOption] = useState<string>(""); 
 
-  useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/products/") // Adjust the endpoint to match your backend
-      .then((response) => setProducts(response.data))
-      .catch((error) => console.error("Error fetching products:", error));
+useEffect(() => {
+  axios
+    .get("http://localhost:8000/api/products/")
+    .then((response) => setProducts(response.data))
+    .catch((error) => console.error("Error fetching products:", error));
   }, []);
 
-  const formatUrl = (title: string, author: string) => {
-    return `/product/${title.toLowerCase().replace(/\s+/g, "-")}-${author.toLowerCase().replace(/\s+/g, "-")}`;
+const formatUrl = (title: string, author: string) => {
+  return `/product/${title.toLowerCase().replace(/\s+/g, "-")}_${author
+    .toLowerCase()
+    .replace(/\s+/g, "-")}`;
   };
 
-  return (
-    <Box>
-      <Navbar />
-      <Container sx={{ my: 10 }}>
-        <Typography variant="h4" fontWeight="bold" textAlign="center" mb={5}>
-          Our Book Collection
-        </Typography>
+const handleRatingChange = (index: number, newValue: number | null) => {
+  if (newValue === null) return;
+  setProducts((prevProducts) => {
+    const updated = [...prevProducts];
+    updated[index] = { ...updated[index], rating: newValue };
+    return updated;
+  });
+};
 
-        <Grid container spacing={4} justifyContent="center">
-          {products.map((product) => (
-            <Grid item key={product.title} xs={12} sm={6} md={4} lg={3}>
-              <Card
-                sx={{ boxShadow: 5, borderRadius: 3, transition: "all 0.3s", "&:hover": { transform: "scale(1.02)" } }}
-                onClick={() => navigate(formatUrl(product.title, product.author))}
-              >
-                <CardMedia
-                  component="img"
-                  height="250"
-                  image={product.cover_image || "https://via.placeholder.com/250"}
-                  alt={product.title}
-                  sx={{ borderRadius: "8px 8px 0 0" }}
-                />
-                <CardContent sx={{ textAlign: "center" }}>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {product.title}
-                  </Typography>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                    by {product.author}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    {product.genre} | {product.language}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ height: 40, overflow: "hidden" }}>
-                    {product.description.length > 80 ? product.description.substring(0, 80) + "..." : product.description}
-                  </Typography>
-                  <Typography variant="h6" color="primary" mt={2}>
-                    ${product.price}
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    sx={{ mt: 2, backgroundColor: "#EF977F", color: "white", "&:hover": { backgroundColor: "#d46c4e" } }}
-                    disabled={product.stock === 0}
-                  >
-                    {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
+const sortedProducts = () => {
+  let sorted = [...products];
+
+  if (sortOption === "") return products;
+
+  if (sortOption === "price-low") {
+    sorted.sort((a, b) => a.price - b.price);
+  } else if (sortOption === "price-high") {
+    sorted.sort((a, b) => b.price - a.price);
+  } else if (sortOption === "pages-low") {  
+    sorted.sort((a, b) => (a.pages ?? 0) - (b.pages ?? 0)); 
+  } else if (sortOption === "pages-high") { 
+    sorted.sort((a, b) => (b.pages ?? 0) - (a.pages ?? 0));
+  } else if (sortOption === "newest") {     
+    sorted.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()); // 
+  } else if (sortOption === "oldest") {     
+    sorted.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+  }
+  else if (sortOption === "popularity") {     
+    sorted.sort((a, b) => (b.ordered_count ?? 0) - (a.ordered_count ?? 0)); 
+  }    
+  return sorted; 
+};
+
+return (
+  <Box>
+  <Navbar />
+  <Container maxWidth="lg" sx={{ my: 10, px: { xs: 2, sm: 3 } }}>
+    <Typography variant="h4" fontWeight="bold" textAlign="center" mb={5}>
+      Our Book Collection
+    </Typography>
+
+    {/* Sorting Dropdown */}
+    <Box display="flex" justifyContent="center" mb={4}>
+      <FormControl sx={{ minWidth: 200 }}>
+        <InputLabel id="sort-select-label">Sort By</InputLabel>
+        <Select
+          labelId="sort-select-label"
+          value={sortOption}
+          label="Sort By"
+          onChange={(e) => setSortOption(e.target.value)} // Seçim yapılınca direkt sıralanacak
+        >
+          <MenuItem value="popularity">Popularity</MenuItem> 
+          <MenuItem value="price-low">Price: Low to High</MenuItem>
+          <MenuItem value="price-high">Price: High to Low</MenuItem>
+          <MenuItem value="pages-low">Pages: Low to High</MenuItem>  
+          <MenuItem value="pages-high">Pages: High to Low</MenuItem> 
+          <MenuItem value="newest">Newest Arrivals</MenuItem>        
+          <MenuItem value="oldest">Oldest Arrivals</MenuItem>        
+        </Select>
+      </FormControl>
     </Box>
-  );
+
+      <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
+        {sortedProducts().map((product) => (
+          <Grid item key={product.title} xs={12} sm={6} md={4} lg={3}>
+            <Card
+              sx={{ boxShadow: 5, borderRadius: 3, transition: "all 0.3s", "&:hover": { transform: "scale(1.02)" } }}
+              onClick={() => navigate(formatUrl(product.title, product.author))}
+            >
+              <CardMedia
+                component="img"
+                height="250"
+                image={product.cover_image || "https://via.placeholder.com/250"}
+                alt={product.title}
+                sx={{ borderRadius: "8px 8px 0 0" }}
+              />
+              <CardContent sx={{ textAlign: "center" }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  {product.title}
+                </Typography>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                  by {product.author}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {product.genre} | {product.language}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ height: 40, overflow: "hidden" }}>
+                  {product.description.length > 80 ? product.description.substring(0, 80) + "..." : product.description}
+                </Typography>
+                <Typography variant="h6" color="primary" mt={2}>
+                  ${product.price}
+                </Typography>
+                <Button
+                  variant="contained"
+                  fullWidth
+                  sx={{ mt: 2, backgroundColor: "#EF977F", color: "white", "&:hover": { backgroundColor: "#d46c4e" } }}
+                  disabled={product.stock === 0}
+                >
+                  {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+  </Box>
+);
 };
 
 export default ProductPage;
