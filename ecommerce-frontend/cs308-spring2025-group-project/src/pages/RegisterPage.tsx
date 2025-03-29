@@ -54,7 +54,7 @@ function RegisterPage() {
 
           <form onSubmit={handleRegister} style={{ width: "100%" }}>
             <TextField
-              label="Full Name"
+              label="Username"
               type="text"
               fullWidth
               margin="normal"
