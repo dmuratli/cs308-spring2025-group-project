@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import React from "react";
 import Navbar from "./components/Navbar";
-import HomePage from "./pages/HomePage"; // Import the HomePage component
+import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -9,11 +9,8 @@ import ManageProducts from "./pages/admin/ManageProducts";
 import ManageOrders from "./pages/admin/ManageOrders";
 import ManageUsers from "./pages/admin/ManageUsers";
 import AddProduct from "./pages/admin/AddProduct";
-import EditProduct from "./pages/admin/EditProduct"; // ✅ Import
-import ProductPage from "./pages/ProductPage"; // ✅ Import
-
-
-
+import EditProduct from "./pages/admin/EditProduct";
+import ProductPage from "./pages/ProductPage";
 
 import ProfilePage from "./pages/ProfilePage";
 import BookDetailsPage from "./pages/BookDetailPage";

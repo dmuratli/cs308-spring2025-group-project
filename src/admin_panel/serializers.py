@@ -6,7 +6,6 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
-        read_only_fields = ["created-at", "slug"]
 
     def validate_isbn(self, value):
         """Ensure ISBN is exactly 13 digits."""
