@@ -43,7 +43,7 @@ const Navbar: React.FC = () => {
   const handleResultClick = (product: any) => {
     const formattedTitle = product.title.toLowerCase().replace(/\s+/g, "-");
     const formattedAuthor = product.author.toLowerCase().replace(/\s+/g, "-");
-    navigate(`/product/${formattedTitle}-${formattedAuthor}`);
+    navigate(`/products/${formattedTitle}-${formattedAuthor}`);
     setOpenDropdown(false);
   };
 
