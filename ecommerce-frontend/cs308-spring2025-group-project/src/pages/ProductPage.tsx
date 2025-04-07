@@ -128,6 +128,8 @@ return (
           <Fade in={true} timeout={1000} style={{ transitionDelay: `${index * 200}ms` }}>
             <Card
               sx={{
+                opacity: product.stock === 0 ? 0.7 : 1,
+                pointerEvents: product.stock === 0 ? "none" : "auto",
                 boxShadow: 5,
                 borderRadius: 3,
                 cursor: "pointer",

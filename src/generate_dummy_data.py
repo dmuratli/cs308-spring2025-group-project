@@ -1,12 +1,11 @@
 import os
 import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "e_commerce_app.settings")
+django.setup()
 import random
 from faker import Faker
 from admin_panel.models import Product
 
-# ✅ Set up Django environment
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "e_commerce_app.settings")
-django.setup()
 
 fake = Faker()
 

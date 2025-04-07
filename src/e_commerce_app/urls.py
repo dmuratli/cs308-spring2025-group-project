@@ -45,6 +45,12 @@ urlpatterns = [
     # DRF API (list, create, update, delete)
     path('api/', include(router.urls)),
 
+    path('api/orders/', include('orders.urls')),
+    path("api/csrf/", get_csrf_token),
+
+
+
+
     # Detail view by slug for BookDetailsPage
     path('api/products/<slug:slug>/', product_detail_by_slug, name="product-detail-slug"),
 ]

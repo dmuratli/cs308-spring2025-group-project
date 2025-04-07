@@ -45,6 +45,16 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(unique=True, blank=True)
 
+    def decrease_stock(self, quantity):
+        if quantity > self.stock:
+            raise ValueError("Not enough stock to fulfill the request")
+        self.stock -= quantity
+        self.save()
+
+    def increase_stock(self, quantity):
+        self.stock += quantity
+        self.save()
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(f"{self.title}-{self.author}")

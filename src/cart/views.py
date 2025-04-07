@@ -9,19 +9,16 @@ from rest_framework.permissions import AllowAny
 
 class CartView(APIView):
     permission_classes = [AllowAny]
+
     def get_cart(self, request):
         if request.user.is_authenticated:
-            # Authenticated: use user field
-            cart, created = Cart.objects.get_or_create(user=request.user, is_active=True)
+            cart, _ = Cart.objects.get_or_create(user=request.user, is_active=True)
         else:
-            # Guest: use session_key
             session_key = request.session.session_key
             if not session_key:
                 request.session.create()
                 session_key = request.session.session_key
-
-            cart, created = Cart.objects.get_or_create(session_key=session_key, is_active=True)
-
+            cart, _ = Cart.objects.get_or_create(session_key=session_key, is_active=True)
         return cart
 
     def get(self, request):
@@ -33,16 +30,24 @@ class CartView(APIView):
         cart = self.get_cart(request)
         product_id = request.data.get("product_id")
         quantity = int(request.data.get("quantity", 1))
+
         product = get_object_or_404(Product, id=product_id)
 
-        if product.stock < quantity:
-            return Response({"error": "Not enough stock."}, status=status.HTTP_400_BAD_REQUEST)
+        # ❌ Prevent adding out-of-stock products
+        if product.stock <= 0:
+            return Response({"error": "This product is out of stock."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ❌ Prevent exceeding available stock
+        existing_item = CartItem.objects.filter(cart=cart, product=product).first()
+        current_quantity = existing_item.quantity if existing_item else 0
+        if product.stock < current_quantity + quantity:
+            return Response(
+                {"error": f"Only {product.stock - current_quantity} more item(s) available in stock."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-        if not created:
-            item.quantity += quantity
-        else:
-            item.quantity = quantity
+        item.quantity += quantity if not created else quantity
         item.save()
 
         serializer = CartSerializer(cart)

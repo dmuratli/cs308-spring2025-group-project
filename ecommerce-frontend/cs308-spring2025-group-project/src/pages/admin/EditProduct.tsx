@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom"; // ✅ Import for navigation & params
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Container,
   TextField,
@@ -14,7 +14,7 @@ import {
 const genres = ["Fiction", "Non-Fiction", "Sci-Fi", "Biography", "Mystery", "Fantasy"];
 
 const EditProduct: React.FC = () => {
-  const { id } = useParams(); // ✅ Get Book ID from URL
+  const { slug } = useParams(); // ✅ Use slug instead of id
   const navigate = useNavigate();
 
   const [product, setProduct] = useState({
@@ -31,54 +31,56 @@ const EditProduct: React.FC = () => {
     language: "",
   });
 
-  const [image, setImage] = useState<File | null>(null); // ✅ File upload state
+  const [image, setImage] = useState<File | null>(null);
 
-  // ✅ Fetch existing book details
+  // ✅ Load product details by slug
   useEffect(() => {
-    axios
-      .get(`http://127.0.0.1:8000/api/products/${id}/`)
-      .then((response) => setProduct(response.data))
-      .catch((error) => console.error("Error fetching product:", error));
-  }, [id]);
+    if (slug) {
+      axios
+        .get(`http://127.0.0.1:8000/api/products/${slug}/`)
+        .then((res) => {
+          const data = res.data;
+          const formattedDate = data.publication_date?.slice(0, 10) || "";
+          setProduct({ ...data, publication_date: formattedDate });
+        })
+        .catch((err) => {
+          console.error("Error fetching product:", err);
+          alert("Failed to load product details.");
+        });
+    }
+  }, [slug]);
 
-  // ✅ Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProduct({ ...product, [e.target.name]: e.target.value });
   };
 
-  // ✅ Handle Image Upload
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
       setImage(e.target.files[0]);
     }
   };
 
-  // ✅ Submit Edited Book
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData();
-  
-    // ✅ Append all text data
     Object.keys(product).forEach((key) => {
       formData.append(key, (product as any)[key]);
     });
-  
-    // ✅ Only append image if the user selects a new one
     if (image) {
       formData.append("cover_image", image);
     }
-  
-    axios
-      .put(`http://127.0.0.1:8000/api/products/${id}/`, formData, {
+
+    try {
+      await axios.put(`http://127.0.0.1:8000/api/products/${slug}/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then(() => {
-        alert("Product updated successfully!");
-        navigate("/admin/products"); // ✅ Redirect to Manage Products
-      })
-      .catch((error) => console.error("Error updating product:", error));
+      });
+      alert("✅ Product updated successfully!");
+      navigate("/admin/products");
+    } catch (error: any) {
+      console.error("❌ Error updating product:", error.response?.data || error.message);
+      alert("❌ Failed to update product.");
+    }
   };
-  
 
   return (
     <Container sx={{ mt: 10, maxWidth: "600px" }}>
@@ -88,23 +90,39 @@ const EditProduct: React.FC = () => {
         </Typography>
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <TextField label="Title" name="title" fullWidth required value={product.title} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Author" name="author" fullWidth required value={product.author} onChange={handleChange} />
-            </Grid>
+            {[
+              { label: "Title", name: "title" },
+              { label: "Author", name: "author" },
+              { label: "Price ($)", name: "price", type: "number" },
+              { label: "Stock", name: "stock", type: "number" },
+              { label: "ISBN", name: "isbn" },
+              { label: "Pages", name: "pages", type: "number" },
+              { label: "Publisher", name: "publisher" },
+              { label: "Language", name: "language" },
+            ].map(({ label, name, type = "text" }, i) => (
+              <Grid item xs={i % 2 === 0 ? 12 : 6} key={name}>
+                <TextField
+                  label={label}
+                  name={name}
+                  fullWidth
+                  required
+                  type={type}
+                  value={(product as any)[name]}
+                  onChange={handleChange}
+                />
+              </Grid>
+            ))}
+
             <Grid item xs={6}>
-              <TextField label="Price ($)" name="price" type="number" fullWidth required value={product.price} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField label="Stock" name="stock" type="number" fullWidth required value={product.stock} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="ISBN" name="isbn" fullWidth required value={product.isbn} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={6}>
-              <TextField select label="Genre" name="genre" fullWidth required value={product.genre} onChange={handleChange}>
+              <TextField
+                select
+                label="Genre"
+                name="genre"
+                fullWidth
+                required
+                value={product.genre}
+                onChange={handleChange}
+              >
                 {genres.map((genre) => (
                   <MenuItem key={genre} value={genre}>
                     {genre}
@@ -112,12 +130,7 @@ const EditProduct: React.FC = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={6}>
-              <TextField label="Pages" name="pages" type="number" fullWidth required value={product.pages} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField label="Publisher" name="publisher" fullWidth required value={product.publisher} onChange={handleChange} />
-            </Grid>
+
             <Grid item xs={6}>
               <TextField
                 label="Publication Date"
@@ -130,16 +143,25 @@ const EditProduct: React.FC = () => {
                 onChange={handleChange}
               />
             </Grid>
-            <Grid item xs={6}>
-              <TextField label="Language" name="language" fullWidth required value={product.language} onChange={handleChange} />
-            </Grid>
+
             <Grid item xs={12}>
-              <TextField label="Description" name="description" multiline rows={3} fullWidth required value={product.description} onChange={handleChange} />
+              <TextField
+                label="Description"
+                name="description"
+                multiline
+                rows={3}
+                fullWidth
+                required
+                value={product.description}
+                onChange={handleChange}
+              />
             </Grid>
+
             <Grid item xs={12} textAlign="center">
-              <Typography variant="subtitle1">Upload New Book Cover (Required)</Typography>
+              <Typography variant="subtitle1">Upload New Book Cover (optional)</Typography>
               <input type="file" accept="image/*" onChange={handleImageChange} />
             </Grid>
+
             <Grid item xs={12} textAlign="center">
               <Button type="submit" variant="contained" sx={{ backgroundColor: "#EF977F" }}>
                 Update Book

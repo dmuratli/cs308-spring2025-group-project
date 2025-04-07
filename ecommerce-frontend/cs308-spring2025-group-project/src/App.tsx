@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
-import React from "react";
+import React, { useEffect } from "react";
+import axios from "axios";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -16,6 +17,11 @@ import ProfilePage from "./pages/ProfilePage";
 import BookDetailsPage from "./pages/BookDetailPage";
 
 function App() {
+  useEffect(() => {
+    axios.get("http://localhost:8000/api/csrf/", {
+      withCredentials: true,
+    });
+  }, []);
   return (
     <>
       <Navbar />
@@ -30,7 +36,8 @@ function App() {
         <Route path="/admin/orders" element={<ManageOrders />} />
         <Route path="/admin/users" element={<ManageUsers />} />
         <Route path="/admin/add-product" element={<AddProduct />} />
-        <Route path="/admin/edit-product/:id" element={<EditProduct />} />
+        <Route path="/admin/edit-product/:slug" element={<EditProduct />} />
+
         <Route path="/products" element={<ProductPage/>} />
         <Route path="/products/:slug" element={<BookDetailsPage />} />
 
