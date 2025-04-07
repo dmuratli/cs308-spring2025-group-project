@@ -12,6 +12,13 @@ pip3 install pycryptodome
 python -m pip install Pillow
 
 python3 manage.py runserver
+
+for dummy data:
+
+pip install Faker
+
+python generate_dummy_data.py
+
 ```
 
 ## Frontend setup:
