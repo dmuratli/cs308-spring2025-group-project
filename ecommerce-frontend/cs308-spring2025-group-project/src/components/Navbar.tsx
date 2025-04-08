@@ -5,11 +5,13 @@ import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext"; // YENİ: CartContext'i import ediyoruz
 import axios from "axios";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
+  const { itemCount } = useCart(); // YENİ: useCart hook'undan itemCount'u alıyoruz
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -164,7 +166,7 @@ const Navbar: React.FC = () => {
 
           {/* Cart Icon */}
           <IconButton onClick={() => navigate("/cart")} sx={{ ml: 1, "&:hover": { transform: "scale(1.1)" } }}>
-            <Badge badgeContent={2} color="error">
+            <Badge badgeContent={itemCount} color="error">
               <ShoppingCartIcon />
             </Badge>
           </IconButton>

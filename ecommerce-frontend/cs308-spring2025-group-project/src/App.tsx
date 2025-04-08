@@ -11,16 +11,17 @@ import ManageUsers from "./pages/admin/ManageUsers";
 import AddProduct from "./pages/admin/AddProduct";
 import EditProduct from "./pages/admin/EditProduct";
 import ProductPage from "./pages/ProductPage";
-
 import ProfilePage from "./pages/ProfilePage";
 import BookDetailsPage from "./pages/BookDetailPage";
+import CartPage from "./pages/CartPage";
+import { CartProvider } from "./context/CartContext"; 
 
 function App() {
   return (
-    <>
+    <CartProvider> {}
       <Navbar />
       <Routes>
-        <Route path="/" element={<HomePage />} /> {/* Adding the HomePage Route */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<div>404 Not Found</div>} />
@@ -33,11 +34,9 @@ function App() {
         <Route path="/admin/edit-product/:id" element={<EditProduct />} />
         <Route path="/products" element={<ProductPage/>} />
         <Route path="/products/:slug" element={<BookDetailsPage />} />
-
-
-        
+        <Route path="/cart" element={<CartPage />} />
       </Routes>
-    </>
+    </CartProvider>
   );
 }
 

@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Button, Container, Grid, Typography, Card, CardContent, CardMedia } from "@mui/material";
 import Navbar from "../components/Navbar"; // Navbar is now a separate component
 import { useNavigate } from "react-router-dom";
+import AddToCartButton from "../components/AddToCartButton";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -84,18 +85,20 @@ const HomePage: React.FC = () => {
                   <Typography variant="body2" color="text.secondary">
                     Sample book description.
                   </Typography>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      mt: 2,
-                      transition: "all 0.3s",
-                      "&:hover": {
-                        transform: "scale(1.05)",
-                      },
-                    }}
-                  >
-                    Learn More
-                  </Button>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      sx={{
+                        transition: "all 0.3s",
+                        "&:hover": {
+                          transform: "scale(1.05)",
+                        },
+                      }}
+                    >
+                      Learn More
+                    </Button>
+                
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
@@ -167,18 +170,20 @@ const HomePage: React.FC = () => {
                   <Typography variant="body2" color="text.secondary">
                     Limited-time book deal.
                   </Typography>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      mt: 2,
-                      transition: "all 0.3s",
-                      "&:hover": {
-                        transform: "scale(1.05)",
-                      },
-                    }}
-                  >
-                    Shop Now
-                  </Button>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      sx={{
+                        transition: "all 0.3s",
+                        "&:hover": {
+                          transform: "scale(1.05)",
+                        },
+                      }}
+                    >
+                      Shop Now
+                    </Button>
+  
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
