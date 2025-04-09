@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
-import { getCSRFToken } from "../context/AuthContext";
+import { getCSRFToken, useAuth } from "../context/AuthContext";
 import {
   Container,
   Typography,
@@ -24,6 +24,7 @@ import {
   CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 
 // --- Types --- //
 interface ProfileData {
@@ -163,7 +164,14 @@ interface OrderItemProps {
 
 const OrderItem: React.FC<OrderItemProps> = React.memo(({ order }) => (
   <>
-    <ListItem alignItems="flex-start" sx={{ paddingY: 2, transition: "all 0.2s ease", "&:hover": { backgroundColor: "rgba(0,0,0,0.03)", borderRadius: "8px" } }}>
+    <ListItem
+      alignItems="flex-start"
+      sx={{
+        paddingY: 2,
+        transition: "all 0.2s ease",
+        "&:hover": { backgroundColor: "rgba(0,0,0,0.03)", borderRadius: "8px" },
+      }}
+    >
       <ListItemText
         primary={
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -176,7 +184,11 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order }) => (
           </Box>
         }
         secondary={
-          <Typography component="span" variant="body2" sx={{ display: "block", fontWeight: "medium", marginTop: 0.5 }}>
+          <Typography
+            component="span"
+            variant="body2"
+            sx={{ display: "block", fontWeight: "medium", marginTop: 0.5 }}
+          >
             Total: {order.total}
           </Typography>
         }
@@ -220,6 +232,10 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
 
 // --- Profile Page Component --- //
 const ProfilePage: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Call hooks unconditionally
   const [profileData, setProfileData] = useState<ProfileData>({
     username: "",
     name: "",
@@ -229,33 +245,41 @@ const ProfilePage: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetch profile data on mount
+  // Redirect in an effect if not authenticated
   useEffect(() => {
-    const fetchProfileData = async () => {
-      const accessToken = localStorage.getItem("access_token");
-      try {
-        const response = await fetch("http://localhost:8000/profile/", {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Authorization": `Bearer ${accessToken}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Expect data to include: { username, name, email, address }
-          setProfileData(data);
-        } else {
-          console.error("Failed to fetch profile data:", response.statusText);
+    if (!isAuthenticated) {
+      navigate("/login?next=/profile", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Fetch profile data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const fetchProfileData = async () => {
+        const accessToken = localStorage.getItem("access_token");
+        try {
+          const response = await fetch("http://localhost:8000/profile/", {
+            method: "GET",
+            credentials: "include",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setProfileData(data);
+          } else {
+            console.error("Failed to fetch profile data:", response.statusText);
+          }
+        } catch (error) {
+          console.error("Error fetching profile data:", error);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Error fetching profile data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfileData();
-  }, []);
+      };
+      fetchProfileData();
+    }
+  }, [isAuthenticated]);
 
   // Handle input changes when editing profile
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,7 +305,6 @@ const ProfilePage: React.FC = () => {
         },
         credentials: "include",
         body: JSON.stringify({
-          // Only update editable profile fields; username remains unchanged.
           name: profileData.name,
           email: profileData.email,
           address: profileData.address,
