@@ -9,6 +9,14 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+import os
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR)) 
+  #burayı ratereview için ekledim(src dizini pyhon yoluna dahil etmek için)
+
 
 from pathlib import Path
 from datetime import timedelta
@@ -44,6 +52,7 @@ INSTALLED_APPS = [
     'admin_panel',
     "cart",
     "orders",
+    "reviews",
 ]
 
 MIDDLEWARE = [

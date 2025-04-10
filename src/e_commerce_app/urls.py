@@ -4,6 +4,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/reviews/', include('reviews.urls')),  # burayı rate&review için ekledim, deneme
+    
+]
+
 
 from users.views import (
     register_view,
