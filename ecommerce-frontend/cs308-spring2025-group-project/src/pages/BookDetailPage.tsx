@@ -131,18 +131,34 @@ const BookDetailsPage: React.FC = () => {
               <strong>Genre:</strong> {product.genre} | <strong>Language:</strong> {product.language}
             </Typography>
             <Typography variant="h5" color="primary" mt={3}>
-              ${product.price}
+            ${product.price}
             </Typography>
+
+            <Typography variant="body2" color={product.stock > 0 ? "green" : "error"} mt={2}>
+              <strong>In Stock:</strong> {product.stock} {product.stock === 1 ? "copy" : "copies"}
+            </Typography>
+            {product.stock <= 3 && product.stock > 0 && (
+            <Typography variant="body2" color="warning.main" fontWeight="bold" mt={1}>
+              Hurry! Only {product.stock} left in stock.
+            </Typography>
+            )}
+
+
             <Typography variant="body2" color="text.secondary" mt={1} mb={2}>
               <strong>Stock Status:</strong> {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
             </Typography>
             <Button
               variant="contained"
               fullWidth
-              sx={{ mt: 2, backgroundColor: "#EF977F", color: "white", "&:hover": { backgroundColor: "#d46c4e" } }}
+              sx={{
+                mt: 2,
+                backgroundColor: "#EF977F",
+                color: "white",
+                "&:hover": { backgroundColor: "#d46c4e" },
+              }}
               disabled={product.stock === 0 || loading}
               onClick={handleAddToCart}
-            >
+            >            
               {loading ? 'Adding...' : product.stock > 0 ? "Add to Cart" : "Out of Stock"}
             </Button>
           </CardContent>

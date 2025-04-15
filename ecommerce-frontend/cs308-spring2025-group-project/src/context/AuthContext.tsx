@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const accessToken = localStorage.getItem("access_token");
   
       if (refreshToken && accessToken) {
-        const response = await fetch("http://localhost:8000/api/logout/", {
+        const response = await fetch("http://localhost:8000/logout/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

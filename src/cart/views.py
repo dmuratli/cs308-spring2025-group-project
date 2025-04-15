@@ -12,15 +12,13 @@ class CartView(APIView):
 
     def get_cart(self, request):
         if request.user.is_authenticated:
-            # Use the user field for authenticated users
-            cart, created = Cart.objects.get_or_create(user=request.user, is_active=True)
+            cart, _ = Cart.objects.get_or_create(user=request.user, is_active=True)
         else:
-            # Use session_key for guest users
             session_key = request.session.session_key
             if not session_key:
                 request.session.create()
                 session_key = request.session.session_key
-            cart, created = Cart.objects.get_or_create(session_key=session_key, is_active=True)
+            cart, _ = Cart.objects.get_or_create(session_key=session_key, is_active=True)
         return cart
 
     def get(self, request):
@@ -32,7 +30,8 @@ class CartView(APIView):
         cart = self.get_cart(request)
         product_id = request.data.get("product_id")
         quantity = int(request.data.get("quantity", 1))
-        # Convert override parameter properly (if override is "true", then True, else False)
+
+         # Convert override parameter properly (if override is "true", then True, else False)
         override_param = request.data.get("override", "false")
         if isinstance(override_param, str):
             override = override_param.lower() == "true"

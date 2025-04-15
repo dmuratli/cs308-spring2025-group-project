@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from django.db import IntegrityError
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_POST, require_http_methods
+from django.utils.decorators import method_decorator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 

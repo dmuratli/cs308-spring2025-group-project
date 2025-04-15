@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'admin_panel',
     "cart",
+    "orders",
 ]
 
 MIDDLEWARE = [

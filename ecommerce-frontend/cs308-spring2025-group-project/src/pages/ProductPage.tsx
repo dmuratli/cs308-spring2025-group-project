@@ -1,3 +1,4 @@
+// ProductPage.tsx
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -15,6 +16,12 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Slider,
+  Checkbox,
+  FormControlLabel,
+  Stack,
+  TextField,
+  Paper
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
@@ -41,22 +48,19 @@ const ProductPage: React.FC = () => {
   }
 
   const [products, setProducts] = useState<Product[]>([]);
-  const navigate = useNavigate();
   const [sortOption, setSortOption] = useState<string>("");
+  const [selectedGenre, setSelectedGenre] = useState<string>("All");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("All");
+  const [minRating, setMinRating] = useState<number>(0);
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
       .get("http://localhost:8000/api/products/")
-      .then((response) => {
-        console.log("API Response Product Sample:", response.data[0]); // İlk ürünü görelim
-        setProducts(response.data);
-      })
+      .then((response) => setProducts(response.data))
       .catch((error) => console.error("Error fetching products:", error));
-  }, []); // useEffect'i doğru şekilde kapattık ve dependency array ekledik
-
-  const formatUrl = (title: string, author: string) => {
-    return `/products/${title.toLowerCase().replace(/\s+/g, "-")}-${author.toLowerCase().replace(/\s+/g, "-")}`;
-  };
+  }, []);
 
   const handleRatingChange = (index: number, newValue: number | null) => {
     if (newValue === null) return;
@@ -67,27 +71,93 @@ const ProductPage: React.FC = () => {
     });
   };
 
-  const sortedProducts = () => {
-    let sorted = [...products];
+  // For title,author search
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
-    if (sortOption === "") return products;
+  // For price range filter
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
+
+
+  const genres = ["All", ...Array.from(new Set(products.map((p) => p.genre)))];
+  const languages = ["All", ...Array.from(new Set(products.map((p) => p.language)))];
+
+
+  // default genre and language
+  const defaultGenres = ["Fiction", "Non-Fiction", "Mystery", "Fantasy", "Biography"];
+  const defaultLanguages = ["English", "Spanish", "German", "French", "Japanese"];
+
+  
+  genres.push(...defaultGenres);
+  languages.push(...defaultLanguages);
+
+  
+  const uniqueGenres = Array.from(new Set(genres));
+  const uniqueLangs = Array.from(new Set(languages));
+
+ 
+  genres.length = 0;
+  languages.length = 0;
+  uniqueGenres.forEach((item) => genres.push(item));
+  uniqueLangs.forEach((item) => languages.push(item));
+
+
+  const sortedProducts = () => {
+    let filtered = [...products];
+
+    if (selectedGenre !== "All") {
+      filtered = filtered.filter((p) => p.genre === selectedGenre);
+    }
+    if (selectedLanguage !== "All") {
+      filtered = filtered.filter((p) => p.language === selectedLanguage);
+    }
+    if (minRating > 0) {
+      filtered = filtered.filter((p) => p.rating >= minRating);
+    }
+    if (inStockOnly) {
+      filtered = filtered.filter((p) => p.stock > 0);
+    }
+
+    // search filter for title or author
+    if (searchTerm.trim() !== "") {
+      filtered = filtered.filter(
+        (p) =>
+          p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.author.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // filter by price range
+    filtered = filtered.filter(
+      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
+    );
 
     if (sortOption === "price-low") {
-      sorted.sort((a, b) => a.price - b.price);
+      filtered.sort((a, b) => a.price - b.price);
     } else if (sortOption === "price-high") {
-      sorted.sort((a, b) => b.price - a.price);
+      filtered.sort((a, b) => b.price - a.price);
     } else if (sortOption === "pages-low") {
-      sorted.sort((a, b) => (a.pages ?? 0) - (b.pages ?? 0));
+      filtered.sort((a, b) => (a.pages ?? 0) - (b.pages ?? 0));
     } else if (sortOption === "pages-high") {
-      sorted.sort((a, b) => (b.pages ?? 0) - (a.pages ?? 0));
+      filtered.sort((a, b) => (b.pages ?? 0) - (a.pages ?? 0));
     } else if (sortOption === "newest") {
-      sorted.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      filtered.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     } else if (sortOption === "oldest") {
-      sorted.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+      filtered.sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
     } else if (sortOption === "popularity") {
-      sorted.sort((a, b) => (b.ordered_count ?? 0) - (a.ordered_count ?? 0));
+      filtered.sort((a, b) => (b.ordered_count ?? 0) - (a.ordered_count ?? 0));
     }
-    return sorted;
+
+    return filtered;
+  };
+
+  const formatUrl = (title: string, author: string) => {
+    return `/products/${title.toLowerCase().replace(/\s+/g, "-")}-${author
+      .toLowerCase()
+      .replace(/\s+/g, "-")}`;
   };
 
   return (
@@ -98,27 +168,126 @@ const ProductPage: React.FC = () => {
           Our Book Collection
         </Typography>
 
-        {/* Sorting Dropdown */}
-        <Box display="flex" justifyContent="center" mb={4}>
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel id="sort-select-label">Sort By</InputLabel>
-            <Select
-              labelId="sort-select-label"
-              value={sortOption}
-              label="Sort By"
-              onChange={(e) => setSortOption(e.target.value)}
-            >
-              <MenuItem value="popularity">Popularity</MenuItem>
-              <MenuItem value="price-low">Price: Low to High</MenuItem>
-              <MenuItem value="price-high">Price: High to Low</MenuItem>
-              <MenuItem value="pages-low">Pages: Low to High</MenuItem>
-              <MenuItem value="pages-high">Pages: High to Low</MenuItem>
-              <MenuItem value="newest">Newest Arrivals</MenuItem>
-              <MenuItem value="oldest">Oldest Arrivals</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 3,
+            borderRadius: 2,
+            background: "#ffffff",
+            mb: 4,
+            border: "1px solid #ddd"
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 2, textAlign: "center", fontWeight: "bold" }}>
+            Filter Options
+          </Typography>
+          {/* Filters */}
+          <Stack direction="row" spacing={2} flexWrap="wrap" justifyContent="center">
+            {/* Genre Filter */}
+            <FormControl sx={{ minWidth: 160 }}>
+              <InputLabel id="genre-label">Filter by Genre</InputLabel>
+              <Select
+                labelId="genre-label"
+                value={selectedGenre}
+                label="Filter by Genre"
+                onChange={(e) => setSelectedGenre(e.target.value)}
+              >
+                {genres.map((genre) => (
+                  <MenuItem key={genre} value={genre}>
+                    {genre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
+            {/* Language Filter */}
+            <FormControl sx={{ minWidth: 160 }}>
+              <InputLabel id="language-label">Filter by Language</InputLabel>
+              <Select
+                labelId="language-label"
+                value={selectedLanguage}
+                label="Filter by Language"
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+              >
+                {languages.map((lang) => (
+                  <MenuItem key={lang} value={lang}>
+                    {lang}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Rating Filter */}
+            <Box sx={{ width: 200 }}>
+              <Typography gutterBottom>Min Rating: {minRating}</Typography>
+              <Slider
+                value={minRating}
+                onChange={(e, newValue) => setMinRating(newValue as number)}
+                step={0.5}
+                marks
+                min={0}
+                max={5}
+                valueLabelDisplay="auto"
+              />
+            </Box>
+
+            {/* In Stock Filter */}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                />
+              }
+              label="In Stock Only"
+            />
+
+            {/* Sort Dropdown */}
+            <FormControl sx={{ minWidth: 160 }}>
+              <InputLabel id="sort-label">Sort By</InputLabel>
+              <Select
+                labelId="sort-label"
+                value={sortOption}
+                label="Sort By"
+                onChange={(e) => setSortOption(e.target.value)}
+              >
+                <MenuItem value="popularity">Popularity</MenuItem>
+                <MenuItem value="price-low">Price: Low to High</MenuItem>
+                <MenuItem value="price-high">Price: High to Low</MenuItem>
+                <MenuItem value="pages-low">Pages: Low to High</MenuItem>
+                <MenuItem value="pages-high">Pages: High to Low</MenuItem>
+                <MenuItem value="newest">Newest Arrivals</MenuItem>
+                <MenuItem value="oldest">Oldest Arrivals</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Title/Author Search */}
+            <TextField
+              label="Search Title/Author"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ minWidth: 220 }}
+            />
+
+            {/* Price Range Filter */}
+            <Box sx={{ width: 200 }}>
+              <Typography gutterBottom>
+                Price Range: ${priceRange[0]} - ${priceRange[1]}
+              </Typography>
+              <Slider
+                value={priceRange}
+                onChange={(e, newValue) => setPriceRange(newValue as [number, number])}
+                valueLabelDisplay="auto"
+                min={0}
+                max={500}
+                step={10}
+              />
+            </Box>
+          </Stack>
+        </Paper>
+
+        {/* Product Cards */}
         <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
           {sortedProducts().map((product, index) => (
             <Grid
@@ -205,6 +374,8 @@ const ProductPage: React.FC = () => {
                     <Typography variant="h6" color="primary" mt={2}>
                       ${product.price}
                     </Typography>
+
+
                     <AddToCartButton
                       productId={product.id || index + 1} // ID varsa kullan, yoksa index+1 kullan
                       fullWidth
