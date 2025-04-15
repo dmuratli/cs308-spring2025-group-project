@@ -16,16 +16,18 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const ManageOrders: React.FC = () => {
-  // Sample Order List
   const [orders, setOrders] = useState([
     { id: 1, customer: "Alice Johnson", total: "$49.99", status: "Processing" },
     { id: 2, customer: "Bob Smith", total: "$89.99", status: "Shipped" },
     { id: 3, customer: "Charlie Brown", total: "$24.99", status: "Delivered" },
   ]);
 
-  // Update Order Status
   const handleStatusChange = (id: number, newStatus: string) => {
-    setOrders(orders.map((order) => (order.id === id ? { ...order, status: newStatus } : order)));
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === id ? { ...order, status: newStatus } : order
+      )
+    );
   };
 
   return (

@@ -31,10 +31,16 @@ interface Product {
   stock: number;
 }
 
-const ManageProducts: React.FC = () => {
+interface ManageProductsProps {
+  panel: "admin" | "manager";
+}
+
+const ManageProducts: React.FC<ManageProductsProps> = ({ panel }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
-  const [stockChanges, setStockChanges] = useState<Record<string, number>>({}); // use slug as key
+  const [stockChanges, setStockChanges] = useState<Record<string, number>>({});
+
+  const basePath = panel === "admin" ? "/admin" : "/product-manager";
 
   useEffect(() => {
     axios
@@ -92,20 +98,20 @@ const ManageProducts: React.FC = () => {
   };
 
   const handleEdit = (slug: string) => {
-    navigate(`/admin/edit-product/${slug}`);
+    navigate(`${basePath}/edit-product/${slug}`);
   };
 
   return (
     <Container sx={{ mt: 12, minHeight: "80vh" }}>
       <Typography variant="h4" fontWeight="bold" color="#EF977F" gutterBottom>
-        Manage Products
+        {panel === "admin" ? "Admin Panel - Manage Products" : "Product Manager - Manage Products"}
       </Typography>
 
       <Button
         variant="contained"
         startIcon={<AddIcon />}
         sx={{ mb: 2, backgroundColor: "#4CAF50" }}
-        onClick={() => navigate("/admin/add-product")}
+        onClick={() => navigate(`${basePath}/add-product`)}
       >
         Add New Product
       </Button>
