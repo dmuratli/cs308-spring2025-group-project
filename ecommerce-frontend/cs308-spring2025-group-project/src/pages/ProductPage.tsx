@@ -298,7 +298,7 @@ const ProductPage: React.FC = () => {
               md={4}
               lg={3}
             >
-              <Fade in={true} timeout={1000} style={{ transitionDelay: `${index * 200}ms` }}>
+              
                 <Card
                   sx={{
                     boxShadow: 5,
@@ -394,7 +394,7 @@ const ProductPage: React.FC = () => {
                     </Button>
                   </CardActions>
                 </Card>
-              </Fade>
+              
             </Grid>
           ))}
         </Grid>
