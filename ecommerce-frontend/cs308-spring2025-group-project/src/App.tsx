@@ -18,6 +18,7 @@ import BookDetailsPage from "./pages/BookDetailPage";
 import StockPage from "./pages/admin/StockPage";
 import CommentsPage from "./pages/admin/CommentsPage";
 import DeliveryPage from "./pages/admin/DeliveryPage";
+import InvoicesPage from "./pages/admin/InvoicesPage";
 import { CartProvider } from "./context/CartContext";
 import CartPage from "./pages/CartPage";
 
@@ -56,6 +57,7 @@ function App() {
 
      
         <Route path="/product-manager/orders" element={<ManageOrders />} />
+        <Route path="/product-manager/invoices" element={<InvoicesPage />} />
 
       </Routes>
     </CartProvider>

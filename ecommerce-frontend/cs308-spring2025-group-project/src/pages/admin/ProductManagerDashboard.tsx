@@ -101,6 +101,22 @@ const ProductManagerDashboard = () => {
             </Button>
           </Paper>
 
+          {/* Invoices */}
+          <Paper elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="bold" mb={2}>
+              🧾 Manage Invoices
+            </Typography>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => navigate("/product-manager/invoices")}
+              sx={btnStyle}
+            >
+              Go to Invoices Page
+            </Button>
+          </Paper>
+
+
           {/* Manage Products */}
           <Paper elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight="bold" mb={2}>
