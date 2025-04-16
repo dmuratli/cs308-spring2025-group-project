@@ -14,6 +14,7 @@ urlpatterns = [
 ]
 
 
+
 from users.views import (
     register_view,
     logout_view,
@@ -56,6 +57,10 @@ urlpatterns = [
 
     path('api/orders/', include('orders.urls')),
     path("api/csrf/", get_csrf_token),
+
+    # Review app  #review için ekledim
+    path('api/reviews/', include('reviews.urls')),
+
 
 
 
