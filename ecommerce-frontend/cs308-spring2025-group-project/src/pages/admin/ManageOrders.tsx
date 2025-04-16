@@ -23,11 +23,15 @@ const ManageOrders: React.FC = () => {
   ]);
 
   const handleStatusChange = (id: number, newStatus: string) => {
+    const confirmChange = window.confirm("Are you sure you want to change the order status?");
+    if (!confirmChange) return;
     setOrders((prev) =>
       prev.map((order) =>
         order.id === id ? { ...order, status: newStatus } : order
       )
     );
+
+    alert("Status updated successfully!");
   };
 
   return (
