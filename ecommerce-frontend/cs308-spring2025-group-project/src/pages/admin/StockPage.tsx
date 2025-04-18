@@ -84,7 +84,7 @@ const StockChart = () => {
     );
 
   return (
-    <Box>
+    <Box mt={10}>
       {/* Filters */}
       <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={2} mb={3}>
         <TextField

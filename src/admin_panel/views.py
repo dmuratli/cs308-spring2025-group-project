@@ -1,6 +1,6 @@
 from rest_framework import viewsets, filters, permissions, status
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
@@ -15,6 +15,7 @@ from orders.models import Order, OrderItem
 from orders.serializers import OrderSerializer
 from cart.models import Cart
 
+from users.permissions import IsProductManager, IsSalesManager, IsCustomer, IsProductManagerOrSalesManager
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ProductViewSet(viewsets.ModelViewSet):
@@ -24,6 +25,24 @@ class ProductViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'description']
+
+    # default fallback
+    permission_classes = [permissions.AllowAny]
+
+    # per‑action override
+    permission_classes_by_action = {
+        "list":       [permissions.AllowAny],
+        "retrieve":   [permissions.AllowAny],
+        "create":     [permissions.IsAuthenticated, IsProductManager],
+        "update":     [permissions.IsAuthenticated, IsProductManager],
+        "partial_update": [permissions.IsAuthenticated, IsProductManager],
+        "destroy":    [permissions.IsAuthenticated, IsProductManager],
+        "adjust_stock": [permissions.IsAuthenticated, IsProductManager],
+    }
+
+    def get_permissions(self):
+        perms = self.permission_classes_by_action.get(self.action, self.permission_classes)
+        return [p() for p in perms]
 
     def perform_create(self, serializer):
         serializer.save()
@@ -51,7 +70,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'list':
-            return [permissions.IsAdminUser()]
+            return [IsProductManagerOrSalesManager()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):

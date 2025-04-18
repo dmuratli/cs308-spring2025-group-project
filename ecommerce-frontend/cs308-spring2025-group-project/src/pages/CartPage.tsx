@@ -36,6 +36,7 @@ interface CartItem {
   product_price: number;
   quantity: number;
   total_price: number;
+  cover_image?: string;
 }
 
 // Cart interface
@@ -50,6 +51,18 @@ interface ErrorResponse {
   error?: string;
   message?: string;
 }
+
+interface CartItem {
+  id: number;
+  product: number;
+  product_title: string;
+  product_price: number;
+  quantity: number;
+  total_price: number;
+  cover_image?: string;
+  stock?: number; // 👈 Add this line
+}
+
 
 // API base URL
 const API_BASE_URL = "http://localhost:8000";
@@ -293,22 +306,27 @@ const CartPage = () => {
                     }}
                   >
                     <CardMedia
+                      
                       component="img"
                       sx={{
                         width: 100,
                         height: 100,
                         borderRadius: 2,
                         mr: 2,
-                        objectFit: "contain",
+                        objectFit: "cover",
                         backgroundColor: "#f8f9fa",
                       }}
-                      image={`${API_BASE_URL}/media/book_covers/${item.product}.jpg`}
+                      image={
+                        item.cover_image && item.cover_image.includes("http")
+                          ? item.cover_image
+                          : item.cover_image
+                          ? `${API_BASE_URL}${item.cover_image}`
+                          : "https://via.placeholder.com/100x140?text=No+Image"
+                      }
                       alt={item.product_title}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "https://via.placeholder.com/100?text=Book";
-                      }}
                     />
+
+
                     <Box sx={{ flexGrow: 1 }}>
                       <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1a202c" }}>
                         {item.product_title}
@@ -363,6 +381,11 @@ const CartPage = () => {
               ))}
             </Grid>
             <Box sx={{ textAlign: "right", mt: 4, pr: 2 }}>
+              {cart.items.some((item) => item.stock !== undefined && item.quantity > item.stock) && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  Some items in your cart exceed available stock. Please adjust quantities.
+                </Alert>
+              )}
               <Typography variant="h5" sx={{ fontWeight: "bold", color: "#1a202c" }}>
                 Total: ${formatPrice(cart.total)}
               </Typography>
@@ -375,10 +398,12 @@ const CartPage = () => {
                     backgroundColor: "#2B6CB0",
                   },
                 }}
+                disabled={cart.items.some((item) => item.stock !== undefined && item.quantity > item.stock)}
               >
                 PROCEED TO CHECKOUT
               </Button>
             </Box>
+
           </>
         ) : (
           <Box sx={{ textAlign: "center", mt: 8 }}>

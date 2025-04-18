@@ -1,15 +1,40 @@
-import React from "react";
-import { Box, Button, Container, Grid, Typography, Card, CardContent, CardMedia } from "@mui/material";
-import Navbar from "../components/Navbar"; // Navbar is now a separate component
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Container,
+  Grid,
+  Typography,
+  Card,
+  CardContent,
+  CardMedia,
+} from "@mui/material";
+import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
-import AddToCartButton from "../components/AddToCartButton";
+import axios from "axios";
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:8000/api/products/")
+      .then((res) => setProducts(res.data))
+      .catch((err) => console.error("Failed to fetch products", err));
+  }, []);
+
+  const newArrivals = [...products]
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+    .slice(0, 3); // You can increase this if needed
+
   return (
     <Box>
       <Navbar />
-      
+
       {/* Hero Section */}
       <Box
         sx={{
@@ -19,12 +44,11 @@ const HomePage: React.FC = () => {
           justifyContent: "center",
           alignItems: "center",
           textAlign: "center",
-          position: "relative", // Needed for the overlay effect
+          position: "relative",
           color: "black",
           p: 2,
         }}
       >
-        {/* Background Image with Transparency */}
         <Box
           sx={{
             position: "absolute",
@@ -36,8 +60,8 @@ const HomePage: React.FC = () => {
               "url('https://i.ibb.co/CssQMFQj/DALL-E-2025-03-06-14-57-55-A-beautiful-and-immersive-book-themed-background-image-for-an-online-book.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            opacity: 0.3, // Adjust this value to control transparency (0 = fully transparent, 1 = fully visible)
-            zIndex: -1, // Keeps the image behind the text
+            opacity: 0.3,
+            zIndex: -1,
           }}
         />
         <Typography variant="h4" fontWeight="bold">
@@ -69,7 +93,12 @@ const HomePage: React.FC = () => {
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
           Bestsellers
         </Typography>
-        <Typography variant="body1" color="text.secondary" textAlign="center" mb={4}>
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          textAlign="center"
+          mb={4}
+        >
           Discover our top-rated books loved by our readers!
         </Typography>
 
@@ -77,7 +106,9 @@ const HomePage: React.FC = () => {
           {[...Array(3)].map((_, index) => (
             <Grid item key={index} xs={12} sm={6} md={4}>
               <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-                <CardMedia sx={{ height: 200, backgroundColor: "#e0e0e0" }} />
+                <CardMedia
+                  sx={{ height: 200, backgroundColor: "#e0e0e0" }}
+                />
                 <CardContent>
                   <Typography variant="h6" fontWeight="bold">
                     Book Title
@@ -85,7 +116,9 @@ const HomePage: React.FC = () => {
                   <Typography variant="body2" color="text.secondary">
                     Sample book description.
                   </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}
+                  >
                     <Button
                       variant="outlined"
                       sx={{
@@ -97,7 +130,6 @@ const HomePage: React.FC = () => {
                     >
                       Learn More
                     </Button>
-                
                   </Box>
                 </CardContent>
               </Card>
@@ -113,26 +145,25 @@ const HomePage: React.FC = () => {
             What Our Readers Say
           </Typography>
           <Grid container spacing={4} justifyContent="center">
-            {[ 
-              { 
+            {[
+              {
                 text: '"This bookstore changed my reading experience! Amazing selection and fast delivery."',
-                name: "- John Doe"
-              }, 
-              { 
+                name: "- John Doe",
+              },
+              {
                 text: '"Great books, fantastic service, and unbeatable prices!"',
-                name: "- Jane Smith"
-              }
+                name: "- Jane Smith",
+              },
             ].map((review, index) => (
               <Grid item xs={12} md={6} key={index}>
                 <Box display="flex" alignItems="center" gap={3}>
-                  {/* Ensuring same profile picture size & shape */}
                   <Box
                     sx={{
                       width: 80,
                       height: 80,
                       backgroundColor: "#dcdcdc",
-                      borderRadius: "50%",  // Ensures perfect circle
-                      flexShrink: 0,        // Prevents resizing
+                      borderRadius: "50%",
+                      flexShrink: 0,
                     }}
                   />
                   <Box>
@@ -148,31 +179,46 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-
-      {/* Deal of the Week Section */}
+      {/* New Arrivals Section (Real Data) */}
       <Container sx={{ my: 5 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
-          Deal of the Week
+          New Arrivals
         </Typography>
-        <Typography variant="body1" color="text.secondary" textAlign="center" mb={4}>
-          Get the best deals on our top-rated books. Limited time only!
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          textAlign="center"
+          mb={4}
+        >
+          Get the latest books just added to our store!
         </Typography>
 
         <Grid container spacing={3} justifyContent="center">
-          {[...Array(3)].map((_, index) => (
-            <Grid item key={index} xs={12} sm={6} md={4}>
+          {newArrivals.map((product) => (
+            <Grid item key={product.id} xs={12} sm={6} md={4}>
               <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-                <CardMedia sx={{ height: 200, backgroundColor: "#e0e0e0" }} />
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={product.cover_image || "https://via.placeholder.com/250x350?text=No+Image"}
+                  alt={product.title}
+                />
                 <CardContent>
-                  <Typography variant="h6" fontWeight="bold">
-                    Book Title
+                  <Typography variant="h6" fontWeight="bold" noWrap>
+                    {product.title}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Limited-time book deal.
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    {product.genre}
                   </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+                  <Typography variant="body1" fontWeight="bold" mt={1}>
+                    {product.price}₺
+                  </Typography>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}
+                  >
                     <Button
                       variant="outlined"
+                      onClick={() => navigate(`/products/${product.slug}`)}
                       sx={{
                         transition: "all 0.3s",
                         "&:hover": {
@@ -180,9 +226,8 @@ const HomePage: React.FC = () => {
                         },
                       }}
                     >
-                      Shop Now
+                      Learn More
                     </Button>
-  
                   </Box>
                 </CardContent>
               </Card>

@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="Cart",
+            name="Review",
             fields=[
                 (
                     "id",
@@ -25,36 +25,25 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("session_key", models.CharField(blank=True, max_length=40, null=True)),
-                ("is_active", models.BooleanField(default=True)),
+                ("stars", models.PositiveSmallIntegerField()),
+                ("review_text", models.TextField()),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
-            ],
-        ),
-        migrations.CreateModel(
-            name="CartItem",
-            fields=[
                 (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("quantity", models.PositiveIntegerField(default=1)),
-                (
-                    "cart",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        related_name="items",
-                        to="cart.cart",
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending Approval"),
+                            ("approved", "Approved"),
+                        ],
+                        default="pending",
+                        max_length=20,
                     ),
                 ),
                 (
                     "product",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reviews",
                         to="admin_panel.product",
                     ),
                 ),
