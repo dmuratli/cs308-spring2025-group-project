@@ -29,6 +29,7 @@ function App() {
       withCredentials: true,
     });
   }, []);
+  
   return (
     <CartProvider>
       <Navbar />

@@ -21,7 +21,7 @@ from users.permissions import IsProductManager, IsSalesManager, IsCustomer, IsPr
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
     lookup_field = 'slug'
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'description']
@@ -47,8 +47,27 @@ class ProductViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
-    def perform_update(self, serializer):
-        serializer.save()
+    def update(self, request, *args, **kwargs):
+        """
+        Partial‐style PUT: drop any non-file 'cover_image' values
+        so JSON updates (price, stock, etc.) don’t trigger that error.
+        """
+        # Copy data so we can mutate it
+        data = request.data.copy()
+
+        # If cover_image is present but not an uploaded file, remove it
+        cover_val = data.get('cover_image', None)
+        from django.core.files.uploadedfile import UploadedFile
+        if cover_val is not None and not isinstance(cover_val, UploadedFile):
+            data.pop('cover_image', None)
+
+        instance   = self.get_object()
+        serializer = self.get_serializer(instance,
+                                         data=data,
+                                         partial=True)  # behave like PATCH
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     @method_decorator(csrf_exempt)
     @action(detail=True, methods=['post'], parser_classes=[JSONParser])
