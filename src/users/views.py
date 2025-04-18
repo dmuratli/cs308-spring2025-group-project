@@ -79,3 +79,13 @@ def profile_update_view(request):
         return JsonResponse(updated_profile, status=200)
     else:
         return JsonResponse(form.errors, status=400)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_info(request):
+    user = request.user
+    roles = list(user.groups.values_list('name', flat=True))
+    return Response({
+        "username": user.username,
+        "roles": roles,
+    })
