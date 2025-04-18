@@ -49,8 +49,8 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         """
-        Partial‐style PUT: drop any non-file 'cover_image' values
-        so JSON updates (price, stock, etc.) don’t trigger that error.
+        Partial-style PUT: drop any non-file 'cover_image' values
+        so JSON updates (price, stock, etc.) don't trigger that error.
         """
         # Copy data so we can mutate it
         data = request.data.copy()
