@@ -17,11 +17,9 @@ const ProductManagerDashboard = () => {
   return (
     <Box sx={{ backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
       <Navbar />
-
-      {/* Navbar yüksekliğini karşılayan boşluk */}
       <Toolbar />
 
-      {/* Sayfa Başlığı */}
+      {/* Header */}
       <Box
         sx={{
           py: 6,
@@ -38,75 +36,65 @@ const ProductManagerDashboard = () => {
         </Typography>
       </Box>
 
-      {/* Dikey Buton Listesi */}
-      <Container maxWidth="sm" sx={{ py: 6 }}>
+      <Container maxWidth="md" sx={{ py: 6 }}>
         <Stack spacing={3}>
-
-          {/* Orders */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              🧾 Manage Orders
-            </Typography>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => navigate("/product-manager/orders")}
-              sx={btnStyle}
-            >
-              Go to Orders Page
-            </Button>
-          </Paper>
-
-          {/* Comments */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              💬 Comment Approvals
-            </Typography>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => navigate("/product-manager/comments")}
-              sx={btnStyle}
-            >
-              Go to Comments Page
-            </Button>
-          </Paper>
-
-          {/* Invoices */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              🧾 Manage Invoices
-            </Typography>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => navigate("/product-manager/invoices")}
-              sx={btnStyle}
-            >
-              Go to Invoices Page
-            </Button>
-          </Paper>
-
-
-          {/* Manage Products */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              🛠️ Manage Products
-            </Typography>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => navigate("/product-manager/manage-products")}
-              sx={btnStyle}
-            >
-              Go to Manage Products
-            </Button>
-          </Paper>
+          <ActionCard
+            title="Manage Orders"
+            description="Track and update the status of product orders."
+            onClick={() => navigate("/product-manager/orders")}
+          />
+          <ActionCard
+            title="Comment Approvals"
+            description="Review and moderate user reviews for products."
+            onClick={() => navigate("/product-manager/comments")}
+          />
+          <ActionCard
+            title="Manage Invoices"
+            description="Access and manage product invoices and history."
+            onClick={() => navigate("/product-manager/invoices")}
+          />
+          <ActionCard
+            title="Manage Products"
+            description="Add, edit, delete or update stock for all listed products."
+            onClick={() => navigate("/product-manager/manage-products")}
+          />
         </Stack>
       </Container>
     </Box>
   );
 };
+
+interface ActionCardProps {
+  title: string;
+  description: string;
+  onClick: () => void;
+}
+
+const ActionCard: React.FC<ActionCardProps> = ({ title, description, onClick }) => (
+  <Paper
+    elevation={3}
+    sx={{
+      p: 4,
+      borderRadius: 3,
+      backgroundColor: "white",
+      display: "flex",
+      flexDirection: "column",
+      gap: 1,
+    }}
+  >
+    <Typography variant="h6" fontWeight="bold">
+      {title}
+    </Typography>
+    <Typography variant="body2" color="text.secondary">
+      {description}
+    </Typography>
+    <Box display="flex" justifyContent="flex-end" mt={2}>
+      <Button variant="outlined" sx={btnStyle} onClick={onClick}>
+        Open
+      </Button>
+    </Box>
+  </Paper>
+);
 
 const btnStyle = {
   borderColor: "#EF977F",
