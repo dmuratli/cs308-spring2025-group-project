@@ -15,9 +15,7 @@ import ProductPage from "./pages/ProductPage";
 import ProductManagerDashboard from './pages/admin/ProductManagerDashboard';
 import ProfilePage from "./pages/ProfilePage";
 import BookDetailsPage from "./pages/BookDetailPage";
-import StockPage from "./pages/admin/StockPage";
 import CommentsPage from "./pages/admin/CommentsPage";
-import DeliveryPage from "./pages/admin/DeliveryPage";
 import InvoicesPage from "./pages/admin/InvoicesPage";
 import { CartProvider } from "./context/CartContext";
 import CartPage from "./pages/CartPage";
@@ -52,11 +50,7 @@ function App() {
         <Route path="/product-manager/manage-products" element={<ManageProducts panel="manager" />} />
         <Route path="/product-manager/add-product" element={<AddProduct />} />
         <Route path="/product-manager/edit-product/:slug" element={<EditProduct />} />
-        <Route path="/product-manager/stocks" element={<StockPage />} />
         <Route path="/product-manager/comments" element={<CommentsPage />} />
-        <Route path="/product-manager/deliveries" element={<DeliveryPage />} />
-
-     
         <Route path="/product-manager/orders" element={<ManageOrders />} />
         <Route path="/product-manager/invoices" element={<InvoicesPage />} />
 

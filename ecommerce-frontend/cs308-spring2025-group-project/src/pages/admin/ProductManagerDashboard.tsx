@@ -41,20 +41,6 @@ const ProductManagerDashboard = () => {
       {/* Dikey Buton Listesi */}
       <Container maxWidth="sm" sx={{ py: 6 }}>
         <Stack spacing={3}>
-          {/* Stock */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              📦 Stock Control
-            </Typography>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => navigate("/product-manager/stocks")}
-              sx={btnStyle}
-            >
-              Go to Stock Page
-            </Button>
-          </Paper>
 
           {/* Orders */}
           <Paper elevation={3} sx={{ p: 3 }}>
@@ -83,21 +69,6 @@ const ProductManagerDashboard = () => {
               sx={btnStyle}
             >
               Go to Comments Page
-            </Button>
-          </Paper>
-
-          {/* Deliveries */}
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight="bold" mb={2}>
-              🚚 Delivery List
-            </Typography>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => navigate("/product-manager/deliveries")}
-              sx={btnStyle}
-            >
-              Go to Delivery Page
             </Button>
           </Paper>
 
