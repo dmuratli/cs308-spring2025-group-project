@@ -19,6 +19,7 @@ import CommentsPage from "./pages/admin/CommentsPage";
 import InvoicesPage from "./pages/admin/InvoicesPage";
 import { CartProvider } from "./context/CartContext";
 import CartPage from "./pages/CartPage";
+import SalesManagerDashboard from "./pages/admin/SalesManagerDashboard";
 
 
 function App() {
@@ -53,6 +54,8 @@ function App() {
         <Route path="/product-manager/comments" element={<CommentsPage />} />
         <Route path="/product-manager/orders" element={<ManageOrders />} />
         <Route path="/product-manager/invoices" element={<InvoicesPage />} />
+        <Route path="/sales-manager" element={<SalesManagerDashboard />} />
+        <Route path="/sales-manager/invoices" element={<InvoicesPage />} />
 
       </Routes>
     </CartProvider>
