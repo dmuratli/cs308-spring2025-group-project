@@ -20,7 +20,8 @@ import InvoicesPage from "./pages/admin/InvoicesPage";
 import { CartProvider } from "./context/CartContext";
 import CartPage from "./pages/CartPage";
 import SalesManagerDashboard from "./pages/admin/SalesManagerDashboard";
-
+import PaymentPage from "./pages/PaymentPage";
+import TransactionHistoryPage from "./pages/TransactionHistoryPage";
 
 function App() {
   useEffect(() => {
@@ -28,6 +29,12 @@ function App() {
       withCredentials: true,
     });
   }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/csrf/", {
+      credentials: "include", // Include cookies in the request
+    }).catch((error) => console.error("Failed to fetch CSRF token:", error));
+  }, []); 
   
   return (
     <CartProvider>
@@ -56,6 +63,9 @@ function App() {
         <Route path="/product-manager/invoices" element={<InvoicesPage />} />
         <Route path="/sales-manager" element={<SalesManagerDashboard />} />
         <Route path="/sales-manager/invoices" element={<InvoicesPage />} />
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/profile/transactions" element={<TransactionHistoryPage />} />
+
 
       </Routes>
     </CartProvider>

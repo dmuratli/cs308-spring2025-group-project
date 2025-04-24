@@ -13,7 +13,7 @@ import {
   Alert,
 } from "@mui/material";
 import axios, { AxiosError } from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 import { useCart } from "../context/CartContext"; // Import useCart hook
 
 // Helper function to format numbers as price strings
@@ -37,6 +37,7 @@ interface CartItem {
   quantity: number;
   total_price: number;
   cover_image?: string;
+  stock?: number;
 }
 
 // Cart interface
@@ -52,19 +53,6 @@ interface ErrorResponse {
   message?: string;
 }
 
-interface CartItem {
-  id: number;
-  product: number;
-  product_title: string;
-  product_price: number;
-  quantity: number;
-  total_price: number;
-  cover_image?: string;
-  stock?: number; // 👈 Add this line
-}
-
-
-// API base URL
 const API_BASE_URL = "http://localhost:8000";
 
 const CartPage = () => {
@@ -83,6 +71,7 @@ const CartPage = () => {
     duration: 3000,
   });
   const [updatingItems, setUpdatingItems] = useState<number[]>([]);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   // Fetch the cart data from the backend API
   const fetchCart = async () => {
@@ -122,10 +111,6 @@ const CartPage = () => {
     let notificationDuration = 3000; // Default duration
     if (duration) {
       notificationDuration = duration;
-    } else if (type === "success" && message.includes("increased")) {
-      notificationDuration = 10000;
-    } else if (type === "success" && message.includes("removed")) {
-      notificationDuration = 10000;
     }
     setNotification({
       open: true,
@@ -153,18 +138,16 @@ const CartPage = () => {
     try {
       setUpdatingItems((prev) => [...prev, productId]);
 
-      // Adding override: "true" forces the server to update the quantity directly
       const response = await axios.post(
         `${API_BASE_URL}/cart/`,
         {
           product_id: productId,
           quantity: newQuantity,
-          override: "true"
+          override: "true",
         },
         { withCredentials: true }
       );
 
-      // If new quantity is 0, backend removes the item; update UI accordingly.
       if (newQuantity === 0) {
         if (response.data && response.data.items && response.data.items.length === 0) {
           setCart({ ...response.data, items: [] });
@@ -204,18 +187,6 @@ const CartPage = () => {
     }
   };
 
-  // Handler for quantity input changes
-  const handleQuantityInputChange = (
-    productId: number,
-    value: string,
-    currentQuantity: number
-  ) => {
-    const newQty = parseInt(value, 10);
-    if (!isNaN(newQty) && newQty >= 0) {
-      handleQuantityChange(productId, newQty, currentQuantity);
-    }
-  };
-
   // Handler for removing an item (by setting quantity to 0)
   const handleRemoveItem = async (productId: number) => {
     try {
@@ -224,13 +195,11 @@ const CartPage = () => {
         `${API_BASE_URL}/cart/`,
         {
           product_id: productId,
-          quantity: 0, // Quantity 0 indicates removal
-          override: "true" // Optional, but ensures removal action
+          quantity: 0,
+          override: "true",
         },
         { withCredentials: true }
       );
-
-      console.log("Item removal response:", response.data);
 
       if (response.data && response.data.items && response.data.items.length === 0) {
         setCart({ ...response.data, items: [] });
@@ -249,6 +218,13 @@ const CartPage = () => {
       fetchCart();
     } finally {
       setUpdatingItems((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
+  // Navigate to the payment page
+  const handleProceedToCheckout = () => {
+    if (cart) {
+      navigate("/payment"); // Redirect to the payment page
     }
   };
 
@@ -306,7 +282,6 @@ const CartPage = () => {
                     }}
                   >
                     <CardMedia
-                      
                       component="img"
                       sx={{
                         width: 100,
@@ -325,8 +300,6 @@ const CartPage = () => {
                       }
                       alt={item.product_title}
                     />
-
-
                     <Box sx={{ flexGrow: 1 }}>
                       <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1a202c" }}>
                         {item.product_title}
@@ -343,10 +316,9 @@ const CartPage = () => {
                           size="small"
                           value={item.quantity}
                           onChange={(e) =>
-                            handleQuantityInputChange(item.product, e.target.value, item.quantity)
+                            handleQuantityChange(item.product, parseInt(e.target.value, 10), item.quantity)
                           }
                           sx={{ width: 70 }}
-                          // inputProps: artış/azalış oklarının 1 birim adım atmasını sağlar
                           inputProps={{
                             min: 0,
                             step: 1,
@@ -398,12 +370,12 @@ const CartPage = () => {
                     backgroundColor: "#2B6CB0",
                   },
                 }}
+                onClick={handleProceedToCheckout} // Call the navigation function
                 disabled={cart.items.some((item) => item.stock !== undefined && item.quantity > item.stock)}
               >
                 PROCEED TO CHECKOUT
               </Button>
             </Box>
-
           </>
         ) : (
           <Box sx={{ textAlign: "center", mt: 8 }}>
