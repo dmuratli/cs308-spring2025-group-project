@@ -54,8 +54,8 @@ urlpatterns = [
     path('payment/', include('payment.urls')),
 
     # 8) User profile
-    path('api/profile/',      profile_view,        name='profile'),
-    path('api/profile/edit/', profile_update_view, name='profile_edit'),
+    path('profile/',      profile_view,        name='profile'),
+    path('profile/edit/', profile_update_view, name='profile_edit'),
 
     # 9) DRF router catch-all (products, orders, users list/detail)
     path('api/', include(router.urls)),
