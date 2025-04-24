@@ -8,3 +8,6 @@ sqlparse==0.5.3
 tzdata==2023.3
 Pillow
 Faker
+factory_boy
+celery
+pytest

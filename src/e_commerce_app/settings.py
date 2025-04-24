@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "orders",
     "reviews",
     "payment",
+    "invoices",
 ]
 
 MIDDLEWARE = [
@@ -167,3 +168,7 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = "users.User"
+
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
