@@ -9,6 +9,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  Toolbar,
   Paper,
   CircularProgress,
   Alert
@@ -68,6 +69,8 @@ const TransactionHistoryPage: React.FC = () => {
   }
 
   return (
+    <>
+    <Toolbar />
     <Container sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
         Your Transaction History
@@ -99,6 +102,7 @@ const TransactionHistoryPage: React.FC = () => {
         </Paper>
       )}
     </Container>
+    </>
   );
 };
 
