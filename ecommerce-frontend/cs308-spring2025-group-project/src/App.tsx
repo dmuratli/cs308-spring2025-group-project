@@ -31,7 +31,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:8000/csrf/", {
+    fetch("http://localhost:8000/api/csrf/", {
       credentials: "include", // Include cookies in the request
     }).catch((error) => console.error("Failed to fetch CSRF token:", error));
   }, []); 
