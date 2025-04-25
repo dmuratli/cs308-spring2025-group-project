@@ -22,6 +22,7 @@ import {
   LocalShipping as ShippingIcon,
   Inventory as InventoryIcon,
   CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
@@ -39,6 +40,7 @@ interface Order {
   date: string;
   total: string;
   status: string;
+  products: string;
 }
 
 // --- Animations & Styled Components --- //
@@ -131,12 +133,12 @@ const styles = {
   },
 };
 
-// --- Order History Components --- //
 const STATUS_COLORS: Record<string, string> = {
   Delivered: "#4caf50",
   "In Transit": "#2196f3",
   Processing: "#ff9800",
-  Refunded: "#f44336",
+  Refunded: "#9e9e9e",
+  Cancelled: "#f44336"
 };
 
 interface StatusIconProps {
@@ -153,7 +155,9 @@ const StatusIcon: React.FC<StatusIconProps> = React.memo(({ status }) => {
       return <InventoryIcon sx={{ color: STATUS_COLORS.Processing }} />;
     case "Refunded":
       return <EditIcon sx={{ color: STATUS_COLORS.Refunded }} />;
-    default:
+    case "Cancelled":
+      return <CancelIcon sx={{ color: STATUS_COLORS.Cancelled }} />;
+      default:
       return null;
   }
 });
@@ -176,7 +180,7 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order }) => (
         primary={
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Typography variant="body1" fontWeight="medium">
-              Order #{order.id}
+              {order.products || `Order #${order.id}`}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {order.date}
@@ -327,9 +331,41 @@ const ProfilePage: React.FC = () => {
     return profileData.username ? profileData.username.charAt(0).toUpperCase() : "U";
   }, [profileData.username]);
 
-  // Dummy order data (replace with real data as needed)
-  const dummyOrders: Order[] = [];
-  const statusTypes = useMemo<string[]>(() => ["In Transit", "Processing", "Delivered", "Refunded"], []);
+  // ─────────── Real order-history state & fetch ───────────
+const [orders, setOrders]               = useState<Order[]>([]);
+const [loadingOrders, setLoadingOrders] = useState<boolean>(true);
+
+const statusTypes = useMemo<string[]>(() =>
+  ["Processing", "In Transit", "Delivered", "Refunded", "Cancelled"],
+  []
+);
+
+useEffect(() => {
+  if (!isAuthenticated) return;
+  const token = localStorage.getItem("access_token");
+  fetch("http://127.0.0.1:8000/api/orders/", {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Cannot load orders");
+      return res.json();
+    })
+    .then((data: any[]) =>
+      setOrders(
+        data.map((o) => ({
+          id:       o.id,
+          date:     new Date(o.created_at).toLocaleDateString(),
+          total:    `$${parseFloat(o.total as string).toFixed(2)}`,
+          status:   o.status === "Shipped" ? "In Transit" : o.status,
+          products: (o.items as any[])
+            .map(i => `${i.product_title} (x${i.quantity})`)
+            .join(", "),
+        }))
+      )
+    )
+    .catch(console.error)
+    .finally(() => setLoadingOrders(false));
+}, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -491,7 +527,7 @@ const ProfilePage: React.FC = () => {
           </Typography>
           <Divider sx={{ marginBottom: 3 }} />
           {statusTypes.map((status) => (
-            <OrderStatusSection key={status} status={status} orders={dummyOrders} />
+            <OrderStatusSection key={status} status={status} orders={orders} />
           ))}
         </Paper>
       </Fade>

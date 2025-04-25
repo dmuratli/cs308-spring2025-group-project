@@ -10,6 +10,8 @@ class Order(models.Model):
         ("Processing", "Processing"),
         ("Shipped", "Shipped"),
         ("Delivered", "Delivered"),
+        ("Refunded", "Refunded"),
+        ("Cancelled", "Cancelled"),
     ]
     
     customer_name = models.CharField(max_length=255)

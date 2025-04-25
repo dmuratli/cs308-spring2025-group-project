@@ -89,8 +89,8 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.action == 'list':
-            return [IsProductManagerOrSalesManager()]
-        return [permissions.IsAuthenticated()]
+            return [IsCustomer()]
+        return [IsProductManagerOrSalesManager()]
 
     def get_queryset(self):
         user = self.request.user

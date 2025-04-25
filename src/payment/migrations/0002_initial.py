@@ -11,12 +11,12 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("orders", "0001_initial"),
+        ("payment", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="order",
+            model_name="transaction",
             name="user",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL

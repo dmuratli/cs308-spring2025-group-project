@@ -7,6 +7,8 @@ class Order(models.Model):
         ("Processing", "Processing"),
         ("Shipped", "Shipped"),
         ("Delivered", "Delivered"),
+        ("Refunded", "Refunded"),
+        ("Cancelled", "Cancelled"),
     ]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Processing")
@@ -24,3 +26,8 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity}x {self.product.title} in Order #{self.order.id}"
+
+class OrderStatusHistory(models.Model):
+    order     = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='history')
+    status    = models.CharField(max_length=20, choices=Order.STATUS_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)

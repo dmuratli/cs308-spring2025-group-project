@@ -74,7 +74,7 @@ class ProcessPaymentView(APIView):
                 prod.save()
 
             # 6) Mark paid and record
-            order.status = "Shipped"
+            order.status = "Processing"
             order.save()
             Transaction.objects.create(user=request.user, order=order, status="Completed")
 

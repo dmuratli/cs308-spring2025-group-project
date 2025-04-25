@@ -1,12 +1,20 @@
-# src/orders/views.py
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
 from rest_framework import status, permissions
 from django.db import transaction
+from users.permissions import IsProductManager
 
-from .models import Order, OrderItem
+from .models import Order, OrderItem, OrderStatusHistory
+from .serializers import OrderStatusUpdateSerializer, OrderSerializer
 from cart.models import Cart
+
+VALID_TRANSITIONS = {
+    'Processing':   ['Shipped', 'Cancelled'],
+    'Shipped':   ['Delivered'],
+    'Delivered':    ['Refunded'],
+    'Refunded':     [],
+}
 
 class PlaceOrderView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -51,3 +59,32 @@ class PlaceOrderView(APIView):
             {"message": "Order placed successfully", "order_id": order.id},
             status=status.HTTP_201_CREATED
         )
+
+class OrderStatusUpdateView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsProductManager]
+
+    def patch(self, request, pk):
+        order = Order.objects.filter(pk=pk).first()
+        if not order:
+            return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        new_status = request.data.get('status')
+        if new_status not in VALID_TRANSITIONS[order.status]:
+            return Response(
+                {'error': f"Invalid transition: {order.status} → {new_status}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Perform update
+        order.status = new_status
+        order.save()
+
+        # Record timestamp or history
+        OrderStatusHistory.objects.create(order=order, status=new_status)
+
+        return Response({'status': order.status}, status=status.HTTP_200_OK)
+    
+class OrderListView(ListAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsProductManager]
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
