@@ -13,10 +13,9 @@ import {
   Alert,
 } from "@mui/material";
 import axios, { AxiosError } from "axios";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
-import { useCart } from "../context/CartContext"; // Import useCart hook
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 
-// Helper function to format numbers as price strings
 const formatPrice = (price: any): string => {
   if (typeof price === "number") {
     return price.toFixed(2);
@@ -28,7 +27,6 @@ const formatPrice = (price: any): string => {
   return "0.00";
 };
 
-// Cart item interface
 interface CartItem {
   id: number;
   product: number;
@@ -40,14 +38,12 @@ interface CartItem {
   stock?: number;
 }
 
-// Cart interface
 interface Cart {
   id: number;
   items: CartItem[];
   total: number;
 }
 
-// Error response interface
 interface ErrorResponse {
   error?: string;
   message?: string;
@@ -59,39 +55,28 @@ const CartPage = () => {
   const { updateCartItemCount } = useCart();
   const [cart, setCart] = useState<Cart | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [notification, setNotification] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error" | "info";
-    duration: number;
-  }>({
+  const [notification, setNotification] = useState({
     open: false,
     message: "",
-    type: "info",
+    type: "info" as "success" | "error" | "info",
     duration: 3000,
   });
   const [updatingItems, setUpdatingItems] = useState<number[]>([]);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
-  // Fetch the cart data from the backend API
   const fetchCart = async () => {
     try {
       setIsLoading(true);
       const res = await axios.get(`${API_BASE_URL}/cart/`, { withCredentials: true });
-      console.log("Cart data:", res.data);
       if (res.data && typeof res.data === "object") {
         setCart(res.data);
-
-        // Calculate total quantity for the badge update
         const totalQuantity =
           res.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
         updateCartItemCount(totalQuantity);
       } else {
-        console.error("Unexpected API response:", res.data);
         showNotification("Failed to load cart data", "error");
       }
     } catch (err) {
-      console.error("Error loading cart:", err);
       showNotification("Error loading cart", "error");
     } finally {
       setIsLoading(false);
@@ -102,13 +87,12 @@ const CartPage = () => {
     fetchCart();
   }, []);
 
-  // Helper to show notifications with configurable duration
   const showNotification = (
     message: string,
     type: "success" | "error" | "info",
     duration?: number
   ) => {
-    let notificationDuration = 3000; // Default duration
+    let notificationDuration = 3000;
     if (duration) {
       notificationDuration = duration;
     }
@@ -121,23 +105,18 @@ const CartPage = () => {
   };
 
   const closeNotification = () => {
-    setNotification({
-      ...notification,
-      open: false,
-    });
+    setNotification({ ...notification, open: false });
   };
 
-  // Handle quantity change via API (override: true to replace the quantity exactly)
   const handleQuantityChange = async (
     productId: number,
     newQuantity: number,
     currentQuantity: number
   ) => {
-    if (newQuantity < 0) return; // Prevent negative values
+    if (newQuantity < 0) return;
 
     try {
       setUpdatingItems((prev) => [...prev, productId]);
-
       const response = await axios.post(
         `${API_BASE_URL}/cart/`,
         {
@@ -174,7 +153,6 @@ const CartPage = () => {
         }
       }
     } catch (err) {
-      console.error("Error updating quantity:", err);
       const error = err as AxiosError<ErrorResponse>;
       if (error.response?.data?.error) {
         showNotification(error.response.data.error, "error", 6000);
@@ -187,7 +165,6 @@ const CartPage = () => {
     }
   };
 
-  // Handler for removing an item (by setting quantity to 0)
   const handleRemoveItem = async (productId: number) => {
     try {
       setUpdatingItems((prev) => [...prev, productId]);
@@ -213,7 +190,6 @@ const CartPage = () => {
 
       showNotification("Item removed from cart", "success", 2000);
     } catch (err) {
-      console.error("Error removing item:", err);
       showNotification("Failed to remove item", "error", 3000);
       fetchCart();
     } finally {
@@ -221,10 +197,9 @@ const CartPage = () => {
     }
   };
 
-  // Navigate to the payment page
   const handleProceedToCheckout = () => {
     if (cart) {
-      navigate("/payment"); // Redirect to the payment page
+      navigate("/payment");
     }
   };
 
@@ -249,7 +224,7 @@ const CartPage = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #f0f4f8, #d9e2ec)",
+        background: "linear-gradient(to bottom right, #fdf6f0, #e8f0fe)",
         pt: 16,
         pb: 4,
       }}
@@ -261,7 +236,7 @@ const CartPage = () => {
             fontWeight: "bold",
             textAlign: "center",
             mb: 4,
-            color: "#1a202c",
+            color: "#2d3748",
           }}
         >
           Your Shopping Cart
@@ -277,8 +252,9 @@ const CartPage = () => {
                       display: "flex",
                       p: 2,
                       alignItems: "center",
-                      borderRadius: 2,
-                      boxShadow: 3,
+                      borderRadius: 3,
+                      boxShadow: 4,
+                      background: "linear-gradient(to right, #fff5f0, #f0f4ff)",
                     }}
                   >
                     <CardMedia
@@ -301,7 +277,7 @@ const CartPage = () => {
                       alt={item.product_title}
                     />
                     <Box sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: "bold", color: "#1a202c" }}>
+                      <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2d3748" }}>
                         {item.product_title}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -332,7 +308,7 @@ const CartPage = () => {
                     </Box>
                     <Typography
                       variant="h6"
-                      sx={{ fontWeight: "bold", color: "#1a202c", mx: 2 }}
+                      sx={{ fontWeight: "bold", color: "#2d3748", mx: 2 }}
                     >
                       ${formatPrice(item.total_price)}
                     </Typography>
@@ -358,19 +334,22 @@ const CartPage = () => {
                   Some items in your cart exceed available stock. Please adjust quantities.
                 </Alert>
               )}
-              <Typography variant="h5" sx={{ fontWeight: "bold", color: "#1a202c" }}>
+              <Typography variant="h5" sx={{ fontWeight: "bold", color: "#2d3748" }}>
                 Total: ${formatPrice(cart.total)}
               </Typography>
               <Button
                 variant="contained"
                 sx={{
                   mt: 2,
-                  backgroundColor: "#4299E1",
+                  backgroundColor: "#EF977F",
+                  color: "white",
+                  fontWeight: "bold",
+                  px: 3,
                   "&:hover": {
-                    backgroundColor: "#2B6CB0",
+                    backgroundColor: "#d46c4e",
                   },
                 }}
-                onClick={handleProceedToCheckout} // Call the navigation function
+                onClick={handleProceedToCheckout}
                 disabled={cart.items.some((item) => item.stock !== undefined && item.quantity > item.stock)}
               >
                 PROCEED TO CHECKOUT

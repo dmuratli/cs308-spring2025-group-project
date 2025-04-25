@@ -13,14 +13,25 @@ import {
   Toolbar,
   Grid,
   Divider,
-  Paper
+  Paper,
+  CircularProgress,
+  Avatar,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useCart } from "../context/CartContext";
 
+interface Review {
+  id: number;
+  stars: number;
+  review_text: string;
+  created_at: string;
+  username?: string;
+}
+
 const BookDetailsPage: React.FC = () => {
   interface Product {
+    id: number;
     title: string;
     author: string;
     genre: string;
@@ -29,7 +40,6 @@ const BookDetailsPage: React.FC = () => {
     price: number;
     stock: number;
     cover_image?: string;
-    id?: number;
     isbn?: string;
     pages?: number;
     publisher?: string;
@@ -38,66 +48,79 @@ const BookDetailsPage: React.FC = () => {
 
   const { slug } = useParams<{ slug: string }>();
   const { addToCart } = useCart();
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({
     open: false,
-    message: '',
-    type: 'info' as 'success' | 'error' | 'info'
+    message: "",
+    type: "info" as "success" | "error" | "info",
   });
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  const token = localStorage.getItem("access");
+
+  const fetchProduct = async () => {
+    if (!slug) return;
+    const res = await axios.get<Product>(
+      `http://localhost:8000/api/products/${slug}/`,
+      { withCredentials: true }
+    );
+    setProduct(res.data);
+  };
+
+  const fetchReviews = async (prodId: number) => {
+    setReviewsLoading(true);
+    try {
+      const res = await axios.get<Review[]>(
+        `http://localhost:8000/api/reviews/?product=${prodId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setReviews(res.data);
+    } catch {
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (slug) {
-      axios
-        .get(`http://localhost:8000/api/products/${slug}/`, { withCredentials: true })
-        .then((response) => setProduct(response.data))
-        .catch((error) => console.error("Error fetching product:", error));
-    }
+    fetchProduct();
   }, [slug]);
 
-  const handleAddToCart = async () => {
-    if (!product || !product.id) return;
-    if (loading) return;
+  useEffect(() => {
+    if (product?.id) fetchReviews(product.id);
+  }, [product?.id]);
 
+  const handleAddToCart = async () => {
+    if (!product || loading) return;
     if (product.stock <= 0) {
       setNotification({
         open: true,
-        message: 'This product is out of stock.',
-        type: 'error'
+        message: "This product is out of stock.",
+        type: "error",
       });
       return;
     }
-
     setLoading(true);
-    const success = await addToCart(product.id, 1);
-
-    if (success) {
-      setNotification({
-        open: true,
-        message: 'Product added to cart successfully!',
-        type: 'success'
-      });
-      axios.get(`http://localhost:8000/api/products/${slug}/`, { withCredentials: true })
-        .then((response) => setProduct(response.data))
-        .catch((error) => console.error("Error refreshing product data:", error));
-    } else {
-      setNotification({
-        open: true,
-        message: 'There was a problem adding the product to cart.',
-        type: 'error'
-      });
-    }
-
+    const ok = await addToCart(product.id, 1);
+    setNotification({
+      open: true,
+      message: ok
+        ? "Product added to cart successfully!"
+        : "There was a problem adding the product to cart.",
+      type: ok ? "success" : "error",
+    });
+    if (ok) fetchProduct();
     setLoading(false);
   };
 
-  const handleCloseNotification = () => {
-    setNotification({ ...notification, open: false });
-  };
-
-  if (!product) {
-    return <Typography textAlign="center" mt={5}>Loading...</Typography>;
-  }
+  if (!product)
+    return (
+      <Typography textAlign="center" mt={5}>
+        Loading…
+      </Typography>
+    );
 
   return (
     <Box>
@@ -112,16 +135,20 @@ const BookDetailsPage: React.FC = () => {
             alt={product.title}
             sx={{ width: "40%", borderRadius: "3px 0 0 3px" }}
           />
+
           <CardContent sx={{ flex: 1, p: 5 }}>
             <Typography variant="h4" fontWeight="bold">
               {product.title}
             </Typography>
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="h6" color="text.secondary" mb={2}>
               by {product.author}
             </Typography>
+
             <Typography variant="body2" color="text.secondary" mt={2}>
-              <strong>Genre:</strong> {product.genre} | <strong>Language:</strong> {product.language}
+              <strong>Genre:</strong> {product.genre} | <strong>Language:</strong>{" "}
+              {product.language}
             </Typography>
+
             <Typography variant="h5" color="primary" mt={2}>
               ${product.price}
             </Typography>
@@ -134,46 +161,65 @@ const BookDetailsPage: React.FC = () => {
             <Grid container spacing={2}>
               {product.isbn && (
                 <Grid item xs={6}>
-                  <Paper elevation={0} sx={{ p: 2, backgroundColor: '#FFF8F0' }}>
-                    <Typography variant="body2"><strong>ISBN:</strong> {product.isbn}</Typography>
+                  <Paper elevation={0} sx={{ p: 2, bgcolor: "#FFF8F0" }}>
+                    <Typography variant="body2">
+                      <strong>ISBN:</strong> {product.isbn}
+                    </Typography>
                   </Paper>
                 </Grid>
               )}
               {product.pages && (
                 <Grid item xs={6}>
-                  <Paper elevation={0} sx={{ p: 2, backgroundColor: '#FFF8F0' }}>
-                    <Typography variant="body2"><strong>Pages:</strong> {product.pages}</Typography>
+                  <Paper elevation={0} sx={{ p: 2, bgcolor: "#FFF8F0" }}>
+                    <Typography variant="body2">
+                      <strong>Pages:</strong> {product.pages}
+                    </Typography>
                   </Paper>
                 </Grid>
               )}
               {product.publisher && (
                 <Grid item xs={6}>
-                  <Paper elevation={0} sx={{ p: 2, backgroundColor: '#FFF8F0' }}>
-                    <Typography variant="body2"><strong>Publisher:</strong> {product.publisher}</Typography>
+                  <Paper elevation={0} sx={{ p: 2, bgcolor: "#FFF8F0" }}>
+                    <Typography variant="body2">
+                      <strong>Publisher:</strong> {product.publisher}
+                    </Typography>
                   </Paper>
                 </Grid>
               )}
               {product.publication_date && (
                 <Grid item xs={6}>
-                  <Paper elevation={0} sx={{ p: 2, backgroundColor: '#FFF8F0' }}>
-                    <Typography variant="body2"><strong>Publication Date:</strong> {new Date(product.publication_date).toLocaleDateString()}</Typography>
+                  <Paper elevation={0} sx={{ p: 2, bgcolor: "#FFF8F0" }}>
+                    <Typography variant="body2">
+                      <strong>Publication Date:</strong>{" "}
+                      {new Date(product.publication_date).toLocaleDateString()}
+                    </Typography>
                   </Paper>
                 </Grid>
               )}
             </Grid>
 
-            <Typography variant="h6" fontWeight="bold" gutterBottom mt={3}>
+            <Typography variant="h6" fontWeight="bold" mt={3} gutterBottom>
               Description
             </Typography>
             <Typography variant="body1" color="text.secondary">
               {product.description}
             </Typography>
 
-            <Typography variant="body2" color={product.stock > 0 ? "green" : "error"} mt={2}>
-              <strong>In Stock:</strong> {product.stock} {product.stock === 1 ? "copy" : "copies"}
+            <Typography
+              variant="body2"
+              color={product.stock > 0 ? "green" : "error"}
+              mt={2}
+            >
+              <strong>In Stock:</strong> {product.stock}
             </Typography>
+
             {product.stock <= 3 && product.stock > 0 && (
-              <Typography variant="body2" color="warning.main" fontWeight="bold" mt={1}>
+              <Typography
+                variant="body2"
+                color="warning.main"
+                fontWeight="bold"
+                mt={1}
+              >
                 Hurry! Only {product.stock} left in stock.
               </Typography>
             )}
@@ -184,25 +230,97 @@ const BookDetailsPage: React.FC = () => {
               sx={{
                 mt: 2,
                 backgroundColor: "#EF977F",
-                color: "white",
                 "&:hover": { backgroundColor: "#d46c4e" },
               }}
               disabled={product.stock === 0 || loading}
               onClick={handleAddToCart}
             >
-              {loading ? 'Adding...' : product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+              {loading
+                ? "Adding…"
+                : product.stock > 0
+                ? "Add to Cart"
+                : "Out of Stock"}
             </Button>
           </CardContent>
         </Card>
+
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h5" gutterBottom fontWeight="bold">
+            Reviews
+          </Typography>
+
+          {reviewsLoading ? (
+            <CircularProgress />
+          ) : reviews.length === 0 ? (
+            <Alert severity="info">No reviews yet.</Alert>
+          ) : (
+            reviews.map((r) => (
+              <Paper
+                key={r.id}
+                elevation={3}
+                sx={{
+                  p: 3,
+                  mb: 3,
+                  borderRadius: 4,
+                  background: "linear-gradient(to right, #fef6e4, #f9f3ff)",
+                  transition: "all 0.3s",
+                  "&:hover": {
+                    boxShadow: 6,
+                    transform: "scale(1.015)",
+                    background: "linear-gradient(to right, #ffecd2, #fcb69f)",
+                  },
+                }}
+              >
+                <Box display="flex" alignItems="center" mb={1}>
+                  <Avatar
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      fontWeight: "bold",
+                      bgcolor:
+                        r.stars >= 4
+                          ? "#66bb6a"
+                          : r.stars === 3
+                          ? "#ffa726"
+                          : "#ef5350",
+                      mr: 2,
+                    }}
+                  >
+                    {r.stars}
+                  </Avatar>
+                  <Typography fontWeight="bold" fontSize="1.1rem" mr={2}>
+                  {"🌟".repeat(r.stars)}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mr={1}>
+                    {new Date(r.created_at).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                    – {r.username || "Anonymous"}
+                  </Typography>
+                </Box>
+
+                <Typography
+                  variant="body1"
+                  sx={{ ml: 1.5, fontSize: "1.05rem", color: "#333" }}
+                >
+                  {r.review_text}
+                </Typography>
+              </Paper>
+            ))
+          )}
+        </Box>
       </Container>
 
       <Snackbar
         open={notification.open}
         autoHideDuration={3000}
-        onClose={handleCloseNotification}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        onClose={() => setNotification((p) => ({ ...p, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseNotification} severity={notification.type}>
+        <Alert
+          severity={notification.type}
+          onClose={() => setNotification((p) => ({ ...p, open: false }))}
+        >
           {notification.message}
         </Alert>
       </Snackbar>
