@@ -5,10 +5,8 @@ import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageProducts from "./pages/admin/ManageProducts";
 import ManageOrders from "./pages/admin/ManageOrders";
-import ManageUsers from "./pages/admin/ManageUsers";
 import AddProduct from "./pages/admin/AddProduct";
 import EditProduct from "./pages/admin/EditProduct";
 import ProductPage from "./pages/ProductPage";
@@ -45,12 +43,6 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<div>404 Not Found</div>} />
         <Route path="/profile" element={<ProfilePage/>} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/products" element={<ManageProducts panel="admin" />} />
-        <Route path="/admin/orders" element={<ManageOrders  />} />
-        <Route path="/admin/users" element={<ManageUsers />} />
-        <Route path="/admin/add-product" element={<AddProduct />} />
-        <Route path="/admin/edit-product/:slug" element={<EditProduct />} />
         <Route path="/product-manager" element={<ProductManagerDashboard />} />
         <Route path="/products" element={<ProductPage/>} />
         <Route path="/products/:slug" element={<BookDetailsPage />} />

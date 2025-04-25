@@ -82,7 +82,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         product.save()
         return Response({"message": "Stock updated", "stock": product.stock})
 
-
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
