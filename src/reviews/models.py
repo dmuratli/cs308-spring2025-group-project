@@ -14,6 +14,7 @@ class Review(models.Model):
     review_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    approved = models.BooleanField(default=True)
 
 
 

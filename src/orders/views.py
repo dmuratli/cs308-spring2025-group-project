@@ -3,21 +3,42 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from rest_framework.exceptions import PermissionDenied
 from django.db import transaction
 
 from .models import Order, OrderItem
 from cart.models import Cart
+from admin_panel.models import Product
+
+
+class OrderProductInfoView(APIView):
+    """
+    GET /api/orders/product-info/<order_id>/
+    -> { "product_id": ..., "product_slug": ... }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, order_id):
+        try:
+            order_item = OrderItem.objects.get(order_id=order_id, order__user=request.user)
+            return Response({
+                "product_id": order_item.product.id,
+                "product_slug": order_item.product.slug
+            })
+        except OrderItem.DoesNotExist:
+            raise PermissionDenied("Order not found or you don't have access.")
+
 
 class PlaceOrderView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        # 1) Fetch the active cart for the user
+       
         cart = Cart.objects.filter(user=request.user, is_active=True).first()
         if not cart or not cart.items.exists():
             return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 2) Validate stock availability for every item
+        
         for item in cart.items.all():
             if item.quantity > item.product.stock:
                 return Response(
@@ -25,7 +46,7 @@ class PlaceOrderView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        # 3) Create order + items in one atomic block (no stock mutation here)
+        
         with transaction.atomic():
             order = Order.objects.create(user=request.user, total_price=0)
             total = 0
@@ -42,7 +63,7 @@ class PlaceOrderView(APIView):
             order.total_price = total
             order.save()
 
-            # 4) Clear the cart
+            
             cart.items.all().delete()
             cart.is_active = False
             cart.save()

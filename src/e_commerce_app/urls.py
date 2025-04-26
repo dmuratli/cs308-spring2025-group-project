@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from orders.views import OrderProductInfoView
 
 # JWT auth
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -42,6 +43,8 @@ urlpatterns = [
     path('api/register/',      register_view,                   name='register'),
     path('api/logout/',        logout_view,                     name='logout'),
     path('api/csrf/',          get_csrf_token,                  name='get_csrf'),
+    path("api/orders/<int:pk>/product/", OrderProductInfoView.as_view()),
+    path("api/reviews/", include("reviews.urls")),
 
     # 5) Namespaced cart (for new clients)
     path('api/cart/',    include('cart.urls')),
@@ -54,8 +57,8 @@ urlpatterns = [
     path('payment/', include('payment.urls')),
 
     # 8) User profile
-    path('api/profile/',      profile_view,        name='profile'),
-    path('api/profile/edit/', profile_update_view, name='profile_edit'),
+    path('profile/',      profile_view,        name='profile'),
+    path('profile/edit/', profile_update_view, name='profile_edit'),
 
     # 9) DRF router catch-all (products, orders, users list/detail)
     path('api/', include(router.urls)),

@@ -1,26 +1,25 @@
-from rest_framework import generics, permissions, serializers
+from rest_framework import generics, permissions
 from .models import Review
 from .serializers import ReviewSerializer
-from orders.models import OrderItem  # 
-from rest_framework.permissions import IsAuthenticated
+from orders.models import OrderItem
+from admin_panel.models import Product  # <-- bunu da ekle
 
 class ReviewCreateView(generics.CreateAPIView):
     serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
         product = serializer.validated_data['product']
         user = self.request.user
 
-        # Check if user received the product
-        delivered_items = OrderItem.objects.filter(
-            order__user=user,
-            order__status="Delivered",
-            product=product
-        )
+        # geçici olarak teslimat kontrolü kaldırıldı:
+        serializer.save(user=user, approved=True, status='approved')
 
-        if not delivered_items.exists():
-            raise serializers.ValidationError("You can only review a product after it has been delivered.")
+class ReviewListView(generics.ListAPIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.AllowAny]
 
-        # Create review with "pending" status
-        serializer.save(user=user, status='pending')
+    def get_queryset(self):
+        product_id = self.request.query_params.get('product')
+        return Review.objects.filter(product_id=product_id)
+
