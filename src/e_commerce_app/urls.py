@@ -1,5 +1,3 @@
-# src/e_commerce_app/urls.py
-
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -68,5 +66,4 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    # serve uploaded book covers at /book_covers/…
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
