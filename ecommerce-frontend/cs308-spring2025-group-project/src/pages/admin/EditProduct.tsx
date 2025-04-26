@@ -72,7 +72,10 @@ const EditProduct: React.FC = () => {
 
     try {
       await axios.put(`http://127.0.0.1:8000/api/products/${slug}/`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
+        },
       });
       alert("✅ Product updated successfully!");
       navigate("/product-manager/manage-products");
