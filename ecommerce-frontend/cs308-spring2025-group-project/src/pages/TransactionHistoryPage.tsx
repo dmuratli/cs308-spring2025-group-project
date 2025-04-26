@@ -1,13 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
-  Box,
   Container,
   Typography,
-  Card,
-  CardMedia,
-  Button,
-  Grid,
-  TextField,
   Table,
   TableHead,
   TableRow,
@@ -16,256 +10,117 @@ import {
   Toolbar,
   Paper,
   CircularProgress,
-  Snackbar,
   Alert,
-} from "@mui/material";
-import axios, { AxiosError } from "axios";
-import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+  Button                   // ← ADDED
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom'; // ← ADDED
 
-const formatPrice = (price: any): string => {
-  if (typeof price === "number") {
-    return price.toFixed(2);
-  }
-  if (typeof price === "string") {
-    const parsed = parseFloat(price);
-    return isNaN(parsed) ? "0.00" : parsed.toFixed(2);
-  }
-  return "0.00";
-};
-
-interface CartItem {
+interface Transaction {
   id: number;
-  product: number;
-  product_title: string;
-  product_price: number;
-  quantity: number;
-  total_price: number;
-  cover_image?: string;
-  stock?: number;
+  order_id: number;
+  status: string;
+  created_at: string;
 }
 
-interface Cart {
-  id: number;
-  items: CartItem[];
-  total: number;
-}
-
-interface ErrorResponse {
-  error?: string;
-  message?: string;
-}
-
-const API_BASE_URL = "http://localhost:8000";
-
-const CartPage = () => {
-  const { updateCartItemCount } = useCart();
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [notification, setNotification] = useState({
-    open: false,
-    message: "",
-    type: "info" as "success" | "error" | "info",
-    duration: 3000,
-  });
-  const [updatingItems, setUpdatingItems] = useState<number[]>([]);
-  const navigate = useNavigate();
-
-  const fetchCart = async () => {
-    try {
-      setIsLoading(true);
-      const res = await axios.get(`${API_BASE_URL}/cart/`, { withCredentials: true });
-      if (res.data && typeof res.data === "object") {
-        setCart(res.data);
-        const totalQuantity =
-          res.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-        updateCartItemCount(totalQuantity);
-      } else {
-        showNotification("Failed to load cart data", "error");
-      }
-    } catch (err) {
-      showNotification("Error loading cart", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const TransactionHistoryPage: React.FC = () => {
+  const [txs, setTxs]       = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+  const navigate = useNavigate();              // ← ADDED
 
   useEffect(() => {
-    fetchCart();
+    const fetchTxs = async () => {
+      const token = localStorage.getItem('access_token');
+      try {
+        const res = await fetch('http://localhost:8000/api/payment/transactions/', {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          const payload = await res.json();
+          throw new Error(payload.detail || 'Failed to load transactions');
+        }
+        const data: Transaction[] = await res.json();
+        setTxs(data);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTxs();
   }, []);
 
-  const showNotification = (
-    message: string,
-    type: "success" | "error" | "info",
-    duration?: number
-  ) => {
-    let notificationDuration = 3000;
-    if (duration) {
-      notificationDuration = duration;
-    }
-    setNotification({
-      open: true,
-      message,
-      type,
-      duration: notificationDuration,
-    });
-  };
-
-  const closeNotification = () => {
-    setNotification({ ...notification, open: false });
-  };
-
-  const handleQuantityChange = async (
-    productId: number,
-    newQuantity: number,
-    currentQuantity: number
-  ) => {
-    if (newQuantity < 0) return;
-
-    try {
-      setUpdatingItems((prev) => [...prev, productId]);
-      const response = await axios.post(
-        `${API_BASE_URL}/cart/`,
-        {
-          product_id: productId,
-          quantity: newQuantity,
-          override: "true",
-        },
-        { withCredentials: true }
-      );
-
-      if (newQuantity === 0) {
-        if (response.data && response.data.items && response.data.items.length === 0) {
-          setCart({ ...response.data, items: [] });
-          updateCartItemCount(0);
-        } else {
-          setCart(response.data);
-          const totalQuantity =
-            response.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-          updateCartItemCount(totalQuantity);
-        }
-        showNotification("Item removed from cart", "success", 2000);
-      } else {
-        setCart(response.data);
-        const totalQuantity =
-          response.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-        updateCartItemCount(totalQuantity);
-
-        if (newQuantity > currentQuantity) {
-          showNotification(`Quantity increased to ${newQuantity}`, "success", 8000);
-        } else if (newQuantity < currentQuantity) {
-          showNotification(`Quantity decreased to ${newQuantity}`, "info", 3000);
-        } else {
-          showNotification("Quantity updated successfully", "success", 3000);
-        }
-      }
-    } catch (err) {
-      const error = err as AxiosError<ErrorResponse>;
-      if (error.response?.data?.error) {
-        showNotification(error.response.data.error, "error", 6000);
-      } else {
-        showNotification("Failed to update quantity", "error", 3000);
-      }
-      fetchCart();
-    } finally {
-      setUpdatingItems((prev) => prev.filter((id) => id !== productId));
-    }
-  };
-
-  const handleRemoveItem = async (productId: number) => {
-    try {
-      setUpdatingItems((prev) => [...prev, productId]);
-      const response = await axios.post(
-        `${API_BASE_URL}/cart/`,
-        {
-          product_id: productId,
-          quantity: 0,
-          override: "true",
-        },
-        { withCredentials: true }
-      );
-
-      if (response.data && response.data.items && response.data.items.length === 0) {
-        setCart({ ...response.data, items: [] });
-        updateCartItemCount(0);
-      } else {
-        setCart(response.data);
-        const totalQuantity =
-          response.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-        updateCartItemCount(totalQuantity);
-      }
-
-      showNotification("Item removed from cart", "success", 2000);
-    } catch (err) {
-      showNotification("Failed to remove item", "error", 3000);
-      fetchCart();
-    } finally {
-      setUpdatingItems((prev) => prev.filter((id) => id !== productId));
-    }
-  };
-
-  const handleProceedToCheckout = () => {
-    if (cart) {
-      navigate("/payment");
-    }
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          pt: 16,
-          textAlign: "center",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <Container sx={{ textAlign: 'center', mt: 4 }}>
         <CircularProgress />
-        <Typography sx={{ ml: 2 }}>Loading cart...</Typography>
-      </Box>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container sx={{ mt: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
     );
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background: "linear-gradient(to bottom right, #fcf9f4, #e8f1fc)",
-        pt: 16,
-        pb: 4,
-      }}
-    >
-      <Container>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: "bold",
-            textAlign: "center",
-            mb: 4,
-            color: "#1f2937",
-            fontFamily: "'Segoe UI', sans-serif",
-          }}
-        >
-          Your Shopping Cart
+    <>
+      <Toolbar />
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Your Transaction History
         </Typography>
-
-        {/* Rest of the component remains unchanged */}
+        {txs.length === 0 ? (
+          <Alert severity="info">No transactions yet</Alert>
+        ) : (
+          <Paper>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Transaction ID</TableCell>
+                  <TableCell>Order ID</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>When</TableCell>
+                  <TableCell align="center">Rate & Review</TableCell> {/* ← ADDED */}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {txs.map(tx => (
+                  <TableRow key={tx.id}>
+                    <TableCell>{tx.id}</TableCell>
+                    <TableCell>{tx.order_id}</TableCell>
+                    <TableCell>{tx.status}</TableCell>
+                    <TableCell>
+                      {new Date(tx.created_at).toLocaleString()} {/* ← MODIFIED */}
+                    </TableCell>
+                    <TableCell align="center">               {/* ← ADDED */}
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() =>
+                          navigate(
+                            `/review/${tx.order_id}/`
+                          )
+                        }
+                      >
+                        RATE & REVIEW
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Paper>
+        )}
       </Container>
-
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={notification.duration}
-        onClose={closeNotification}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={closeNotification} severity={notification.type} sx={{ width: "100%" }}>
-          {notification.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+    </>
   );
 };
 
-export default CartPage;
+export default TransactionHistoryPage;
