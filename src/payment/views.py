@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Transaction
 from .serializers import TransactionSerializer
 from django.db import transaction
+from cart.models import Cart
 
 class ProcessPaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -80,6 +81,13 @@ class ProcessPaymentView(APIView):
             order.status = "Processing"
             order.save()
             Transaction.objects.create(user=request.user, order=order, status="Completed")
+            
+            # 6) Clear the cart
+            cart = Cart.objects.filter(user=request.user, is_active=True).first()
+            if cart:
+                cart.items.all().delete()
+                cart.is_active = False
+                cart.save()
 
         # 7) Success
         return Response({"message":"Payment processed successfully"}, status=status.HTTP_200_OK)

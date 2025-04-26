@@ -74,6 +74,8 @@ const EditProduct: React.FC = () => {
       await axios.put(`http://127.0.0.1:8000/api/products/${slug}/`, formData, {
         withCredentials: true,
         headers: {
+          "Content-Type": "multipart/form-data",
+          "X-CSRFToken": localStorage.getItem("csrftoken") || "",
           "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
         },
       });

@@ -64,7 +64,6 @@ const AddProduct: React.FC = () => {
   
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("SUBMIT!", product, image)
     e.preventDefault();
     const formData = new FormData();
   
@@ -87,6 +86,8 @@ const AddProduct: React.FC = () => {
       const response = await axios.post("http://127.0.0.1:8000/api/products/", formData, {
         withCredentials: true,
         headers: {
+          "Content-Type": "multipart/form-data",
+          "X-CSRFToken": localStorage.getItem("csrftoken"),
           "Authorization": `Bearer ${localStorage.getItem("access_token")}`,
         },
       });

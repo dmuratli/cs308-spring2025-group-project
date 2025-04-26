@@ -71,11 +71,6 @@ class PlaceOrderView(APIView):
         order.total_price = total
         order.save()
 
-        # 4) Clear the cart: remove items and deactivate
-        cart.items.all().delete()
-        cart.is_active = False
-        cart.save()
-
         return Response(
             {"message": "Order placed successfully", "order_id": order.id},
             status=status.HTTP_201_CREATED
