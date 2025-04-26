@@ -80,7 +80,7 @@ function App() {
             <Container sx={{ mt: 12, textAlign: "center", py: 4 }}>
               <Typography variant="h4">404 – Page not found</Typography>
               <Typography variant="body1" color="text.secondary">
-                Oops! We can’t find that page.
+                Oops! We can't find that page.
               </Typography>
             </Container>
           }
