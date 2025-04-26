@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, CircularProgress, Snackbar, Alert } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import axios from 'axios';
-import { useCart } from '../context/CartContext'; // Yolunuzu kontrol edin
+import { useCart } from '../context/CartContext';
 
 // API base URL
 const API_BASE_URL = "http://localhost:8000";
@@ -27,56 +27,43 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   disabled = false
 }) => {
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState<{
-    open: boolean;
-    message: string;
-    type: 'success' | 'error' | 'info';
-  }>({
+  const [notification, setNotification] = useState<{ open: boolean; message: string; type: 'success' | 'error' | 'info'; }>({
     open: false,
     message: '',
     type: 'info'
   });
-  
+
   const { fetchCart } = useCart();
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (
+    e: React.MouseEvent<HTMLButtonElement>
+  ): Promise<void> => {
+    e.stopPropagation();
+    
     try {
       setLoading(true);
       const response = await axios.post(
         `${API_BASE_URL}/cart/`,
-        { 
-          product_id: productId,
-          quantity: initialQuantity 
-        },
+        { product_id: productId, quantity: initialQuantity },
         { withCredentials: true }
       );
 
-      // Update cart in context
-      fetchCart();
+      // Refresh the cart context
+      await fetchCart();
 
       // Show success notification
-      setNotification({
-        open: true,
-        message: 'Item added to cart successfully!',
-        type: 'success'
-      });
+      setNotification({ open: true, message: 'Item added to cart successfully!', type: 'success' });
     } catch (error: any) {
       console.error('Error adding item to cart:', error);
-      
-      // Handle error message from API
       const errorMessage = error.response?.data?.error || 'Failed to add item to cart';
-      setNotification({
-        open: true,
-        message: errorMessage,
-        type: 'error'
-      });
+      setNotification({ open: true, message: errorMessage, type: 'error' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleCloseNotification = () => {
-    setNotification({ ...notification, open: false });
+    setNotification(prev => ({ ...prev, open: false }));
   };
 
   return (
@@ -86,8 +73,10 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         size={size}
         fullWidth={fullWidth}
         onClick={handleAddToCart}
-        disabled={disabled || loading} // disabled prop'unu ekleyin
-        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <ShoppingCartIcon />}
+        disabled={disabled || loading}
+        startIcon={
+          loading ? <CircularProgress size={20} color="inherit" /> : <ShoppingCartIcon />
+        }
         sx={{
           backgroundColor: variant === 'contained' ? '#EF977F' : undefined,
           color: variant === 'contained' ? 'white' : '#EF977F',
@@ -100,7 +89,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
       >
         {buttonText}
       </Button>
-      
+
       <Snackbar
         open={notification.open}
         autoHideDuration={3000}
