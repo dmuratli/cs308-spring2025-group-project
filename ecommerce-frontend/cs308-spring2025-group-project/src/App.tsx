@@ -21,6 +21,7 @@ import PaymentPage         from "./pages/PaymentPage";
 import TransactionHistoryPage from "./pages/TransactionHistoryPage";
 import RateReviewPage      from "./pages/RateReviewPage";
 import { CartProvider } from "./context/CartContext";
+import { Typography, Container } from "@mui/material";
 
 function App() {
   useEffect(() => {
@@ -40,7 +41,6 @@ function App() {
   return (
     <CartProvider>
       <Navbar />
-
       <Routes>
         {/* — KULLANICI/RAPOR BÖLÜMÜ — */}
         <Route path="/"                        element={<HomePage />} />
@@ -74,7 +74,17 @@ function App() {
         <Route path="/sales-manager/invoices"   element={<InvoicesPage />} />
 
         {/* — 404 (daima en son) — */}
-        <Route path="*" element={<div style={{padding:40}}>404 – Sayfa bulunamadı</div>} />
+        <Route
+          path="*"
+          element={
+            <Container sx={{ mt: 12, textAlign: "center", py: 4 }}>
+              <Typography variant="h4">404 – Page not found</Typography>
+              <Typography variant="body1" color="text.secondary">
+                Oops! We can’t find that page.
+              </Typography>
+            </Container>
+          }
+        />
       </Routes>
     </CartProvider>
   );
