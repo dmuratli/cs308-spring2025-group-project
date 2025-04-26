@@ -41,7 +41,7 @@ urlpatterns = [
     path('api/token/',         TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(),      name='token_refresh'),
     path('api/register/',      register_view,                   name='register'),
-    path('api/logout/',        logout_view,                     name='logout'),
+    path('logout/',        logout_view,                     name='logout'),
     path('api/csrf/',          get_csrf_token,                  name='get_csrf'),
     path("api/orders/<int:pk>/product/", OrderProductInfoView.as_view()),
     path("api/reviews/", include("reviews.urls")),
