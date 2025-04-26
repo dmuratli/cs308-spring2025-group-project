@@ -40,8 +40,8 @@ const ManageProducts: React.FC<ManageProductsProps> = ({ panel }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [stockChanges, setStockChanges] = useState<Record<string, number>>({});
 
-  const basePath = panel === "admin" ? "/admin" : "/product-manager";
-
+  const basePath = "/product-manager";
+  
   useEffect(() => {
     axios
       .get<Product[]>("http://127.0.0.1:8000/api/products/")

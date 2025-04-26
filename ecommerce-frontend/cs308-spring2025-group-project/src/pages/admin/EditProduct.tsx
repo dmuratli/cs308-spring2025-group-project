@@ -75,7 +75,7 @@ const EditProduct: React.FC = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("✅ Product updated successfully!");
-      navigate("/admin/products");
+      navigate("/product-manager/manage-products");
     } catch (error: any) {
       console.error("❌ Error updating product:", error.response?.data || error.message);
       alert("❌ Failed to update product.");

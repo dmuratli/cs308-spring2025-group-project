@@ -2,7 +2,6 @@ from django.db import models
 from django.utils.text import slugify
 
 # Create your models here.
-# Product Model
 
 # Order Model
 class Order(models.Model):
@@ -10,6 +9,8 @@ class Order(models.Model):
         ("Processing", "Processing"),
         ("Shipped", "Shipped"),
         ("Delivered", "Delivered"),
+        ("Refunded", "Refunded"),
+        ("Cancelled", "Cancelled"),
     ]
     
     customer_name = models.CharField(max_length=255)
@@ -56,8 +57,16 @@ class Product(models.Model):
         self.save()
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(f"{self.title}-{self.author}")
+        # Always regenerate slug from title and author, ensuring uniqueness
+        base_slug = slugify(f"{self.title}-{self.author}")
+        slug_candidate = base_slug
+        num = 1
+        
+        # Exclude current instance when checking for uniqueness
+        while Product.objects.filter(slug=slug_candidate).exclude(pk=self.pk).exists():
+            slug_candidate = f"{base_slug}-{num}"
+            num += 1
+        self.slug = slug_candidate
         super().save(*args, **kwargs)
 
     def __str__(self):

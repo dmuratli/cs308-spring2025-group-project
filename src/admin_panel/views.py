@@ -82,15 +82,14 @@ class ProductViewSet(viewsets.ModelViewSet):
         product.save()
         return Response({"message": "Stock updated", "stock": product.stock})
 
-
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
     def get_permissions(self):
         if self.action == 'list':
-            return [IsProductManagerOrSalesManager()]
-        return [permissions.IsAuthenticated()]
+            return [IsCustomer()]
+        return [IsProductManagerOrSalesManager()]
 
     def get_queryset(self):
         user = self.request.user

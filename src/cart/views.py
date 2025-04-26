@@ -6,6 +6,7 @@ from admin_panel.models import Product
 from .serializers import CartSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny
+from django.db.models import Q
 
 class CartView(APIView):
     permission_classes = [AllowAny]
@@ -22,6 +23,35 @@ class CartView(APIView):
         return cart
 
     def get(self, request):
+        # Merge guest cart into user cart if JWT-authenticated
+        session_key = request.session.session_key
+        if session_key and request.user.is_authenticated:
+            try:
+                guest_cart = Cart.objects.get(
+                    session_key=session_key,
+                    is_active=True,
+                    user__isnull=True
+                )
+            except Cart.DoesNotExist:
+                guest_cart = None
+
+            if guest_cart:
+                user_cart, _ = Cart.objects.get_or_create(
+                    user=request.user,
+                    is_active=True
+                )
+                for item in guest_cart.items.all():
+                    existing = user_cart.items.filter(product=item.product).first()
+                    if existing:
+                        existing.quantity += item.quantity
+                        existing.save()
+                    else:
+                        item.cart = user_cart
+                        item.save()
+                guest_cart.is_active = False
+                guest_cart.save()
+
+        # Return the current cart (merged if applicable)
         cart = self.get_cart(request)
         serializer = CartSerializer(cart)
         return Response(serializer.data)
@@ -31,7 +61,6 @@ class CartView(APIView):
         product_id = request.data.get("product_id")
         quantity = int(request.data.get("quantity", 1))
 
-         # Convert override parameter properly (if override is "true", then True, else False)
         override_param = request.data.get("override", "false")
         if isinstance(override_param, str):
             override = override_param.lower() == "true"
@@ -39,7 +68,6 @@ class CartView(APIView):
             override = bool(override_param)
         product = get_object_or_404(Product, id=product_id)
 
-        # Handle item removal when quantity is 0
         if quantity == 0:
             item = CartItem.objects.filter(cart=cart, product=product).first()
             if item:
@@ -48,10 +76,9 @@ class CartView(APIView):
                 return Response(serializer.data)
             return Response({"message": "Item not found in cart"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get or create the cart item
         item, created = CartItem.objects.get_or_create(
-            cart=cart, 
-            product=product, 
+            cart=cart,
+            product=product,
             defaults={'quantity': quantity}
         )
 
@@ -68,7 +95,6 @@ class CartView(APIView):
                         {"error": "Not enough stock available for this product."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                # Set the quantity to the exact amount provided (may decrease quantity)
                 item.quantity = quantity
             else:
                 new_quantity = item.quantity + quantity

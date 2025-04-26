@@ -1,45 +1,42 @@
-// src/App.tsx
 import React, { useEffect } from "react";
 import { Routes, Route }   from "react-router-dom";
-import axios               from "axios";
-
-// ortak bileşenler
-import Navbar       from "./components/Navbar";
-import { CartProvider } from "./context/CartContext";
-
-// genel sayfalar
-import HomePage            from "./pages/HomePage";
-import LoginPage           from "./pages/LoginPage";
-import RegisterPage        from "./pages/RegisterPage";
-import ProfilePage         from "./pages/ProfilePage";
+import axios from "axios";
+import Navbar from "./components/Navbar";
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import ManageProducts from "./pages/admin/ManageProducts";
+import ManageOrders from "./pages/admin/ManageOrders";
+import AddProduct from "./pages/admin/AddProduct";
+import EditProduct from "./pages/admin/EditProduct";
+import ProductPage from "./pages/ProductPage";
+import ProductManagerDashboard from './pages/admin/ProductManagerDashboard';
+import SalesManagerDashboard     from "./pages/admin/SalesManagerDashboard";
+import ProfilePage from "./pages/ProfilePage";
+import BookDetailsPage from "./pages/BookDetailPage";
+import CommentsPage from "./pages/admin/CommentsPage";
+import InvoicesPage from "./pages/admin/InvoicesPage";
 import CartPage            from "./pages/CartPage";
 import PaymentPage         from "./pages/PaymentPage";
-import ProductPage         from "./pages/ProductPage";
-import BookDetailsPage     from "./pages/BookDetailPage";
 import TransactionHistoryPage from "./pages/TransactionHistoryPage";
 import RateReviewPage      from "./pages/RateReviewPage";
-
-// yönetim panelleri
-import AdminDashboard            from "./pages/admin/AdminDashboard";
-import ManageProducts            from "./pages/admin/ManageProducts";
-import ManageOrders              from "./pages/admin/ManageOrders";
-import ManageUsers               from "./pages/admin/ManageUsers";
-import AddProduct                from "./pages/admin/AddProduct";
-import EditProduct               from "./pages/admin/EditProduct";
-import CommentsPage              from "./pages/admin/CommentsPage";
-import InvoicesPage              from "./pages/admin/InvoicesPage";
-import ProductManagerDashboard   from "./pages/admin/ProductManagerDashboard";
-import SalesManagerDashboard     from "./pages/admin/SalesManagerDashboard";
+import { CartProvider } from "./context/CartContext";
 
 function App() {
-  /* CSRF çerezi */
   useEffect(() => {
     axios.get("http://localhost:8000/api/csrf/", { withCredentials: true });
-    fetch("http://localhost:8000/csrf/", { credentials: "include" }).catch(
+
+    fetch("http://localhost:8000/api/csrf/", { credentials: "include" }).catch(
       (err) => console.error("Failed to fetch CSRF token:", err)
     );
   }, []);
 
+  useEffect(() => {
+    fetch("http://localhost:8000/api/csrf/", {
+      credentials: "include", // Include cookies in the request
+    }).catch((error) => console.error("Failed to fetch CSRF token:", error));
+  }, []); 
+  
   return (
     <CartProvider>
       <Navbar />
@@ -62,14 +59,6 @@ function App() {
 
         {/* — YORUM SAYFASI (transaksiyon sonrası) — */}
         <Route path="/review/:orderId"         element={<RateReviewPage />} />
-
-        {/* — ADMİN — */}
-        <Route path="/admin"                   element={<AdminDashboard />} />
-        <Route path="/admin/products"          element={<ManageProducts panel="admin" />} />
-        <Route path="/admin/orders"            element={<ManageOrders />} />
-        <Route path="/admin/users"             element={<ManageUsers />} />
-        <Route path="/admin/add-product"       element={<AddProduct />} />
-        <Route path="/admin/edit-product/:slug"element={<EditProduct />} />
 
         {/* — PRODUCT MANAGER — */}
         <Route path="/product-manager"                         element={<ProductManagerDashboard />} />
