@@ -20,8 +20,11 @@ class ProcessPaymentView(APIView):
     def post(self, request, order_id):
         # 1) Load the order
         order = get_object_or_404(Order, id=order_id, user=request.user)
-        if order.status != "Processing":
-            return Response({"message":"Order already processed."}, status=status.HTTP_200_OK)
+        if Transaction.objects.filter(order=order).exists():
+            return Response(
+                {"message": "Order already processed."},
+                status=status.HTTP_200_OK,
+            )
 
         # 2) Pull out card data (accept either naming)
         data = request.data
@@ -80,8 +83,6 @@ class ProcessPaymentView(APIView):
 
         # 7) Success
         return Response({"message":"Payment processed successfully"}, status=status.HTTP_200_OK)
-
-
 
 class TransactionHistoryView(generics.ListAPIView):
     """

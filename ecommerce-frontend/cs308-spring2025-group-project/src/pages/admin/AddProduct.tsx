@@ -64,6 +64,7 @@ const AddProduct: React.FC = () => {
   
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("SUBMIT!", product, image)
     e.preventDefault();
     const formData = new FormData();
   

@@ -67,8 +67,6 @@ class PlaceOrderView(APIView):
                 price_at_purchase=item.product.price,
             )
             total += item.quantity * item.product.price
-            # decrement stock
-            item.product.decrease_stock(item.quantity)
 
         order.total_price = total
         order.save()
