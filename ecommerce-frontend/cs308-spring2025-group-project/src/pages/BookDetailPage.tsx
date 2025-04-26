@@ -1,3 +1,4 @@
+// src/pages/BookDetailsPage.tsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -127,13 +128,23 @@ const BookDetailsPage: React.FC = () => {
       <Navbar />
       <Toolbar />
       <Container sx={{ my: 5 }}>
-        <Card sx={{ display: "flex", boxShadow: 5, borderRadius: 3 }}>
+        <Card
+          sx={{
+            display: "flex",
+            boxShadow: 5,
+            borderRadius: 3,
+            transition: "transform 0.3s ease",
+            "&:hover": {
+              transform: "scale(1.02)",
+            },
+          }}
+        >
           <CardMedia
             component="img"
             height="450"
             image={product.cover_image || "https://via.placeholder.com/450"}
             alt={product.title}
-            sx={{ width: "40%", borderRadius: "3px 0 0 3px" }}
+            sx={{ width: "40%", borderRadius: "12px 0 0 12px" }}
           />
 
           <CardContent sx={{ flex: 1, p: 5 }}>
@@ -229,8 +240,17 @@ const BookDetailsPage: React.FC = () => {
               fullWidth
               sx={{
                 mt: 2,
-                backgroundColor: "#EF977F",
-                "&:hover": { backgroundColor: "#d46c4e" },
+                background: "linear-gradient(to right, #f6ad55, #fbd38d)",
+                color: "white",
+                fontWeight: "bold",
+                fontSize: "1rem",
+                py: 1.5,
+                borderRadius: 3,
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  background: "linear-gradient(to right, #f9a826, #f6ad55)",
+                  transform: "scale(1.03)",
+                },
               }}
               disabled={product.stock === 0 || loading}
               onClick={handleAddToCart}
@@ -238,12 +258,13 @@ const BookDetailsPage: React.FC = () => {
               {loading
                 ? "Adding…"
                 : product.stock > 0
-                ? "Add to Cart"
-                : "Out of Stock"}
+                ? "ADD TO CART"
+                : "OUT OF STOCK"}
             </Button>
           </CardContent>
         </Card>
 
+        {/* Reviews */}
         <Box sx={{ mt: 6 }}>
           <Typography variant="h5" gutterBottom fontWeight="bold">
             Reviews
@@ -289,7 +310,7 @@ const BookDetailsPage: React.FC = () => {
                     {r.stars}
                   </Avatar>
                   <Typography fontWeight="bold" fontSize="1.1rem" mr={2}>
-                  {"🌟".repeat(r.stars)}
+                    {"🌟".repeat(r.stars)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" mr={1}>
                     {new Date(r.created_at).toLocaleDateString()}

@@ -1,5 +1,3 @@
-// src/ecommerce-frontend/src/pages/PaymentPage.tsx
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -22,32 +20,28 @@ const PaymentPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry]       = useState("");
-  const [cvv, setCvv]             = useState("");
-  const [loading, setLoading]     = useState(false);
-  const [notification, setNotification] = useState<{
-    open: boolean;
-    message: string;
-    type: "success" | "error";
-  }>({ open: false, message: "", type: "success" });
-
-  // Show the real server message above the form, if any
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    type: "success" as "success" | "error",
+  });
   const [serverMessage, setServerMessage] = useState<string | null>(null);
 
-  // Fetch the cart once on mount
   useEffect(() => {
     fetchCart();
   }, []);
 
   const handlePayment = async () => {
-    // 1) Front-end field check
     if (!cardNumber || !expiry || !cvv) {
       setNotification({ open: true, message: "Please fill in all fields.", type: "error" });
       return;
     }
 
-    const csrfToken    = getCSRFToken();
-    const accessToken  = localStorage.getItem("access_token");
+    const csrfToken = getCSRFToken();
+    const accessToken = localStorage.getItem("access_token");
     if (!accessToken) {
       setNotification({ open: true, message: "You must be logged in to pay.", type: "error" });
       return;
@@ -55,7 +49,6 @@ const PaymentPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // 2) Place the order
       const orderRes = await fetch("http://localhost:8000/api/orders/place/", {
         method: "POST",
         headers: {
@@ -71,7 +64,6 @@ const PaymentPage: React.FC = () => {
       }
       const { order_id } = orderData;
 
-      // 3) Process payment
       const payRes = await fetch(
         `http://localhost:8000/api/payment/process/${order_id}/`,
         {
@@ -84,7 +76,7 @@ const PaymentPage: React.FC = () => {
           credentials: "include",
           body: JSON.stringify({
             card_number: cardNumber,
-            expiry,    // MM/YY
+            expiry,
             cvv,
           }),
         }
@@ -94,18 +86,11 @@ const PaymentPage: React.FC = () => {
         throw new Error(payData.error || payData.message || "Payment failed.");
       }
 
-      // 4) Success — surface the server's exact message
       setServerMessage(payData.message);
-      setNotification({
-        open: true,
-        message: payData.message,
-        type: "success",
-      });
+      setNotification({ open: true, message: payData.message, type: "success" });
 
-      // 5) Refresh cart & redirect
       await fetchCart();
       setTimeout(() => navigate("/profile/transactions"), 1500);
-
     } catch (err: any) {
       setNotification({
         open: true,
@@ -122,7 +107,17 @@ const PaymentPage: React.FC = () => {
     : 0;
 
   return (
-    <Container sx={{ mt: 12, minHeight: "80vh" }}>
+    <Container
+      sx={{
+        mt: 12,
+        minHeight: "80vh",
+        animation: "fadeIn 1s ease-in",
+        "@keyframes fadeIn": {
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
+        },
+      }}
+    >
       {serverMessage && (
         <Alert severity="info" sx={{ mb: 2 }}>
           {serverMessage}
@@ -130,20 +125,26 @@ const PaymentPage: React.FC = () => {
       )}
 
       <Typography variant="h4" fontWeight="bold" textAlign="center" mb={4}>
-        Payment
+        Secure Payment
       </Typography>
 
       {cart && cart.items.length > 0 ? (
-        <Grid container spacing={4}>
-          {/* Order summary */}
-          <Grid item xs={12} md={6}>
-            <Card>
+        <Grid container spacing={4} justifyContent="center">
+          <Grid item xs={12} md={5}>
+            <Card
+              sx={{
+                borderRadius: 4,
+                boxShadow: 4,
+                transition: "transform 0.3s",
+                "&:hover": { transform: "scale(1.02)" },
+              }}
+            >
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Order Summary
                 </Typography>
                 {cart.items.map((item) => (
-                  <Box key={item.id} display="flex" justifyContent="space-between" mb={2}>
+                  <Box key={item.id} display="flex" justifyContent="space-between" mb={1}>
                     <Typography>
                       {item.product_title} x{item.quantity}
                     </Typography>
@@ -152,16 +153,22 @@ const PaymentPage: React.FC = () => {
                     </Typography>
                   </Box>
                 ))}
-                <Typography variant="h6" fontWeight="bold" mt={2}>
+                <Typography variant="h6" fontWeight="bold" mt={2} textAlign="right">
                   Total: ${total.toFixed(2)}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
 
-          {/* Payment form */}
-          <Grid item xs={12} md={6}>
-            <Card>
+          <Grid item xs={12} md={5}>
+            <Card
+              sx={{
+                borderRadius: 4,
+                boxShadow: 4,
+                transition: "transform 0.3s",
+                "&:hover": { transform: "scale(1.02)" },
+              }}
+            >
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Payment Details
@@ -177,29 +184,52 @@ const PaymentPage: React.FC = () => {
                   inputProps={{ maxLength: 19 }}
                 />
 
-                <TextField
-                  label="Expiry Date (MM/YY)"
-                  fullWidth
-                  margin="normal"
-                  value={expiry}
-                  onChange={(e) => setExpiry(e.target.value)}
-                  placeholder="MM/YY"
-                />
-
-                <TextField
-                  label="CVV"
-                  fullWidth
-                  margin="normal"
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value)}
-                  placeholder="123"
-                  inputProps={{ maxLength: 3 }}
-                />
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Expiry Date (MM/YY)"
+                      fullWidth
+                      margin="normal"
+                      value={expiry}
+                      onChange={(e) => setExpiry(e.target.value)}
+                      placeholder="MM/YY"
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="CVV"
+                      fullWidth
+                      margin="normal"
+                      value={cvv}
+                      onChange={(e) => setCvv(e.target.value)}
+                      placeholder="123"
+                      inputProps={{ maxLength: 3 }}
+                    />
+                  </Grid>
+                </Grid>
 
                 <Button
                   variant="contained"
+                  size="large"
                   fullWidth
-                  sx={{ mt: 2 }}
+                  sx={{
+                    mt: 3,
+                    py: 1.8,
+                    fontSize: "1rem",
+                    fontWeight: "bold",
+                    borderRadius: 3,
+                    background: "linear-gradient(45deg, #f6ad55, #f97316)",
+                    color: "#fff",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      background: "linear-gradient(45deg, #f97316, #ea580c)",
+                      transform: "scale(1.02)",
+                    },
+                    "&:active": {
+                      transform: "scale(0.98)",
+                    },
+                  }}
                   onClick={handlePayment}
                   disabled={loading}
                 >

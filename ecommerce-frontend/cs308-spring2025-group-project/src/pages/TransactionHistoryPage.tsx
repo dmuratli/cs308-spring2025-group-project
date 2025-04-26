@@ -11,9 +11,9 @@ import {
   Paper,
   CircularProgress,
   Alert,
-  Button                   // ← ADDED
+  Button,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; // ← ADDED
+import { useNavigate } from 'react-router-dom';
 
 interface Transaction {
   id: number;
@@ -23,10 +23,10 @@ interface Transaction {
 }
 
 const TransactionHistoryPage: React.FC = () => {
-  const [txs, setTxs]       = useState<Transaction[]>([]);
+  const [txs, setTxs] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
-  const navigate = useNavigate();              // ← ADDED
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTxs = async () => {
@@ -73,43 +73,77 @@ const TransactionHistoryPage: React.FC = () => {
     <>
       <Toolbar />
       <Container sx={{ mt: 4 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
           Your Transaction History
         </Typography>
         {txs.length === 0 ? (
           <Alert severity="info">No transactions yet</Alert>
         ) : (
-          <Paper>
+          <Paper
+            sx={{
+              overflowX: 'auto',
+              borderRadius: 4,
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+              p: 2,
+            }}
+          >
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell>Transaction ID</TableCell>
-                  <TableCell>Order ID</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>When</TableCell>
-                  <TableCell align="center">Rate & Review</TableCell> {/* ← ADDED */}
+                <TableRow
+                  sx={{
+                    backgroundColor: '#fef3c7',
+                  }}
+                >
+                  <TableCell><strong>Transaction ID</strong></TableCell>
+                  <TableCell><strong>Order ID</strong></TableCell>
+                  <TableCell><strong>Status</strong></TableCell>
+                  <TableCell><strong>When</strong></TableCell>
+                  <TableCell align="center"><strong>Rate & Review</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {txs.map(tx => (
-                  <TableRow key={tx.id}>
+                {txs.map((tx) => (
+                  <TableRow
+                    key={tx.id}
+                    sx={{
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        backgroundColor: '#fff7ed',
+                        transform: 'scale(1.01)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                      },
+                      borderBottom: '1px solid #eee',
+                    }}
+                  >
                     <TableCell>{tx.id}</TableCell>
                     <TableCell>{tx.order_id}</TableCell>
                     <TableCell>{tx.status}</TableCell>
                     <TableCell>
-                      {new Date(tx.created_at).toLocaleString()} {/* ← MODIFIED */}
+                      {new Date(tx.created_at).toLocaleString()}
                     </TableCell>
-                    <TableCell align="center">               {/* ← ADDED */}
+                    <TableCell align="center">
                       <Button
-                        variant="outlined"
+                        onClick={() => navigate(`/review/${tx.order_id}/`)}
+                        sx={{
+                          background: 'linear-gradient(45deg, #f6ad55, #f97316)',
+                          color: 'white',
+                          fontWeight: 'bold',
+                          borderRadius: 3,
+                          px: 2,
+                          py: 0.5,
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            background: 'linear-gradient(45deg, #f97316, #ea580c)',
+                            transform: 'scale(1.05)',
+                          },
+                          '&:active': {
+                            transform: 'scale(0.97)',
+                          },
+                        }}
                         size="small"
-                        onClick={() =>
-                          navigate(
-                            `/review/${tx.order_id}/`
-                          )
-                        }
                       >
-                        RATE & REVIEW
+                        Rate & Review
                       </Button>
                     </TableCell>
                   </TableRow>

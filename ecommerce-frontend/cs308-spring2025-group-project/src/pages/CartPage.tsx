@@ -127,31 +127,11 @@ const CartPage = () => {
         { withCredentials: true }
       );
 
-      if (newQuantity === 0) {
-        if (response.data && response.data.items && response.data.items.length === 0) {
-          setCart({ ...response.data, items: [] });
-          updateCartItemCount(0);
-        } else {
-          setCart(response.data);
-          const totalQuantity =
-            response.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-          updateCartItemCount(totalQuantity);
-        }
-        showNotification("Item removed from cart", "success", 2000);
-      } else {
-        setCart(response.data);
-        const totalQuantity =
-          response.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-        updateCartItemCount(totalQuantity);
-
-        if (newQuantity > currentQuantity) {
-          showNotification(`Quantity increased to ${newQuantity}`, "success", 8000);
-        } else if (newQuantity < currentQuantity) {
-          showNotification(`Quantity decreased to ${newQuantity}`, "info", 3000);
-        } else {
-          showNotification("Quantity updated successfully", "success", 3000);
-        }
-      }
+      setCart(response.data);
+      const totalQuantity =
+        response.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
+      updateCartItemCount(totalQuantity);
+      showNotification("Quantity updated successfully", "success", 3000);
     } catch (err) {
       const error = err as AxiosError<ErrorResponse>;
       if (error.response?.data?.error) {
@@ -178,16 +158,8 @@ const CartPage = () => {
         { withCredentials: true }
       );
 
-      if (response.data && response.data.items && response.data.items.length === 0) {
-        setCart({ ...response.data, items: [] });
-        updateCartItemCount(0);
-      } else {
-        setCart(response.data);
-        const totalQuantity =
-          response.data.items?.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-        updateCartItemCount(totalQuantity);
-      }
-
+      setCart(response.data);
+      updateCartItemCount(0);
       showNotification("Item removed from cart", "success", 2000);
     } catch (err) {
       showNotification("Failed to remove item", "error", 3000);
@@ -205,15 +177,7 @@ const CartPage = () => {
 
   if (isLoading) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          pt: 16,
-          textAlign: "center",
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
+      <Box sx={{ minHeight: "100vh", pt: 16, textAlign: "center" }}>
         <CircularProgress />
         <Typography sx={{ ml: 2 }}>Loading cart...</Typography>
       </Box>
@@ -221,119 +185,69 @@ const CartPage = () => {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background: "linear-gradient(to bottom right, #fdf6f0, #e8f0fe)",
-        pt: 16,
-        pb: 4,
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", background: "linear-gradient(to bottom right, #fcf9f4, #e8f1fc)", pt: 16, pb: 4 }}>
       <Container>
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: "bold",
-            textAlign: "center",
-            mb: 4,
-            color: "#2d3748",
-          }}
-        >
+        <Typography variant="h4" sx={{ fontWeight: "bold", textAlign: "center", mb: 4, color: "#1f2937" }}>
           Your Shopping Cart
         </Typography>
 
-        {cart && cart.items && cart.items.length > 0 ? (
+        {cart && cart.items.length > 0 ? (
           <>
             <Grid container spacing={3}>
               {cart.items.map((item) => (
                 <Grid item xs={12} key={item.id}>
-                  <Card
-                    sx={{
-                      display: "flex",
-                      p: 2,
-                      alignItems: "center",
-                      borderRadius: 3,
-                      boxShadow: 4,
-                      background: "linear-gradient(to right, #fff5f0, #f0f4ff)",
-                    }}
-                  >
+                  <Card sx={{ display: "flex", p: 2, alignItems: "center", borderRadius: 3, boxShadow: 4, background: "linear-gradient(to right, #fff5f0, #f0f4ff)", transition: "transform 0.3s ease", "&:hover": { transform: "scale(1.02)" } }}>
                     <CardMedia
                       component="img"
-                      sx={{
-                        width: 100,
-                        height: 100,
-                        borderRadius: 2,
-                        mr: 2,
-                        objectFit: "cover",
-                        backgroundColor: "#f8f9fa",
-                      }}
-                      image={
-                        item.cover_image && item.cover_image.includes("http")
-                          ? item.cover_image
-                          : item.cover_image
-                          ? `${API_BASE_URL}${item.cover_image}`
-                          : "https://via.placeholder.com/100x140?text=No+Image"
-                      }
+                      sx={{ width: 100, height: 100, borderRadius: 2, mr: 2, objectFit: "cover", backgroundColor: "#f8f9fa" }}
+                      image={item.cover_image ? `${API_BASE_URL}${item.cover_image}` : "https://via.placeholder.com/100x140?text=No+Image"}
                       alt={item.product_title}
                     />
                     <Box sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2d3748" }}>
-                        {item.product_title}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Unit Price: ${formatPrice(item.product_price)}
-                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2d3748" }}>{item.product_title}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Unit Price: ${formatPrice(item.product_price)}</Typography>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography variant="body2" sx={{ mr: 1 }}>
-                          Quantity:
-                        </Typography>
+                        <Typography variant="body2" sx={{ mr: 1 }}>Quantity:</Typography>
                         <TextField
                           type="number"
                           size="small"
                           value={item.quantity}
-                          onChange={(e) =>
-                            handleQuantityChange(item.product, parseInt(e.target.value, 10), item.quantity)
-                          }
-                          sx={{ width: 70 }}
-                          inputProps={{
-                            min: 0,
-                            step: 1,
-                          }}
+                          onChange={(e) => handleQuantityChange(item.product, parseInt(e.target.value, 10), item.quantity)}
+                          sx={{ width: 70, borderRadius: 2, boxShadow: "0 0 6px rgba(0,0,0,0.1)" }}
+                          inputProps={{ min: 0, step: 1 }}
                           disabled={updatingItems.includes(item.product)}
                         />
-                        {updatingItems.includes(item.product) && (
-                          <CircularProgress size={20} sx={{ ml: 1 }} />
-                        )}
+                        {updatingItems.includes(item.product) && <CircularProgress size={20} sx={{ ml: 1 }} />}
                       </Box>
                     </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: "bold", color: "#2d3748", mx: 2 }}
-                    >
+                    <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2d3748", mx: 2 }}>
                       ${formatPrice(item.total_price)}
                     </Typography>
                     <Button
-                      variant="contained"
-                      color="error"
                       onClick={() => handleRemoveItem(item.product)}
                       disabled={updatingItems.includes(item.product)}
+                      sx={{
+                        background: "linear-gradient(45deg, #fbb6b6, #fbcfe8)",
+                        color: "#6b0d0d",
+                        fontWeight: "bold",
+                        px: 2,
+                        py: 1,
+                        borderRadius: 2,
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          background: "linear-gradient(45deg, #fca5a5, #f9a8d4)",
+                          transform: "scale(1.05)",
+                        },
+                      }}
                     >
-                      {updatingItems.includes(item.product) ? (
-                        <CircularProgress size={24} color="inherit" />
-                      ) : (
-                        "REMOVE"
-                      )}
+                      {updatingItems.includes(item.product) ? <CircularProgress size={24} color="inherit" /> : "Remove"}
                     </Button>
                   </Card>
                 </Grid>
               ))}
             </Grid>
-            <Box sx={{ textAlign: "right", mt: 4, pr: 2 }}>
-              {cart.items.some((item) => item.stock !== undefined && item.quantity > item.stock) && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  Some items in your cart exceed available stock. Please adjust quantities.
-                </Alert>
-              )}
+            <Box sx={{ textAlign: "right", mt: 4 }}>
               <Typography variant="h5" sx={{ fontWeight: "bold", color: "#2d3748" }}>
                 Total: ${formatPrice(cart.total)}
               </Typography>
@@ -341,64 +255,26 @@ const CartPage = () => {
                 variant="contained"
                 sx={{
                   mt: 2,
-                  backgroundColor: "#EF977F",
+                  background: "linear-gradient(to right, #f6ad55, #f97316)",
                   color: "white",
                   fontWeight: "bold",
                   px: 3,
+                  py: 1,
+                  borderRadius: 3,
+                  transition: "all 0.3s ease",
                   "&:hover": {
-                    backgroundColor: "#d46c4e",
+                    background: "linear-gradient(to right, #f97316, #ea580c)",
+                    transform: "scale(1.05)",
                   },
                 }}
                 onClick={handleProceedToCheckout}
-                disabled={cart.items.some((item) => item.stock !== undefined && item.quantity > item.stock)}
               >
                 PROCEED TO CHECKOUT
               </Button>
             </Box>
           </>
         ) : (
-          <Box sx={{ textAlign: "center", mt: 8 }}>
-            <Card
-              sx={{
-                p: 4,
-                borderRadius: 2,
-                boxShadow: 3,
-                display: "inline-block",
-              }}
-            >
-              <Box sx={{ mb: 2 }}>
-                <CardMedia
-                  component="img"
-                  image="/cartimage.png"
-                  alt="Empty Cart"
-                  sx={{ width: 160, mx: "auto" }}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "https://via.placeholder.com/160?text=Empty+Cart";
-                  }}
-                />
-              </Box>
-              <Typography variant="h6" sx={{ mb: 2, color: "#1a202c" }}>
-                Your cart is currently empty.
-              </Typography>
-              <Button
-                variant="contained"
-                component={Link}
-                to="/"
-                sx={{
-                  backgroundColor: "#EF977F",
-                  color: "#fff",
-                  px: 3,
-                  py: 1,
-                  "&:hover": {
-                    backgroundColor: "#d46c4e",
-                  },
-                }}
-              >
-                Continue Shopping
-              </Button>
-            </Card>
-          </Box>
+          <Alert severity="info" sx={{ mt: 6 }}>Your cart is empty.</Alert>
         )}
       </Container>
 

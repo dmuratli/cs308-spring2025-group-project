@@ -45,7 +45,6 @@ const RateReviewPage: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchProductInfo();
   }, [orderId]);
 
@@ -95,11 +94,22 @@ const RateReviewPage: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(to right, #fdfbfb, #ebedee)',
-        borderRadius: 4,
         py: 6,
       }}
     >
-      <Paper elevation={5} sx={{ p: 5, borderRadius: 4, width: '100%' }}>
+      <Paper
+        elevation={6}
+        sx={{
+          p: 5,
+          borderRadius: 4,
+          width: '100%',
+          textAlign: 'center',
+          transition: 'transform 0.3s ease',
+          '&:hover': {
+            transform: 'scale(1.02)',
+          },
+        }}
+      >
         <Typography variant="h4" fontWeight="bold" gutterBottom>
           ⭐ Rate & Review
         </Typography>
@@ -144,10 +154,10 @@ const RateReviewPage: React.FC = () => {
                 borderColor: '#ccc',
               },
               '&:hover fieldset': {
-                borderColor: '#1976d2',
+                borderColor: '#f6ad55',
               },
               '&.Mui-focused fieldset': {
-                borderColor: '#1976d2',
+                borderColor: '#f6ad55',
               },
             },
           }}
@@ -164,8 +174,14 @@ const RateReviewPage: React.FC = () => {
             fontWeight: 'bold',
             fontSize: '1rem',
             py: 1.5,
-            backgroundColor: '#1976d2',
-            '&:hover': { backgroundColor: '#155fa0' },
+            background: 'linear-gradient(to right, #f6ad55, #fbd38d)',
+            color: 'white',
+            borderRadius: 3,
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              background: 'linear-gradient(to right, #f9a826, #f6ad55)',
+              transform: 'scale(1.05)',
+            },
           }}
         >
           {submitting ? (
