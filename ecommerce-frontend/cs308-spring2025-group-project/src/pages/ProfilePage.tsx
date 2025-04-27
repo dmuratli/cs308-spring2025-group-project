@@ -343,7 +343,7 @@ const statusTypes = useMemo<string[]>(() =>
 useEffect(() => {
   if (!isAuthenticated) return;
   const token = localStorage.getItem("access_token");
-  fetch("http://127.0.0.1:8000/api/orders/", {
+  fetch("http://127.0.0.1:8000/api/orders/mine/", {
     headers: { Authorization: `Bearer ${token}` },
   })
     .then((res) => {

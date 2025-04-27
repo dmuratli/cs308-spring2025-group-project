@@ -115,6 +115,17 @@ class OrderListView(ListAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
+class MyOrderListView(ListAPIView):
+    """
+    GET /api/orders/mine/
+    Returns only the current user's orders, regardless of role.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class   = OrderSerializer
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
 class OrderItemsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
