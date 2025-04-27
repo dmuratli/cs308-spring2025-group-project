@@ -15,19 +15,32 @@ from cart.models import Cart, CartItem
 class OrderProductInfoView(APIView):
     """
     GET /api/orders/product-info/<order_id>/
-    -> { "product_id": ..., "product_slug": ... }
+      -> { "items": [ {product_id,product_slug,product_title,quantity}, … ] }
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, order_id):
-        try:
-            order_item = OrderItem.objects.get(order_id=order_id, order__user=request.user)
-            return Response({
-                "product_id": order_item.product.id,
-                "product_slug": order_item.product.slug
-            })
-        except OrderItem.DoesNotExist:
+        # fetch all items for this order AND this user
+        qs = (
+            OrderItem.objects
+            .filter(order_id=order_id, order__user=request.user)
+            .select_related("product")
+        )
+        if not qs.exists():
             raise PermissionDenied("Order not found or you don't have access.")
+
+        # build a list of items
+        items = [
+            {
+                "product_id":   oi.product.id,
+                "product_slug": oi.product.slug,
+                "product_title": oi.product.title,
+                "quantity":     oi.quantity,
+            }
+            for oi in qs
+        ]
+
+        return Response({"items": items})
 
 VALID_TRANSITIONS = {
     'Processing': ['Shipped', 'Cancelled'],
