@@ -397,9 +397,6 @@ useEffect(() => {
               <Typography variant="h6" fontWeight="bold" gutterBottom>
                 {profileData.username}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                This is your login username.
-              </Typography>
             </Box>
           </Box>
 
@@ -519,9 +516,39 @@ useEffect(() => {
       {/* Order History Section */}
       <Fade in={true} timeout={1000}>
         <Paper elevation={3} sx={{ ...styles.paperStyles, marginTop: 6, maxWidth: 600, marginX: "auto" }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={1}
+        >
+          <Typography variant="h6" fontWeight="bold">
             Order History
           </Typography>
+          <Button
+            onClick={() => navigate("/profile/transactions")}
+            sx={{
+              background: 'linear-gradient(45deg, #f6ad55, #f97316)',
+              color: 'white',
+              fontWeight: 'bold',
+              borderRadius: 3,
+              px: 2,
+              py: 0.5,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #f97316, #ea580c)',
+                transform: 'scale(1.05)',
+              },
+              '&:active': {
+                transform: 'scale(0.97)',
+              },
+            }}
+            size="small"
+          >
+            View Transaction History
+          </Button>
+        </Box>
           <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 3 }}>
             Your recent purchases organized by status
           </Typography>
