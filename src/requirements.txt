@@ -11,3 +11,4 @@ Faker
 factory_boy
 celery
 pytest
+python-dotenv

@@ -17,8 +17,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR)) 
   #burayı ratereview için ekledim(src dizini pyhon yoluna dahil etmek için)
 
+from dotenv import load_dotenv
 
-from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+# email şifrelerini .env dosyasından alabilmek için dotenv kütüphanesini kullanıyoruz
+
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -172,3 +176,12 @@ AUTH_USER_MODEL = "users.User"
 CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+
+# ---------------- Gmail SMTP ----------------
+EMAIL_BACKEND   = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST      = "smtp.gmail.com"
+EMAIL_PORT      = 587
+EMAIL_USE_TLS   = True
+EMAIL_HOST_USER = os.getenv("EMAIL_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASS")
+DEFAULT_FROM_EMAIL = f"Book Store <{EMAIL_HOST_USER}>"

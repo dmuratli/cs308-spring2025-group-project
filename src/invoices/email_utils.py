@@ -1,12 +1,9 @@
 from django.core.mail import EmailMessage
 from django.conf import settings
 
-def email_invoice(invoice, pdf_bytes):
-    msg = EmailMessage(
-        subject=f"Invoice #{invoice.pk}",
-        body="Thanks for your order – the invoice is attached.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[invoice.customer.email],
-    )
-    msg.attach(f"invoice_{invoice.pk}.pdf", pdf_bytes, "application/pdf")
-    msg.send(fail_silently=False)
+def send_invoice_email(to_email: str, pdf_bytes: bytes, order_id: int):
+    subject = f"Your Invoice #{order_id}"
+    body = "Thank you for your order! Please find your invoice attached."
+    email = EmailMessage(subject, body, settings.DEFAULT_FROM_EMAIL, [to_email])
+    email.attach(f"invoice_{order_id}.pdf", pdf_bytes, "application/pdf")
+    email.send(fail_silently=False)

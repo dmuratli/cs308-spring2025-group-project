@@ -8,12 +8,14 @@ from datetime import datetime
 from orders.models import Order, OrderItem
 from admin_panel.models import Product
 from .models import Transaction
-from rest_framework import generics
+from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from .models import Transaction
 from .serializers import TransactionSerializer
 from django.db import transaction
-from cart.models import Cart
+from invoices.models import Invoice
+from invoices.pdf_utils import generate_invoice_pdf  # Import the missing function
+from invoices.email_utils import send_invoice_email
 
 class ProcessPaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -62,34 +64,41 @@ class ProcessPaymentView(APIView):
             return Response({"error":"Invalid CVV"}, status=status.HTTP_400_BAD_REQUEST)
 
         # --- All validations passed; **now** we mutate the DB ---
-        with transaction.atomic():
-            # 4) Retrieve items
-            items = OrderItem.objects.filter(order=order).select_related("product")
+        try:
+            with transaction.atomic():
+                # 4) Retrieve items
+                items = OrderItem.objects.filter(order=order).select_related("product")
 
-            # 5) Decrement stock (rolls back if any item fails)
-            for item in items:
-                prod: Product = item.product
-                if prod.stock < item.quantity:
-                    return Response(
-                        {"error":f"Not enough stock for {prod.title}"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                prod.stock -= item.quantity
-                prod.save()
+                # 5) Decrement stock (rolls back if any item fails)
+                for item in items:
+                    prod: Product = item.product
+                    if prod.stock < item.quantity:
+                        raise serializers.ValidationError(f"Not enough stock for {prod.title}")
+                    prod.stock -= item.quantity
+                    prod.save()
 
-            # 6) Mark paid and record
-            order.status = "Processing"
-            order.save()
-            Transaction.objects.create(user=request.user, order=order, status="Completed")
-            
-            # 6) Clear the cart
-            cart = Cart.objects.filter(user=request.user, is_active=True).first()
-            if cart:
-                cart.items.all().delete()
-                cart.is_active = False
-                cart.save()
+                # 6) Mark paid and record
+                order.status = "Processing"
+                order.save()
+                Transaction.objects.create(user=request.user, order=order, status="Completed")
 
-        # 7) Success
+                # 8) Create Invoice record
+                invoice = Invoice.objects.create(order=order)
+                # 9) Schedule async email with PDF attachment
+                # Generate PDF
+                pdf_bytes = generate_invoice_pdf(invoice.order)
+
+                # Send email immediately
+                send_invoice_email(
+                    invoice.order.user.email,   # to_email
+                    pdf_bytes,                  # pdf
+                    invoice.order.id            # order_id
+                )
+        
+        except serializers.ValidationError as e:
+            return Response({"error": str(e.detail)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 10) Success
         return Response({"message":"Payment processed successfully"}, status=status.HTTP_200_OK)
 
 class TransactionHistoryView(generics.ListAPIView):
