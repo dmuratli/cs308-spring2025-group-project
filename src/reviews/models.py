@@ -6,6 +6,7 @@ class Review(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending Approval'),
         ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

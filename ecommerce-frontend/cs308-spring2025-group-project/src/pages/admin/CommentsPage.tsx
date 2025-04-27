@@ -1,117 +1,92 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import {
-  Box,
-  Typography,
-  Paper,
-  Grid,
-  Button,
-  Chip,
-  CircularProgress
+  Box, Typography, Paper, Grid,
+  Button, Chip, CircularProgress
 } from '@mui/material';
 
-// Dummy comment data
-const dummyComments = [
-  {
-    id: 1,
-    user: 'Ali Yilmaz',
-    product: 'Sapiens',
-    content: 'It really is a great book!',
-    status: 'pending'
-  },
-  {
-    id: 2,
-    user: 'Ayşe Demir',
-    product: 'The Midnight Library',
-    content: 'Some parts are a little slow going but overall it is good.',
-    status: 'pending'
-  }
-];
+interface PendingReview {
+  id: number;
+  user: string;
+  product: { title: string };
+  review_text: string;
+  created_at: string;
+}
 
-const CommentApprovalList = () => {
-  const [comments, setComments] = useState<any[]>([]);
+const CommentApprovalList: React.FC = () => {
+  const [comments, setComments] = useState<PendingReview[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setComments(dummyComments);
-      setLoading(false);
-    }, 500);
-  }, []);
-
-  const handleApprove = (id: number) => {
-    setComments(prev =>
-      prev.map(comment =>
-        comment.id === id ? { ...comment, status: 'approved' } : comment
-      )
+  const fetchPending = async () => {
+    const token = localStorage.getItem('access_token');
+    const res = await axios.get<PendingReview[]>(
+      'http://localhost:8000/api/reviews/pending/',
+      { headers: { Authorization: `Bearer ${token}` } }
     );
+    setComments(res.data);
+    setLoading(false);
   };
 
-  const handleReject = (id: number) => {
-    setComments(prev =>
-      prev.map(comment =>
-        comment.id === id ? { ...comment, status: 'rejected' } : comment
-      )
+  useEffect(() => { fetchPending() }, []);
+
+  const handleApprove = async (id: number) => {
+    const token = localStorage.getItem('access_token');
+    await axios.post(
+      `http://localhost:8000/api/reviews/${id}/approve/`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
     );
+    setComments(c => c.filter(r => r.id !== id));
+  };
+
+  const handleReject = async (id: number) => {
+    const token = localStorage.getItem('access_token');
+    await axios.post(
+      `http://localhost:8000/api/reviews/${id}/reject/`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setComments(c => c.filter(r => r.id !== id));
   };
 
   if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" mt={4}>
-        <CircularProgress />
-      </Box>
-    );
+    return <Box display="flex" justifyContent="center" mt={4}><CircularProgress/></Box>;
   }
-
   if (!comments.length) {
-    return <Typography sx={{ mt: 12, px: 2 }}>No comments awaiting approval found.</Typography>;
+    return <Typography sx={{ mt:12, px:2 }}>No comments awaiting approval.</Typography>;
   }
 
   return (
-    <Box sx={{ mt: 12, py: 4, px: 2 }}>
+    <Box sx={{ mt:4, px:2 }}>
       <Typography variant="h6" fontWeight="bold" gutterBottom>
-        Comment Approvals
+        Pending Reviews
       </Typography>
-
       <Grid container spacing={2}>
-        {comments.map(comment => (
-          <Grid item xs={12} key={comment.id}>
-            <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
-              <Box display="flex" flexDirection="column" gap={1}>
-                <Typography variant="subtitle1">
-                  <strong>{comment.user}</strong> commented on <em>{comment.product}</em>
-                </Typography>
-                <Typography variant="body1">{comment.content}</Typography>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
-                  <Chip
-                    label={comment.status}
-                    color={
-                      comment.status === 'approved'
-                        ? 'success'
-                        : comment.status === 'rejected'
-                        ? 'error'
-                        : 'warning'
-                    }
+        {comments.map(c => (
+          <Grid item xs={12} key={c.id}>
+            <Paper sx={{ p:3 }}>
+              <Typography>
+                <strong>{c.user}</strong> on <em>{c.product.title}</em>
+              </Typography>
+              <Typography sx={{ my:1 }}>{c.review_text}</Typography>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Chip label="Pending" color="warning" />
+                <Box>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    sx={{ mr:1 }}
+                    onClick={() => handleApprove(c.id)}
+                  >
+                    Approve
+                  </Button>
+                  <Button
                     variant="outlined"
-                    sx={{ textTransform: 'capitalize' }}
-                  />
-                  <Box display="flex" gap={2}>
-                    {comment.status === 'pending' && (
-                      <>
-                        <Button variant="contained" color="success" onClick={() => handleApprove(comment.id)}>
-                          Approve
-                        </Button>
-                        <Button variant="outlined" color="error" onClick={() => handleReject(comment.id)}>
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                    {comment.status === 'approved' && (
-                      <Typography color="success.main">Approved</Typography>
-                    )}
-                    {comment.status === 'rejected' && (
-                      <Typography color="error.main">Rejected</Typography>
-                    )}
-                  </Box>
+                    color="error"
+                    onClick={() => handleReject(c.id)}
+                  >
+                    Reject
+                  </Button>
                 </Box>
               </Box>
             </Paper>
