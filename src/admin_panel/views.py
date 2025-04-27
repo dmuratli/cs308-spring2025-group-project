@@ -93,7 +93,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
+        if user.groups.filter(name__in=['product manager', 'sales manager']).exists() or user.is_staff:
             return Order.objects.all()
         return Order.objects.filter(user=user)
 
