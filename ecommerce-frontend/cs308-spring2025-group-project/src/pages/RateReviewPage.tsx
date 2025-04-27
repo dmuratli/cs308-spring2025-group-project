@@ -14,6 +14,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  OutlinedInput,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -135,23 +136,55 @@ const RateReviewPage: React.FC = () => {
         )}
 
         {/* Select Product */}
-        <FormControl fullWidth sx={{ mb: 3 }}>
+        <FormControl fullWidth variant="outlined" sx={{ mb: 3 }}>
           <InputLabel id="product-select-label">Which book?</InputLabel>
+
           <Select
             labelId="product-select-label"
             id="product-select"
             value={selected?.product_id ?? ''}
             label="Which book?"
+            input={<OutlinedInput label="Which book?" />}
             displayEmpty
             onChange={(e) => {
               const pid = Number(e.target.value);
               const found = items.find((it) => it.product_id === pid) || null;
               setSelected(found);
             }}
+
+            sx={{
+              backgroundColor: '#fff',
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#ccc',
+              },
+              '&:hover .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#f6ad55',
+              },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#f6ad55',
+              },
+            }}
+
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  '& .MuiMenuItem-root.Mui-selected': {
+                    backgroundColor: 'rgba(246,173,85,0.3) !important',
+                  },
+                  '& .MuiMenuItem-root:hover': {
+                    backgroundColor: 'rgba(246,173,85,0.3) !important',
+                  },
+                },
+              },
+            }}
           >
+            {/*
+              Always renders the menu (even if items.length === 1), 
+              because displayEmpty + one <MenuItem> is enough.
+            */}
             {items.map((it) => (
               <MenuItem key={it.product_id} value={it.product_id}>
-                {it.product_title} &times;{it.quantity}
+                {it.product_title} ×{it.quantity}
               </MenuItem>
             ))}
           </Select>
