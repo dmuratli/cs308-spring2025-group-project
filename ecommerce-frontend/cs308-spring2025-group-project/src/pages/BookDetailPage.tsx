@@ -4,6 +4,7 @@ import axios from "axios";
 import {
   Box,
   Container,
+  Rating,
   Typography,
   Card,
   CardContent,
@@ -45,6 +46,7 @@ const BookDetailsPage: React.FC = () => {
     pages?: number;
     publisher?: string;
     publication_date?: string;
+    rating: number;
   }
 
   const { slug } = useParams<{ slug: string }>();
@@ -148,12 +150,22 @@ const BookDetailsPage: React.FC = () => {
           />
 
           <CardContent sx={{ flex: 1, p: 5 }}>
-            <Typography variant="h4" fontWeight="bold">
-              {product.title}
-            </Typography>
-            <Typography variant="h6" color="text.secondary" mb={2}>
-              by {product.author}
-            </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+            <Box>
+              <Typography variant="h4" fontWeight="bold">
+                {product.title}
+              </Typography>
+              <Typography variant="subtitle1" color="text.secondary">
+                by {product.author}
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Rating value={product.rating} precision={0.5} readOnly size="large" />
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                {product.rating.toFixed(2)} / 5
+              </Typography>
+            </Box>
+          </Box>
 
             <Typography variant="body2" color="text.secondary" mt={2}>
               <strong>Genre:</strong> {product.genre} | <strong>Language:</strong>{" "}
