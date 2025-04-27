@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from .models import Review
 from .serializers import ReviewSerializer
@@ -21,13 +22,29 @@ class ReviewCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        product = serializer.validated_data['product']
+        product: Product = serializer.validated_data['product']
+        user = self.request.user
 
+        # 🚧 Enforce delivered-only reviews
+        has_been_delivered = OrderItem.objects.filter(
+            order__user=user,
+            order__status='Delivered',
+            product=product
+        ).exists()
+
+        if not has_been_delivered:
+            raise ValidationError({
+                "detail": "You can only review products that have been delivered."
+            })
+
+        # 1) save pending review
         review = serializer.save(
-            user=self.request.user,
-            status='pending'
+            user=user,
+            status='pending',
+            approved=False
         )
 
+        # 2) immediately update product.rating from all stars (incl. pending)
         avg = Review.objects.filter(product=product).aggregate(avg=Avg('stars'))['avg'] or 0
         product.rating = round(avg, 2)
         product.save()
