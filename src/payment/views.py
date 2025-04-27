@@ -61,6 +61,7 @@ class ProcessPaymentView(APIView):
                 order.delete()
                 return Response({"error":"Card expired"}, status=status.HTTP_400_BAD_REQUEST)
         except:
+            order.delete()
             return Response({"error":"Invalid expiry format, expected MM/YY"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 3d) CVV format
@@ -108,6 +109,7 @@ class ProcessPaymentView(APIView):
                 )
         
         except serializers.ValidationError as e:
+            order.delete()
             return Response({"error": str(e.detail)}, status=status.HTTP_400_BAD_REQUEST)
 
         # 10) Success
