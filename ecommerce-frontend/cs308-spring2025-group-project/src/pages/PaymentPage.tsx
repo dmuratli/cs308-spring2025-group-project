@@ -89,6 +89,16 @@ const PaymentPage: React.FC = () => {
       setServerMessage(payData.message);
       setNotification({ open: true, message: payData.message, type: "success" });
 
+      const { invoice_html } = payData;
+
+      // open it in a new tab
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.write(invoice_html);
+        win.document.title = "Invoice";
+        win.document.close();
+      }
+
       await fetchCart();
       setTimeout(() => navigate("/profile/transactions"), 1500);
     } catch (err: any) {

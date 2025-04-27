@@ -17,6 +17,7 @@ from django.db import transaction
 from invoices.models import Invoice
 from invoices.pdf_utils import generate_invoice_pdf  # Import the missing function
 from invoices.email_utils import send_invoice_email
+from django.template.loader import render_to_string
 
 class ProcessPaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -97,7 +98,7 @@ class ProcessPaymentView(APIView):
 
                 # 8) Create Invoice record
                 invoice = Invoice.objects.create(order=order)
-                # 9) Schedule async email with PDF attachment
+                # 9) Schedule email with PDF attachment
                 # Generate PDF
                 pdf_bytes = generate_invoice_pdf(invoice.order)
 
@@ -107,13 +108,22 @@ class ProcessPaymentView(APIView):
                     pdf_bytes,                  # pdf
                     invoice.order.id            # order_id
                 )
+
+                invoice_html = render_to_string("invoices/invoice.html",
+                                {"order": order})
         
         except serializers.ValidationError as e:
             order.delete()
             return Response({"error": str(e.detail)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 10) Success
-        return Response({"message":"Payment processed successfully"}, status=status.HTTP_200_OK)
+        # 10) Success JSON returned to the frontend
+        return Response(
+            {
+                "message": "Payment processed successfully",
+                "invoice_html": invoice_html,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class TransactionHistoryView(generics.ListAPIView):
     """
