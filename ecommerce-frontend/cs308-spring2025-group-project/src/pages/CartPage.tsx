@@ -1,5 +1,3 @@
-// src/pages/CartPage.tsx
-
 import React, { useEffect, useState } from "react";
 import {
   Box,
@@ -283,22 +281,22 @@ const CartPage = () => {
               </Typography>
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
-                  <TextField label="Full Name *" name="fullName" value={shippingInfo.fullName} onChange={handleInputChange} fullWidth required />
+                  <TextField label="Full Name" name="fullName" value={shippingInfo.fullName} onChange={handleInputChange} fullWidth required />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField label="Phone Number *" name="phoneNumber" value={shippingInfo.phoneNumber} onChange={handleInputChange} fullWidth required />
+                  <TextField label="Phone Number" name="phoneNumber" value={shippingInfo.phoneNumber} onChange={handleInputChange} fullWidth required />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField label="Address Line 1 *" name="addressLine1" value={shippingInfo.addressLine1} onChange={handleInputChange} fullWidth required />
+                  <TextField label="Address Line 1" name="addressLine1" value={shippingInfo.addressLine1} onChange={handleInputChange} fullWidth required />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField label="Address Line 2" name="addressLine2" value={shippingInfo.addressLine2} onChange={handleInputChange} fullWidth />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField label="City *" name="city" value={shippingInfo.city} onChange={handleInputChange} fullWidth required />
+                  <TextField label="City" name="city" value={shippingInfo.city} onChange={handleInputChange} fullWidth required />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField label="Postal Code *" name="postalCode" value={shippingInfo.postalCode} onChange={handleInputChange} fullWidth required />
+                  <TextField label="Postal Code" name="postalCode" value={shippingInfo.postalCode} onChange={handleInputChange} fullWidth required />
                 </Grid>
               </Grid>
             </Box>
