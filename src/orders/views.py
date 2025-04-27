@@ -81,6 +81,8 @@ class PlaceOrderView(APIView):
             )
             total += item.quantity * item.product.price
 
+        item.product.ordered_number += item.quantity
+        total += item.quantity * item.product.price
         order.total_price = total
         order.save()
 

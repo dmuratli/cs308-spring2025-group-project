@@ -42,7 +42,7 @@ const ProductPage: React.FC = () => {
     canRate: boolean;
     pages: number;
     created_at: string;
-    ordered_count: number;
+    ordered_number: number;
   }
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -62,7 +62,7 @@ const ProductPage: React.FC = () => {
   // fetch products and compute price slider bounds
   useEffect(() => {
     axios
-      .get("/api/products/")
+      .get("/api/products/?ordering=-ordered_number")
       .then((res) => {
         const list: Product[] = res.data;
         setProducts(list);
@@ -153,7 +153,7 @@ const ProductPage: React.FC = () => {
         break;
       case "popularity":
         filtered.sort(
-          (a, b) => (b.ordered_count ?? 0) - (a.ordered_count ?? 0)
+          (a, b) => (b.ordered_number ?? 0) - (a.ordered_number ?? 0)
         );
         break;
     }

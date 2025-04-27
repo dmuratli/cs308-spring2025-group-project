@@ -82,6 +82,7 @@ class ProcessPaymentView(APIView):
                     if prod.stock < item.quantity:
                         raise serializers.ValidationError(f"Not enough stock for {prod.title}")
                     prod.stock -= item.quantity
+                    prod.ordered_number += item.quantity
                     prod.save()
 
                 # 6) Mark paid and record

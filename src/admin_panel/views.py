@@ -25,6 +25,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'description']
+    ordering = ['-ordered_number']
 
     # default fallback
     permission_classes = [permissions.AllowAny]

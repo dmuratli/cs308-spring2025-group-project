@@ -45,6 +45,7 @@ class Product(models.Model):
     language = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(unique=True, blank=True)
+    ordered_number = models.PositiveIntegerField(default=0)
 
     def decrease_stock(self, quantity):
         if quantity > self.stock:
