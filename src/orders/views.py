@@ -9,7 +9,7 @@ from users.permissions import IsProductManager
 from cart.models import Cart
 from admin_panel.models import Product
 from .models import Order, OrderItem, OrderStatusHistory
-from .serializers import OrderStatusUpdateSerializer, OrderSerializer
+from .serializers import OrderStatusUpdateSerializer, OrderSerializer, OrderItemSerializer
 from cart.models import Cart, CartItem
 
 class OrderProductInfoView(APIView):
@@ -101,3 +101,11 @@ class OrderListView(ListAPIView):
     permission_classes = [permissions.IsAuthenticated, IsProductManager]
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+
+class OrderItemsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, order_id):
+        items = OrderItem.objects.filter(order_id=order_id, order__user=request.user).select_related("product")
+        serializer = OrderItemSerializer(items, many=True)
+        return Response(serializer.data)

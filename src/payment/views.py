@@ -8,6 +8,7 @@ from datetime import datetime
 from orders.models import Order, OrderItem
 from admin_panel.models import Product
 from .models import Transaction
+from cart.models import Cart
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from .models import Transaction
@@ -81,6 +82,13 @@ class ProcessPaymentView(APIView):
                 order.status = "Processing"
                 order.save()
                 Transaction.objects.create(user=request.user, order=order, status="Completed")
+
+                # 7) Clear the cart
+                cart = Cart.objects.filter(user=request.user, is_active=True).first()
+                if cart:
+                    cart.items.all().delete()
+                    cart.is_active = False
+                    cart.save()
 
                 # 8) Create Invoice record
                 invoice = Invoice.objects.create(order=order)
