@@ -63,6 +63,9 @@ urlpatterns = [
 
     # 10) Single‐product detail by slug
     path('api/products/<slug:slug>/', product_detail_by_slug, name='product-detail-slug'),
+
+    # 11) Invoices (HTML & PDF)
+    path("api/invoices/", include("invoices.urls")),
 ]
 
 if settings.DEBUG:

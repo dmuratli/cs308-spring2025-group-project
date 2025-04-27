@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 
-from invoices.pdf_utils import render_invoice_pdf
+from invoices.pdf_utils import generate_invoice_pdf
 from users.permissions import IsSalesManager
 from .models import Invoice
 from .serializers import InvoiceSerializer
@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 
 class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -35,9 +36,22 @@ class MyInvoicePDF(APIView):
         invoice = get_object_or_404(Invoice, pk=pk)
         if invoice.customer != request.user and request.user.role != "sales_manager":
             return Response(status=403)
-        pdf_bytes = render_invoice_pdf(invoice)
+        pdf_bytes = generate_invoice_pdf(invoice)
         return HttpResponse(
             pdf_bytes,
             headers={"Content-Disposition": f'inline; filename="invoice_{pk}.pdf"'},
             content_type="application/pdf",
         )
+    
+class InvoiceHTMLView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk: int):
+        invoice = get_object_or_404(
+            Invoice, pk=pk, order__user=request.user
+        )
+        html = render_to_string(
+            "invoices/invoice.html",
+            {"order": invoice.order}
+        )
+        return HttpResponse(html, content_type="text/html")
