@@ -39,6 +39,7 @@ class ProcessPaymentView(APIView):
         # 3) Validation block—nothing below runs until ALL checks pass
         # 3a) All present?
         if not (card_number and expiry and cvv):
+            order.delete()
             return Response({"error":"Missing payment fields"}, status=status.HTTP_400_BAD_REQUEST)
 
         card_number = card_number.strip()
@@ -47,6 +48,7 @@ class ProcessPaymentView(APIView):
 
         # 3b) Card number format
         if not (card_number.isdigit() and len(card_number) == 16):
+            order.delete()
             return Response({"error":"Invalid card number"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 3c) Expiry format & freshness
@@ -56,12 +58,14 @@ class ProcessPaymentView(APIView):
             year  = int(year_str) if len(year_str)>2 else int("20"+year_str)
             exp_date = datetime(year, month, 1)
             if exp_date < datetime.now():
+                order.delete()
                 return Response({"error":"Card expired"}, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"error":"Invalid expiry format, expected MM/YY"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 3d) CVV format
         if not (cvv.isdigit() and len(cvv)==3):
+            order.delete()
             return Response({"error":"Invalid CVV"}, status=status.HTTP_400_BAD_REQUEST)
 
         # --- All validations passed; **now** we mutate the DB ---
