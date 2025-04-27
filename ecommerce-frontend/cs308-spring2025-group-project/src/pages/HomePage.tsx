@@ -9,9 +9,21 @@ import {
   CardContent,
   CardMedia,
 } from "@mui/material";
+import { motion, AnimatePresence } from "framer-motion";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+
+// animasyon preset’leri
+const fadeIn = {
+  hidden: { opacity: 0, y: 40 },
+  show: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.15, duration: 0.6, ease: "easeOut" },
+  }),
+};
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,16 +41,58 @@ const HomePage: React.FC = () => {
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
-    .slice(0, 3); // You can increase this if needed
+    .slice(0, 3);
+
+  /** ortak “Learn More” butonu */
+  const LearnMoreBtn: React.FC<{
+    onClick: () => void;
+    full?: boolean;
+  }> = ({ onClick, full }) => (
+    <Button
+      component={motion.button}
+      whileHover={{ scale: 1.06 }}
+      whileTap={{ scale: 0.93 }}
+      fullWidth={full}
+      onClick={onClick}
+      sx={{
+        mt: 2,
+        py: 1,
+        fontWeight: 700,
+        letterSpacing: 0.4,
+        background: "linear-gradient(90deg,#ffd27d 0%,#ffaf64 50%,#ffa057 100%)",
+        color: "#5a2700",
+        boxShadow: "0 3px 12px rgba(0,0,0,.12)",
+        borderRadius: 2,
+        overflow: "hidden",
+        position: "relative",
+        "&:hover": {
+          background:
+            "linear-gradient(90deg,#ffa057 0%,#ffaf64 50%,#ffd27d 100%)",
+        },
+      }}
+      endIcon={
+        <motion.span
+          initial={{ x: 0 }}
+          whileHover={{ x: 4 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          style={{ display: "flex", alignItems: "center" }}
+        >
+          <ArrowForwardRoundedIcon sx={{ fontSize: 20 }} />
+        </motion.span>
+      }
+    >
+      Learn&nbsp;More
+    </Button>
+  );
 
   return (
     <Box>
       <Navbar />
 
-      {/* Hero Section */}
+      {/* ─── Hero ─────────────────────────────── */}
       <Box
         sx={{
-          height: "400px",
+          height: 420,
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -47,49 +101,59 @@ const HomePage: React.FC = () => {
           position: "relative",
           color: "black",
           p: 2,
+          overflow: "hidden",
         }}
       >
-        <Box
-          sx={{
+        <motion.img
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 20, ease: "linear", repeat: Infinity }}
+          src="https://i.ibb.co/CssQMFQj/DALL-E-2025-03-06-14-57-55-A-beautiful-and-immersive-book-themed-background-image-for-an-online-book.webp"
+          alt="books"
+          style={{
             position: "absolute",
-            top: 0,
-            left: 0,
+            inset: 0,
             width: "100%",
             height: "100%",
-            backgroundImage:
-              "url('https://i.ibb.co/CssQMFQj/DALL-E-2025-03-06-14-57-55-A-beautiful-and-immersive-book-themed-background-image-for-an-online-book.webp')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            opacity: 0.3,
+            objectFit: "cover",
+            opacity: 0.25,
             zIndex: -1,
           }}
         />
-        <Typography variant="h4" fontWeight="bold">
-          A Book Can Change Your Life
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={() => navigate("/products")}
-          sx={{
-            mt: 2,
-            backgroundColor: "#EF977F",
-            color: "white",
-            px: 4,
-            py: 1,
-            fontSize: "1rem",
-            transition: "all 0.3s",
-            "&:hover": {
-              backgroundColor: "#d46c4e",
-              transform: "scale(1.05)",
-            },
-          }}
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
         >
-          Shop Now
-        </Button>
+          <Typography variant="h3" fontWeight={700}>
+            A Book Can Change Your Life
+          </Typography>
+
+          <Button
+            component={motion.button}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            variant="contained"
+            onClick={() => navigate("/products")}
+            sx={{
+              mt: 3,
+              background: "linear-gradient(90deg,#f9a826 0%,#ef977f 100%)",
+              color: "white",
+              px: 4,
+              py: 1.3,
+              fontSize: "1.05rem",
+              borderRadius: 3,
+              boxShadow: "0 4px 15px rgba(0,0,0,0.15)",
+            }}
+          >
+            Shop Now
+          </Button>
+        </motion.div>
       </Box>
 
-      {/* Bestseller Section */}
-      <Container sx={{ my: 5 }}>
+      {/* ─── Bestsellers (mock) ───────────────── */}
+      <Container sx={{ my: 8 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
           Bestsellers
         </Typography>
@@ -97,90 +161,98 @@ const HomePage: React.FC = () => {
           variant="body1"
           color="text.secondary"
           textAlign="center"
-          mb={4}
+          mb={5}
         >
-          Discover our top-rated books loved by our readers!
+          Discover our top-rated books loved by readers!
         </Typography>
 
-        <Grid container spacing={3} justifyContent="center">
-          {[...Array(3)].map((_, index) => (
-            <Grid item key={index} xs={12} sm={6} md={4}>
-              <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-                <CardMedia
-                  sx={{ height: 200, backgroundColor: "#e0e0e0" }}
-                />
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold">
-                    Book Title
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Sample book description.
-                  </Typography>
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}
-                  >
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        transition: "all 0.3s",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                        },
-                      }}
-                    >
-                      Learn More
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+        <Grid container spacing={4} justifyContent="center">
+          {[...Array(3)].map((_, idx) => (
+            <Grid item xs={12} sm={6} md={4} key={idx}>
+              <motion.div
+                custom={idx}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={fadeIn}
+              >
+                <Card
+                  component={motion.div}
+                  whileHover={{ scale: 1.03 }}
+                  sx={{ boxShadow: 4, borderRadius: 3 }}
+                >
+                  <CardMedia
+                    sx={{ height: 220, bgcolor: "#eee" }}
+                    title="Book cover"
+                  />
+                  <CardContent>
+                    <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      Book Title
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Sample book description.
+                    </Typography>
+
+                    {/* ↓ güzelleştirilmiş buton */}
+                    <LearnMoreBtn onClick={() => {}} full />
+                  </CardContent>
+                </Card>
+              </motion.div>
             </Grid>
           ))}
         </Grid>
       </Container>
 
-      {/* Review Section */}
-      <Box sx={{ backgroundColor: "#f9f9f9", py: 5 }}>
+      {/* ─── Reviews ──────────────────────────── */}
+      <Box sx={{ bgcolor: "#fafafa", py: 7 }}>
         <Container>
-          <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
+          <Typography variant="h4" fontWeight="bold" textAlign="center" mb={4}>
             What Our Readers Say
           </Typography>
           <Grid container spacing={4} justifyContent="center">
             {[
               {
-                text: '"This bookstore changed my reading experience! Amazing selection and fast delivery."',
-                name: "- John Doe",
+                text: `"This bookstore changed my reading experience – amazing selection and fast delivery!"`,
+                name: "John Doe",
               },
               {
-                text: '"Great books, fantastic service, and unbeatable prices!"',
-                name: "- Jane Smith",
+                text: `"Great books, fantastic service, unbeatable prices!"`,
+                name: "Jane Smith",
               },
-            ].map((review, index) => (
-              <Grid item xs={12} md={6} key={index}>
-                <Box display="flex" alignItems="center" gap={3}>
+            ].map((review, i) => (
+              <Grid item xs={12} md={6} key={review.name}>
+                <motion.div
+                  custom={i}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true, amount: 0.3 }}
+                  variants={fadeIn}
+                >
                   <Box
                     sx={{
-                      width: 80,
-                      height: 80,
-                      backgroundColor: "#dcdcdc",
-                      borderRadius: "50%",
-                      flexShrink: 0,
+                      p: 3,
+                      borderLeft: "4px solid #ef977f",
+                      bgcolor: "white",
+                      borderRadius: 2,
+                      boxShadow: 3,
                     }}
-                  />
-                  <Box>
-                    <Typography variant="body1">{review.text}</Typography>
+                  >
+                    <Typography variant="body1" mb={1}>
+                      {review.text}
+                    </Typography>
                     <Typography variant="subtitle2" fontWeight="bold">
-                      {review.name}
+                      — {review.name}
                     </Typography>
                   </Box>
-                </Box>
+                </motion.div>
               </Grid>
             ))}
           </Grid>
         </Container>
       </Box>
 
-      {/* New Arrivals Section (Real Data) */}
-      <Container sx={{ my: 5 }}>
+      {/* ─── New Arrivals (real) ──────────────── */}
+      <Container sx={{ my: 8 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
           New Arrivals
         </Typography>
@@ -188,82 +260,93 @@ const HomePage: React.FC = () => {
           variant="body1"
           color="text.secondary"
           textAlign="center"
-          mb={4}
+          mb={5}
         >
           Get the latest books just added to our store!
         </Typography>
 
-        <Grid container spacing={3} justifyContent="center">
-          {newArrivals.map((product) => (
-            <Grid item key={product.id} xs={12} sm={6} md={4}>
-              <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={product.cover_image || "https://via.placeholder.com/250x350?text=No+Image"}
-                  alt={product.title}
-                />
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold" noWrap>
-                    {product.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {product.genre}
-                  </Typography>
-                  <Typography variant="body1" fontWeight="bold" mt={1}>
-                    {product.price}₺
-                  </Typography>
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}
-                  >
-                    <Button
-                      variant="outlined"
-                      onClick={() => navigate(`/products/${product.slug}`)}
-                      sx={{
-                        transition: "all 0.3s",
-                        "&:hover": {
-                          transform: "scale(1.05)",
-                        },
-                      }}
+        <Grid container spacing={4} justifyContent="center">
+          {newArrivals.map((p, idx) => (
+            <Grid item xs={12} sm={6} md={4} key={p.id}>
+              <motion.div
+                custom={idx}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={fadeIn}
+              >
+                <Card
+                  component={motion.div}
+                  whileHover={{ scale: 1.03 }}
+                  sx={{ boxShadow: 4, borderRadius: 3 }}
+                >
+                  <CardMedia
+                    component="img"
+                    height="220"
+                    image={
+                      p.cover_image ||
+                      "https://via.placeholder.com/250x350?text=No+Image"
+                    }
+                    alt={p.title}
+                  />
+                  <CardContent>
+                    <Typography variant="h6" fontWeight="bold" noWrap>
+                      {p.title}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      noWrap
+                      gutterBottom
                     >
-                      Learn More
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
+                      {p.genre}
+                    </Typography>
+                    <Typography variant="body1" fontWeight="bold">
+                      {p.price}₺
+                    </Typography>
+
+                    {/* ↓ güzelleştirilmiş buton */}
+                    <LearnMoreBtn
+                      onClick={() => navigate(`/products/${p.slug}`)}
+                      full
+                    />
+                  </CardContent>
+                </Card>
+              </motion.div>
             </Grid>
           ))}
         </Grid>
       </Container>
 
-      {/* Footer */}
+      {/* ─── Footer ──────────────────────────── */}
       <Box
         sx={{
-          backgroundColor: "#EF977F",
+          background: "linear-gradient(90deg,#ef977f 0%,#f9a826 100%)",
           color: "white",
           textAlign: "center",
-          p: 4,
-          mt: 5,
-          borderRadius: "10px",
+          py: 6,
+          px: 2,
+          mt: 8,
         }}
       >
-        <Typography variant="h5" fontWeight="bold">
+        <Typography variant="h4" fontWeight={700} mb={1}>
           Start Your Reading Journey
         </Typography>
-        <Typography variant="body1" mt={1}>
+        <Typography variant="body1">
           Find your next favorite book and embark on an adventure through pages.
         </Typography>
+
         <Button
+          component={motion.button}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.94 }}
           variant="contained"
           sx={{
-            mt: 2,
-            backgroundColor: "white",
-            color: "#EF977F",
-            transition: "all 0.3s",
-            "&:hover": {
-              backgroundColor: "#f5f5f5",
-              transform: "scale(1.05)",
-            },
+            mt: 3,
+            background: "white",
+            color: "#ef977f",
+            px: 4,
+            fontWeight: 600,
           }}
         >
           Contact Us
