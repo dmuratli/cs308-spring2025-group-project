@@ -15,7 +15,6 @@ eggs/
 venv/
 env/
 ENV/
-.env
 
 # Django stuff
 *.log
