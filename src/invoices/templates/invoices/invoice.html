@@ -1,39 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <title>Invoice #{{ order.id }}</title>
   <style>
-    body { font-family: sans-serif; font-size: 12pt; }
-    h1   { text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid #666; padding: 4px; text-align: left; }
-    th { background: #f0f0f0; }
-    tfoot td { font-weight: bold; }
+    @page {
+      size: A4;
+      margin: 1cm;
+    }
+    body {
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 12pt;
+      color: #333;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+    }
+    .invoice-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2em;
+    }
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2em;
+      padding-bottom: 1em;
+      border-bottom: 1px solid #ddd;
+    }
+    .company-info {
+      flex: 1;
+    }
+    .company-name {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .invoice-details {
+      text-align: right;
+    }
+    .invoice-title {
+      font-size: 1.8em;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 0.5em;
+    }
+    .invoice-number {
+      font-size: 1.2em;
+      color: #7f8c8d;
+    }
+    .customer-details {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2em;
+    }
+    .bill-to, .payment-info {
+      flex: 1;
+    }
+    .section-title {
+      font-weight: bold;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      font-size: 0.9em;
+      margin-bottom: 0.5em;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.3em;
+    }
+    .customer-name {
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 2em 0;
+    }
+    th {
+      background-color: #f8f9fa;
+      color: #2c3e50;
+      font-weight: bold;
+      text-align: left;
+      padding: 0.8em;
+      border-bottom: 2px solid #ddd;
+    }
+    td {
+      padding: 0.8em;
+      border-bottom: 1px solid #eee;
+    }
+    .item-name {
+      width: 40%;
+    }
+    .item-qty {
+      width: 15%;
+      text-align: center;
+    }
+    .item-price {
+      width: 20%;
+      text-align: right;
+    }
+    .item-subtotal {
+      width: 25%;
+      text-align: right;
+    }
+    .totals {
+      margin-top: 2em;
+      margin-left: auto;
+      width: 40%;
+    }
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5em 0;
+    }
+    .total-label {
+      font-weight: bold;
+      text-align: left;
+    }
+    .total-value {
+      text-align: right;
+      min-width: 100px;
+    }
+    .grand-total {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-top: 0.5em;
+      padding-top: 0.5em;
+      border-top: 2px solid #2c3e50;
+    }
+    .footer {
+      margin-top: 3em;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 0.9em;
+      padding-top: 1em;
+      border-top: 1px solid #eee;
+    }
+    .thank-you {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 0.5em;
+    }
   </style>
 </head>
 <body>
-  <h1>Invoice #{{ order.id }}</h1>
+  <div class="invoice-container">
+    <div class="invoice-header">
+      <div class="company-info">
+        <div class="company-name">AxoReads</div>
+        <div>Orta Mahalle, Üniversite Caddesi, Tuzla</div>
+        <div>Istanbul, Turkey</div>
+        <div>34956</div>
+        <div>info@axoreads.com</div>
+      </div>
+      <div class="invoice-details">
+        <div class="invoice-title">INVOICE</div>
+        <div class="invoice-number">Invoice #{{ order.id }}</div>
+        <div>Date: {{ order.created_at|date:"d/m/Y" }}</div>
+        <div>Status: {{ order.status }}</div>
+      </div>
+    </div>
 
-  <p><strong>Date:</strong> {{ order.created_at|date:"Y-m-d H:i" }}</p>
-  <p><strong>Customer:</strong> {{ order.user.get_full_name|default:order.user.username }}</p>
+    <div class="customer-details">
+      <div class="bill-to">
+        <div class="section-title">Bill To</div>
+        <div class="customer-name">{{ order.user.get_full_name|default:order.user.username }}</div>
+        <div>{{ order.user.email }}</div>
+        {% if order.user.profile.address %}
+        <div>{{ order.user.profile.address }}</div>
+        {% endif %}
+      </div>
+      <div class="payment-info">
+        <div class="section-title">Payment Information</div>
+        <div>Order ID: #{{ order.id }}</div>
+        <div>Order Date: {{ order.created_at|date:"d/m/Y H:i" }}</div>
+      </div>
+    </div>
 
-  <table>
-    <thead>
-      <tr><th>Product</th><th>Qty</th><th>Unit&nbsp;Price</th><th>Subtotal</th></tr>
-    </thead>
-    <tbody>
-      {% for item in order.items.all %}
-      <tr>
-        <td>{{ item.product.title }}</td>
-        <td>{{ item.quantity }}</td>
-        <td>{{ item.price_at_purchase }}</td>
-        <td>{{ item.quantity }} × {{ item.price_at_purchase }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr><td colspan="3">Total</td><td>{{ order.total_price }}</td></tr>
-    </tfoot>
-  </table>
+    <table>
+      <thead>
+        <tr>
+          <th class="item-name">Product</th>
+          <th class="item-qty">Quantity</th>
+          <th class="item-price">Unit Price</th>
+          <th class="item-subtotal">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items.all %}
+        <tr>
+          <td class="item-name">{{ item.product_title }}</td>
+          <td class="item-qty">{{ item.quantity }}</td>
+          <td class="item-price">${{ item.price_at_purchase|floatformat:2 }}</td>
+          <td class="item-subtotal">
+            ${{ item.subtotal|floatformat:2 }}
+          </td>        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="totals-row">
+        <div class="total-label">Total</div>
+        <div class="total-value">${{ order.total_price|floatformat:2 }}</div>
+      </div>
+      <div class="totals-row grand-total">
+        <div class="total-label">GRAND TOTAL</div>
+        <div class="total-value">${{ order.total_price|floatformat:2 }}</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="thank-you">Thank you for your business!</div>
+      <p>If you have any questions about this invoice, please contact us at support@axoreads.com</p>
+      <p>&copy; {% now "Y" %} AxoReads Bookstore. All rights reserved.</p>
+    </div>
+  </div>
 </body>
 </html>

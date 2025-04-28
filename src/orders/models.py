@@ -33,6 +33,10 @@ class OrderItem(models.Model):
         if not self.pk:
             self.product_title = self.product.title
         super().save(*args, **kwargs)
+    
+    @property
+    def subtotal(self):
+        return self.quantity * self.price_at_purchase
 
 class OrderStatusHistory(models.Model):
     order     = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='history')
