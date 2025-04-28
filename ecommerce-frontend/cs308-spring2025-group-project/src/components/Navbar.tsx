@@ -21,10 +21,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import axios from "axios";
-// motion için
 import { motion } from "framer-motion";
 
-// ← Logoyu import ediyoruz
 import logo from "../assets/Axo1.png";
 
 const Navbar: React.FC = () => {
@@ -36,6 +34,8 @@ const Navbar: React.FC = () => {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [openDropdown, setOpenDropdown] = useState(false);
+
+  const gradientBg = "linear-gradient(90deg, #ffd27d 0%, #ffaf64 50%, #ffa057 100%)";
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -49,8 +49,7 @@ const Navbar: React.FC = () => {
       );
       setSearchResults(data);
       setOpenDropdown(true);
-    } catch (e) {
-      console.error("Search Error:", e);
+    } catch {
       setSearchResults([]);
     }
   };
@@ -68,14 +67,8 @@ const Navbar: React.FC = () => {
 
   return (
     <AppBar position="fixed" sx={{ backgroundColor: "white", boxShadow: 3 }}>
-      <Toolbar
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        {/** ← MOTION WRAPPER: logo+text */}
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/** Logo + Yazı */}
         <Box
           component={motion.div}
           whileHover={{ scale: 1.1 }}
@@ -92,19 +85,14 @@ const Navbar: React.FC = () => {
             component="img"
             src={logo}
             alt="AxoReads"
-            sx={{
-              height: 70,
-              pointerEvents: "none", // tüm tıklamalar motion.container'a gelsin
-            }}
+            sx={{ height: 70, pointerEvents: "none" }}
           />
           <Typography
             variant="h5"
             sx={{
-              // gradient text
-              background: "linear-gradient(90deg, #ffd27d 0%, #ffaf64 50%, #ffa057 100%)",
+              background: gradientBg,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
-              // font stili
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 800,
               letterSpacing: "0.08em",
@@ -116,7 +104,7 @@ const Navbar: React.FC = () => {
           </Typography>
         </Box>
 
-        {/** ← ARAMA ÇUBUĞU **/}
+        {/** Arama */}
         <Box sx={{ position: "relative", width: { xs: "70%", md: "45%" } }}>
           <Paper
             sx={{
@@ -168,51 +156,50 @@ const Navbar: React.FC = () => {
           )}
         </Box>
 
-        {/** ← OTURUM VE SEPET BÖLÜMÜ **/}
+        {/** Auth & Cart */}
         <Box display="flex" alignItems="center">
           {!isAuthenticated ? (
             <>
+              {/* Sign Up */}
               <Button
-                variant="contained"
+                component={motion.button}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => navigate("/register")}
                 sx={{
-                  backgroundColor: "#EF977F",
+                  background: gradientBg,
                   color: "white",
                   mx: 1,
-                  "&:hover": { backgroundColor: "#d46c4e" },
+                  textTransform: "none",
+                  boxShadow: 2,
                 }}
               >
-                Sign Up
+                SIGN UP
               </Button>
+              {/* Login */}
               <Button
-                variant="outlined"
+                component={motion.button}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => navigate("/login")}
                 sx={{
-                  borderColor: "#EF977F",
-                  color: "#EF977F",
+                  background: gradientBg,
+                  color: "white",
                   mx: 1,
-                  "&:hover": { backgroundColor: "#EF977F", color: "white" },
+                  textTransform: "none",
+                  boxShadow: 2,
                 }}
               >
-                Login
+                LOGIN
               </Button>
             </>
           ) : (
             <>
-              <IconButton
-                onClick={(e) => setAnchorEl(e.currentTarget)}
-                sx={{ ml: 1 }}
-              >
+              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ ml: 1 }}>
                 <AccountCircleIcon sx={{ fontSize: 30, color: "#EF977F" }} />
               </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-              >
-                <MenuItem onClick={() => navigate("/profile")}>
-                  Profile
-                </MenuItem>
+              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+                <MenuItem onClick={() => navigate("/profile")}>Profile</MenuItem>
                 <MenuItem onClick={logout}>Logout</MenuItem>
               </Menu>
             </>
