@@ -81,14 +81,9 @@ const RateReviewPage: React.FC = () => {
         }
       );
       navigate(`/products/${selected.product_slug}`);
-    } catch (err: any) {
-        console.error('Review error', err);
-
-        const serverMsg =
-          err.response?.data?.detail ||
-          err.response?.data?.error ||
-          'Review could not be submitted';
-        setError(serverMsg);
+    } catch (err) {
+      console.error('Review error', err);
+      setError('Review could not be submitted');
     } finally {
       setSubmitting(false);
     }
