@@ -111,6 +111,7 @@ python generate_dummy_data.py
 ```
 npm install
 npm install @mui/material @emotion/react @emotion/styled
+npm i @mui/icons-material framer-motion
 npm install react-router-dom
 npm start
 ```
