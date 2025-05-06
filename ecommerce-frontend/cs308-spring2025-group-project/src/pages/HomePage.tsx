@@ -9,13 +9,12 @@ import {
   CardContent,
   CardMedia,
 } from "@mui/material";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-// animasyon preset’leri
 const fadeIn = {
   hidden: { opacity: 0, y: 40 },
   show: (i: number) => ({
@@ -43,7 +42,10 @@ const HomePage: React.FC = () => {
     )
     .slice(0, 3);
 
-  /** ortak “Learn More” butonu */
+  const bestSellers = [...products]
+    .sort((a, b) => (b.ordered_number ?? 0) - (a.ordered_number ?? 0))
+    .slice(0, 3);
+
   const LearnMoreBtn: React.FC<{
     onClick: () => void;
     full?: boolean;
@@ -152,7 +154,7 @@ const HomePage: React.FC = () => {
         </motion.div>
       </Box>
 
-      {/* ─── Bestsellers (mock) ───────────────── */}
+      {/* ─── Bestsellers (real) ───────────────── */}
       <Container sx={{ my: 8 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
           Bestsellers
@@ -167,8 +169,8 @@ const HomePage: React.FC = () => {
         </Typography>
 
         <Grid container spacing={4} justifyContent="center">
-          {[...Array(3)].map((_, idx) => (
-            <Grid item xs={12} sm={6} md={4} key={idx}>
+          {bestSellers.map((p, idx) => (
+            <Grid item xs={12} sm={6} md={4} key={p.id}>
               <motion.div
                 custom={idx}
                 initial="hidden"
@@ -182,19 +184,31 @@ const HomePage: React.FC = () => {
                   sx={{ boxShadow: 4, borderRadius: 3 }}
                 >
                   <CardMedia
-                    sx={{ height: 220, bgcolor: "#eee" }}
-                    title="Book cover"
+                    component="img"
+                    height="220"
+                    image={p.cover_image || "https://via.placeholder.com/250x350?text=No+Image"}
+                    alt={p.title}
                   />
                   <CardContent>
-                    <Typography variant="h6" fontWeight="bold" gutterBottom>
-                      Book Title
+                    <Typography variant="h6" fontWeight="bold" noWrap>
+                      {p.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Sample book description.
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      noWrap
+                      gutterBottom
+                    >
+                      {p.genre}
+                    </Typography>
+                    <Typography variant="body1" fontWeight="bold">
+                      {p.price}₺
                     </Typography>
 
-                    {/* ↓ güzelleştirilmiş buton */}
-                    <LearnMoreBtn onClick={() => {}} full />
+                    <LearnMoreBtn
+                      onClick={() => navigate(`/products/${p.slug}`)}
+                      full
+                    />
                   </CardContent>
                 </Card>
               </motion.div>
@@ -251,7 +265,7 @@ const HomePage: React.FC = () => {
         </Container>
       </Box>
 
-      {/* ─── New Arrivals (real) ──────────────── */}
+      {/* ─── New Arrivals ─────────────────────── */}
       <Container sx={{ my: 8 }}>
         <Typography variant="h4" fontWeight="bold" textAlign="center" mb={3}>
           New Arrivals
@@ -283,10 +297,7 @@ const HomePage: React.FC = () => {
                   <CardMedia
                     component="img"
                     height="220"
-                    image={
-                      p.cover_image ||
-                      "https://via.placeholder.com/250x350?text=No+Image"
-                    }
+                    image={p.cover_image || "https://via.placeholder.com/250x350?text=No+Image"}
                     alt={p.title}
                   />
                   <CardContent>
@@ -305,7 +316,6 @@ const HomePage: React.FC = () => {
                       {p.price}₺
                     </Typography>
 
-                    {/* ↓ güzelleştirilmiş buton */}
                     <LearnMoreBtn
                       onClick={() => navigate(`/products/${p.slug}`)}
                       full
