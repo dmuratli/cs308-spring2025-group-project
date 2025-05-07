@@ -5,12 +5,16 @@ from rest_framework import status, permissions
 from rest_framework.exceptions import PermissionDenied
 from django.db import transaction
 from users.permissions import IsProductManager
+from decimal import Decimal
+
 
 from cart.models import Cart
 from admin_panel.models import Product
 from .models import Order, OrderItem, OrderStatusHistory
 from .serializers import OrderStatusUpdateSerializer, OrderSerializer, OrderItemSerializer
 from cart.models import Cart, CartItem
+from .models import Refund, OrderItem
+from .serializers import RefundRequestSerializer, RefundResponseSerializer
 
 class OrderProductInfoView(APIView):
     """
@@ -109,6 +113,82 @@ class OrderStatusUpdateView(APIView):
         OrderStatusHistory.objects.create(order=order, status=new_status)
 
         return Response({'status': order.status}, status=status.HTTP_200_OK)
+    
+class RefundOrderView(APIView):
+    """
+    POST /api/orders/<order_id>/refund/
+    payload: { "items": [ {"order_item_id": 5, "quantity": 2}, … ] }
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, order_id):
+        # 1) fetch and check ownership + delivered status
+        order = Order.objects.filter(pk=order_id, user=request.user).first()
+        if not order:
+            return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+        if order.status != 'Delivered':
+            return Response(
+                {'error': 'Only delivered orders can be refunded.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 2) validate payload
+        serializer = RefundRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        total_refund = Decimal('0')
+        for item_data in serializer.validated_data['items']:
+            try:
+                oi = OrderItem.objects.get(pk=item_data['order_item_id'], order=order)
+            except OrderItem.DoesNotExist:
+                return Response(
+                    {'error': f"OrderItem {item_data['order_item_id']} not found."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            qty = item_data['quantity']
+            if qty > oi.refundable_quantity:
+                return Response(
+                    {'error': f"Cannot refund {qty} of item#{oi.id}, only {oi.refundable_quantity} refundable."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # 3) compute refund, record it, restock
+            refund_amount = oi.price_at_purchase * qty
+            Refund.objects.create(
+                order=order,
+                order_item=oi,
+                quantity=qty,
+                refund_amount=refund_amount
+            )
+            oi.refunded_quantity += qty
+            oi.save()
+
+            # restock product
+            p = oi.product
+            p.stock += qty
+            p.save()
+
+            total_refund += refund_amount
+
+        # 4) if full-order refunded, update status
+        fully_refunded = all(
+            i.quantity == i.refunded_quantity
+            for i in order.items.all()
+        )
+        if fully_refunded:
+            order.status = 'Refunded'
+            order.save()
+            OrderStatusHistory.objects.create(order=order, status='Refunded')
+
+        return Response(
+            RefundResponseSerializer({
+                'refunded_amount': total_refund,
+                'status':          order.status
+            }).data,
+            status=status.HTTP_200_OK
+        )
+
     
 class OrderListView(ListAPIView):
     permission_classes = [permissions.IsAuthenticated, IsProductManager]

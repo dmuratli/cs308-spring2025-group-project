@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from admin_panel.models import Product
+from decimal import Decimal
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -28,7 +29,7 @@ class OrderItem(models.Model):
         max_length=255,
         help_text="Snapshot of the product title at time of purchase"
     )
-
+    refunded_quantity = models.PositiveIntegerField(default=0)
     def save(self, *args, **kwargs):
         if not self.pk:
             self.product_title = self.product.title
@@ -37,8 +38,24 @@ class OrderItem(models.Model):
     @property
     def subtotal(self):
         return self.quantity * self.price_at_purchase
-
+    @property
+    def refundable_quantity(self):
+       return self.quantity - self.refunded_quantity
+    
 class OrderStatusHistory(models.Model):
     order     = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='history')
     status    = models.CharField(max_length=20, choices=Order.STATUS_CHOICES)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+class Refund(models.Model):
+    """
+    Records a refund against a single OrderItem.
+    """
+    order = models.ForeignKey(Order, related_name="refunds", on_delete=models.CASCADE)
+    order_item = models.ForeignKey(OrderItem, related_name="refunds", on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Refund {self.id} of {self.quantity}× item#{self.order_item.id}"
