@@ -1,5 +1,5 @@
 // src/components/Navbar.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -22,7 +22,6 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import axios from "axios";
 import { motion } from "framer-motion";
-
 import logo from "../assets/Axo1.png";
 
 const Navbar: React.FC = () => {
@@ -34,8 +33,35 @@ const Navbar: React.FC = () => {
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [openDropdown, setOpenDropdown] = useState(false);
+  const [roles, setRoles] = useState<string[]>([]);
 
-  const gradientBg = "linear-gradient(90deg, #ffd27d 0%, #ffaf64 50%, #ffa057 100%)";
+  const gradientBg =
+    "linear-gradient(90deg, #ffd27d 0%, #ffaf64 50%, #ffa057 100%)";
+
+  // Fetch roles once authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      console.warn("No token found in localStorage");
+      return;
+    }
+
+    axios
+      .get("http://127.0.0.1:8000/api/user-info/", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        // normalize to lowercase so your includes() checks are consistent:
+        const fetched = res.data.roles.map((r: string) => r.toLowerCase());
+        setRoles(fetched);
+      })
+      .catch((err) => {
+        console.error("user-info failed", err);
+        setRoles([]);
+      });
+  }, [isAuthenticated]);
+
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -67,8 +93,14 @@ const Navbar: React.FC = () => {
 
   return (
     <AppBar position="fixed" sx={{ backgroundColor: "white", boxShadow: 3 }}>
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        {/** Logo + Yazı */}
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/** Logo + Brand */}
         <Box
           component={motion.div}
           whileHover={{ scale: 1.1 }}
@@ -104,7 +136,7 @@ const Navbar: React.FC = () => {
           </Typography>
         </Box>
 
-        {/** Arama */}
+        {/** Search Bar */}
         <Box sx={{ position: "relative", width: { xs: "70%", md: "45%" } }}>
           <Paper
             sx={{
@@ -160,7 +192,6 @@ const Navbar: React.FC = () => {
         <Box display="flex" alignItems="center">
           {!isAuthenticated ? (
             <>
-              {/* Sign Up */}
               <Button
                 component={motion.button}
                 whileHover={{ scale: 1.05 }}
@@ -176,7 +207,6 @@ const Navbar: React.FC = () => {
               >
                 SIGN UP
               </Button>
-              {/* Login */}
               <Button
                 component={motion.button}
                 whileHover={{ scale: 1.05 }}
@@ -195,15 +225,63 @@ const Navbar: React.FC = () => {
             </>
           ) : (
             <>
-              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ ml: 1 }}>
-                <AccountCircleIcon sx={{ fontSize: 30, color: "#EF977F" }} />
+              <IconButton
+                onClick={(e) => setAnchorEl(e.currentTarget)}
+                sx={{ ml: 1 }}
+              >
+                <AccountCircleIcon
+                  sx={{ fontSize: 30, color: "#EF977F" }}
+                />
               </IconButton>
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-                <MenuItem onClick={() => navigate("/profile")}>Profile</MenuItem>
-                <MenuItem onClick={logout}>Logout</MenuItem>
+
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+              >
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    navigate("/profile");
+                  }}
+                >
+                  Profile
+                </MenuItem>
+
+                {roles.includes("product manager") && (
+   <MenuItem
+     onClick={() => {
+       setAnchorEl(null);
+       navigate("/product-manager");
+     }}
+   >
+     Product Manager
+   </MenuItem>
+ )}
+
+ {roles.includes("sales manager") && (
+   <MenuItem
+     onClick={() => {
+       setAnchorEl(null);
+       navigate("/sales-manager");
+     }}
+   >
+     Sales Manager
+   </MenuItem>
+ )}
+
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    logout();
+                  }}
+                >
+                  Logout
+                </MenuItem>
               </Menu>
             </>
           )}
+
           <IconButton onClick={() => navigate("/cart")} sx={{ ml: 1 }}>
             <Badge badgeContent={itemCount} color="error">
               <ShoppingCartIcon />

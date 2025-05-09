@@ -12,6 +12,7 @@ from users.views import (
     register_view, logout_view,
     profile_view, profile_update_view,
     get_csrf_token,
+    user_info,
 )
 from admin_panel.views import (
     ProductViewSet, OrderViewSet, UserViewSet,
@@ -66,6 +67,8 @@ urlpatterns = [
 
     # 11) Invoices (HTML & PDF)
     path("api/invoices/", include("invoices.urls")),
+    
+    path('api/user-info/', user_info, name='user-info'),
 ]
 
 if settings.DEBUG:

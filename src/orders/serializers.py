@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Order, OrderItem
-from .models import Refund
+from .models import Order, OrderItem, Refund, RefundRequest
 
 class OrderItemSerializer(serializers.ModelSerializer):
     # Include the product's title for frontend display
@@ -54,3 +53,16 @@ class RefundRequestSerializer(serializers.Serializer):
 class RefundResponseSerializer(serializers.Serializer):
     refunded_amount = serializers.DecimalField(max_digits=10, decimal_places=2)
     status          = serializers.CharField()
+
+class RefundRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RefundRequest
+        fields = ['id','order_item','quantity','status','requested_at','processed_at','response_message']
+
+class CreateRefundRequestSerializer(serializers.Serializer):
+    order_item_id = serializers.IntegerField()
+    quantity      = serializers.IntegerField(min_value=1)
+
+class ProcessRefundRequestSerializer(serializers.Serializer):
+    status          = serializers.ChoiceField(choices=["Approved","Rejected"])
+    response_message= serializers.CharField(allow_blank=True)
