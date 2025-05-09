@@ -22,6 +22,7 @@ import TransactionHistoryPage from "./pages/TransactionHistoryPage";
 import RateReviewPage      from "./pages/RateReviewPage";
 import { CartProvider } from "./context/CartContext";
 import { Typography, Container } from "@mui/material";
+import RefundDetailsPage from "./pages/RefundDetailsPage";
 
 function App() {
   useEffect(() => {
@@ -73,6 +74,8 @@ function App() {
         <Route path="/sales-manager"            element={<SalesManagerDashboard />} />
         <Route path="/sales-manager/invoices"   element={<InvoicesPage />} />
 
+        {/*REFUND*/}
+        <Route path="/profile/refunds"          element={<RefundDetailsPage/>} />
         {/* — 404 (daima en son) — */}
         <Route
           path="*"
