@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/code
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./src/.env
+
+  frontend:
+    build:
+      context: ./ecommerce-frontend/cs308-spring2025-group-project
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend

@@ -9,38 +9,34 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+
 import os
 import sys
 from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.append(str(BASE_DIR)) 
-  #burayı ratereview için ekledim(src dizini pyhon yoluna dahil etmek için)
-
+from datetime import timedelta
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
-# email şifrelerini .env dosyasından alabilmek için dotenv kütüphanesini kullanıyoruz
-
-from datetime import timedelta
-
+# ──────────────────────────────────────────────────────────────────────────────
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# BASE_DIR points at your src/ folder, which contains manage.py, db.sqlite3, .env, etc.
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))   # for custom imports (e.g. RateReviewPage helpers)
 
+# Load environment variables from src/.env
+load_dotenv(BASE_DIR / ".env")
+# ──────────────────────────────────────────────────────────────────────────────
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+# SECURITY
+# ------------------------------------------------------------------------------
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "django-insecure-mpj+c5_0ym&a28_t=(2w^l-$g&_t24u_qw!a_&3l68^0d*yleq"
+)
+DEBUG = os.getenv("DEBUG", "True") == "True"
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split()
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mpj+c5_0ym&a28_t=(2w^l-$g&_t24u_qw!a_&3l68^0d*yleq'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
-# Application definition
+# APPLICATION DEFINITION
+# ------------------------------------------------------------------------------
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -48,11 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     "users",
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+
     'admin_panel',
     "cart",
     "orders",
@@ -78,7 +76,7 @@ ROOT_URLCONF = 'e_commerce_app.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [],  
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -93,9 +91,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'e_commerce_app.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+# DATABASES
+# ------------------------------------------------------------------------------
+# Using SQLite 3 (db.sqlite3 lives at BASE_DIR / 'db.sqlite3')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -103,8 +101,9 @@ DATABASES = {
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
+# AUTHENTICATION & PASSWORD VALIDATION
+# ------------------------------------------------------------------------------
+AUTH_USER_MODEL = "users.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -121,67 +120,65 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
+# INTERNATIONALIZATION
+# ------------------------------------------------------------------------------
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'Europe/Istanbul'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
+# STATIC FILES
+# ------------------------------------------------------------------------------
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+# REST FRAMEWORK
+# ------------------------------------------------------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
 
-CORS_ALLOW_ALL_ORIGINS = False  # Set to False for security in production
+# CORS
+# ------------------------------------------------------------------------------
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Allow React frontend
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-
-CORS_ALLOW_CREDENTIALS = True  # Allow cookies/session authentication
+CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
+# SIMPLE JWT
+# ------------------------------------------------------------------------------
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
-    "AUTH_HEADER_TYPES": ("Bearer",),
+    'AUTH_HEADER_TYPES': ("Bearer",),
 }
 
-AUTH_USER_MODEL = "users.User"
-
+# CELERY (if used)
+# ------------------------------------------------------------------------------
 CELERY_BROKER_URL = "redis://localhost:6379"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
-# ---------------- Gmail SMTP ----------------
-EMAIL_BACKEND   = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST      = "smtp.gmail.com"
-EMAIL_PORT      = 587
-EMAIL_USE_TLS   = True
+# EMAIL (Gmail SMTP via .env)
+# ------------------------------------------------------------------------------
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_PASS")
 DEFAULT_FROM_EMAIL = f"Book Store <{EMAIL_HOST_USER}>"
+
+# DEFAULT PRIMARY KEY FIELD TYPE
+# ------------------------------------------------------------------------------
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
