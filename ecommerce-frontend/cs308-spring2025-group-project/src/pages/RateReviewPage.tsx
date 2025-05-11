@@ -47,7 +47,6 @@ const RateReviewPage: React.FC = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setItems(res.data.items);
-        // default to first
         if (res.data.items.length > 0) {
           setSelected(res.data.items[0]);
         }
@@ -64,6 +63,7 @@ const RateReviewPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!selected) return;
     setSubmitting(true);
+    setError(null);
     try {
       const token = localStorage.getItem('access_token');
       await axios.post(
@@ -81,9 +81,14 @@ const RateReviewPage: React.FC = () => {
         }
       );
       navigate(`/products/${selected.product_slug}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Review error', err);
-      setError('Review could not be submitted');
+      // surface our delivery‐constraint message if present
+      const msg =
+        err.response?.data?.non_field_errors?.[0] ||
+        err.response?.data?.detail ||
+        'Review could not be submitted.';
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -135,10 +140,8 @@ const RateReviewPage: React.FC = () => {
           </Alert>
         )}
 
-        {/* Select Product */}
         <FormControl fullWidth variant="outlined" sx={{ mb: 3 }}>
           <InputLabel id="product-select-label">Which book?</InputLabel>
-
           <Select
             labelId="product-select-label"
             id="product-select"
@@ -148,15 +151,11 @@ const RateReviewPage: React.FC = () => {
             displayEmpty
             onChange={(e) => {
               const pid = Number(e.target.value);
-              const found = items.find((it) => it.product_id === pid) || null;
-              setSelected(found);
+              setSelected(items.find((it) => it.product_id === pid) || null);
             }}
-
             sx={{
               backgroundColor: '#fff',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#ccc',
-              },
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: '#ccc' },
               '&:hover .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#f6ad55',
               },
@@ -164,7 +163,6 @@ const RateReviewPage: React.FC = () => {
                 borderColor: '#f6ad55',
               },
             }}
-
             MenuProps={{
               PaperProps: {
                 sx: {
@@ -178,10 +176,6 @@ const RateReviewPage: React.FC = () => {
               },
             }}
           >
-            {/*
-              Always renders the menu (even if items.length === 1), 
-              because displayEmpty + one <MenuItem> is enough.
-            */}
             {items.map((it) => (
               <MenuItem key={it.product_id} value={it.product_id}>
                 {it.product_title} ×{it.quantity}
@@ -190,7 +184,6 @@ const RateReviewPage: React.FC = () => {
           </Select>
         </FormControl>
 
-        {/* Rating */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" sx={{ mb: 1 }}>
             Your Rating
@@ -203,7 +196,6 @@ const RateReviewPage: React.FC = () => {
           />
         </Box>
 
-        {/* Comment */}
         <TextField
           label="Your Comment"
           placeholder="Share your thoughts about the book..."
@@ -225,7 +217,6 @@ const RateReviewPage: React.FC = () => {
           }}
         />
 
-        {/* Submit */}
         <Button
           variant="contained"
           size="large"
