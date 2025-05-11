@@ -104,6 +104,7 @@ class PlaceOrderView(APIView):
 class OrderStatusUpdateView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsProductManager]
 
+    @transaction.atomic
     def patch(self, request, pk):
         order = Order.objects.filter(pk=pk).first()
         if not order:
@@ -118,7 +119,14 @@ class OrderStatusUpdateView(APIView):
 
         order.status = new_status
         order.save()
+
+        if new_status == "Cancelled":
+            for item in order.items.select_related("product").all():
+                item.product.stock += item.quantity
+                item.product.save()
+
         OrderStatusHistory.objects.create(order=order, status=new_status)
+
         return Response({'status': order.status}, status=status.HTTP_200_OK)
 
 
