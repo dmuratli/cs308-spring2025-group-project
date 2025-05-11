@@ -207,6 +207,23 @@ class RefundOrderView(APIView):
             status=status.HTTP_200_OK
         )
 
+# views.py
+class MyRefundsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        refunds = Refund.objects.filter(order__user=request.user).select_related('order_item__product')
+        data = [
+            {
+                "id": r.id,
+                "product_title": r.order_item.product.title,
+                "quantity": r.quantity,
+                "refund_amount": str(r.refund_amount),
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in refunds
+        ]
+        return Response(data)
 
 class OrderListView(ListAPIView):
     permission_classes = [permissions.IsAuthenticated, IsProductManager]
