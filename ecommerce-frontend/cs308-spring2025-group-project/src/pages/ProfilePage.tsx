@@ -24,8 +24,10 @@ import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
 } from "@mui/icons-material";
+import RefundModal from "../components/RefundModal";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+
 
 // --- Types --- //
 interface ProfileData {
@@ -164,40 +166,49 @@ const StatusIcon: React.FC<StatusIconProps> = React.memo(({ status }) => {
 
 interface OrderItemProps {
   order: Order;
+  setRefundModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedOrderId: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
-const OrderItem: React.FC<OrderItemProps> = React.memo(({ order }) => (
+const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalOpen, setSelectedOrderId }) => (
   <>
-    <ListItem
-      alignItems="flex-start"
-      sx={{
-        paddingY: 2,
-        transition: "all 0.2s ease",
-        "&:hover": { backgroundColor: "rgba(0,0,0,0.03)", borderRadius: "8px" },
-      }}
-    >
-      <ListItemText
-        primary={
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="body1" fontWeight="medium">
-              {order.products || `Order #${order.id}`}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {order.date}
-            </Typography>
-          </Box>
-        }
-        secondary={
-          <Typography
-            component="span"
-            variant="body2"
-            sx={{ display: "block", fontWeight: "medium", marginTop: 0.5 }}
-          >
+    <ListItemText
+      primary={
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography variant="body1" fontWeight="medium">
+            {order.products || `Order #${order.id}`}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {order.date}
+          </Typography>
+        </Box>
+      }
+      secondary={
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}>
+          <Typography variant="body2" fontWeight="medium">
             Total: {order.total}
           </Typography>
-        }
-      />
-    </ListItem>
+
+          {order.status === "Delivered" && (
+            <>
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="small"
+                onClick={() => {
+                  setSelectedOrderId(order.id);
+                  setRefundModalOpen(true);
+                }}
+                sx={{ width: "fit-content", textTransform: "none" }}
+              >
+                Request Refund
+              </Button>
+              {/* The RefundModal will now be rendered in ProfilePage */}
+            </>
+          )}
+        </Box>
+      }
+    />
     <Divider sx={{ opacity: 0.4 }} />
   </>
 ));
@@ -205,9 +216,11 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order }) => (
 interface OrderStatusSectionProps {
   status: string;
   orders: Order[];
+  setRefundModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedOrderId: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
-const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ status, orders }) => {
+const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ status, orders, setRefundModalOpen, setSelectedOrderId }) => {
   const navigate = useNavigate();
   const filteredOrders = useMemo(() => orders.filter(order => order.status === status), [orders, status]);
   return (
@@ -228,12 +241,17 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
           >
           View All Refunds in Detail
           </Button>
-         )}  
+         )}
       </Box>
       {filteredOrders.length > 0 ? (
         <List sx={{ width: "100%" }}>
           {filteredOrders.map(order => (
-            <OrderItem key={order.id} order={order} />
+            <OrderItem
+              key={order.id}
+              order={order}
+              setRefundModalOpen={setRefundModalOpen}
+              setSelectedOrderId={setSelectedOrderId}
+            />
           ))}
         </List>
       ) : (
@@ -249,7 +267,8 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
 const ProfilePage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-
+  const [refundModalOpen, setRefundModalOpen] = useState(false); 
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   // Call hooks unconditionally
   const [profileData, setProfileData] = useState<ProfileData>({
     username: "",
@@ -564,9 +583,25 @@ useEffect(() => {
             Your recent purchases organized by status
           </Typography>
           <Divider sx={{ marginBottom: 3 }} />
-          {statusTypes.map((status) => (
-            <OrderStatusSection key={status} status={status} orders={orders} />
-          ))}
+          {selectedOrderId !== null && (
+        <RefundModal
+          open={refundModalOpen}
+          onClose={() => setRefundModalOpen(false)}
+          orderId={selectedOrderId}
+          accessToken={localStorage.getItem("access_token") || ""}
+          onSuccess={() => window.location.reload()}
+        />
+      )}
+      {statusTypes.map((status) => (
+        <OrderStatusSection
+          key={status}
+          status={status}
+          orders={orders}
+          setRefundModalOpen={setRefundModalOpen}
+          setSelectedOrderId={setSelectedOrderId}
+        />
+      ))}
+          
         </Paper>
       </Fade>
     </Container>
