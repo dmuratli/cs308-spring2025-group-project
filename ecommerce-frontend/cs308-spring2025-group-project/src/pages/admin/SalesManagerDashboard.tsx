@@ -72,6 +72,7 @@ const ActionCard: React.FC<ActionCardProps> = ({ title, description }) => {
 
   const handleClick = () => {
     if(title.includes("Invoices")) navigate("/sales-manager/invoices")
+    else if (title.includes("Refund")) navigate("/sales-manager/refunds");
     //if (title.includes("Prices")) navigate("");
     //else if (title.includes("Discount")) navigate("");
     //else if (title.includes("Invoices")) navigate("/sales-manager/invoices");

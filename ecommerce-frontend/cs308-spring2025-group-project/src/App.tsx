@@ -29,6 +29,7 @@ import ManageGenres            from "./pages/admin/ManageGenres";
 
 // sales-manager screens
 import SalesManagerDashboard   from "./pages/admin/SalesManagerDashboard";
+import SalesManagerRefundPage  from "./pages/admin/SalesManagerRefundPage";
 
 function App() {
   useEffect(() => {
@@ -53,9 +54,9 @@ function App() {
             </RequireRole>
           }
         >
-          <Route index             element={<ProfilePage />} />
-          <Route path="transactions" element={<TransactionHistoryPage />} />
-          <Route path="refunds"      element={<RefundDetailsPage />} />
+          <Route index                    element={<ProfilePage />} />
+          <Route path="transactions"      element={<TransactionHistoryPage />} />
+          <Route path="refunds"  element={<RefundDetailsPage/>} />
         </Route>
 
         {/* Products */}
@@ -99,13 +100,14 @@ function App() {
         >
           <Route index                element={<SalesManagerDashboard />} />
           <Route path="invoices"      element={<InvoicesPage />} />
+          <Route path="refunds" element={<SalesManagerRefundPage />} /> 
         </Route>
 
         {/* 404 catch-all */}
         <Route path="*" element={
           <div style={{ padding: 40, textAlign: "center" }}>
-            <h1>404 – Page not found</h1>
-            <p>Sorry, we couldn’t find that page.</p>
+            <h1>404 - Page not found</h1>
+            <p>Sorry, we couldn't find that page.</p>
           </div>
         }/>
       </Routes>

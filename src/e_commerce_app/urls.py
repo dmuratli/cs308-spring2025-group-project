@@ -70,8 +70,6 @@ urlpatterns = [
     path("api/invoices/", include("invoices.urls")),
     
     path('api/user-info/', user_info, name='user-info'),
-    
-    path("api/orders/", include("orders.urls")),
 ]
 
 if settings.DEBUG:
