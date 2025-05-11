@@ -208,6 +208,7 @@ interface OrderStatusSectionProps {
 }
 
 const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ status, orders }) => {
+  const navigate = useNavigate();
   const filteredOrders = useMemo(() => orders.filter(order => order.status === status), [orders, status]);
   return (
     <Box sx={{ marginBottom: 4 }}>
@@ -222,7 +223,7 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
           <Button
           variant="outlined"
           size="small"
-          //onClick={() => navigate("")}
+          onClick={() => navigate("/profile/refunds")}
           sx={{ ml: 2 }}
           >
           View All Refunds in Detail
