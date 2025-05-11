@@ -28,33 +28,23 @@ const RefundDetailsPage: React.FC = () => {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    // Mock verileri doğrudan set et
-    const mockRefunds = [
-      {
-        id: 1,
-        product_title: "Book A",
-        quantity: 2,
-        refund_amount: 40.0,
-        created_at: "2025-05-01T10:00:00Z",
-      },
-      {
-        id: 2,
-        product_title: "Book B",
-        quantity: 1,
-        refund_amount: 20.0,
-        created_at: "2025-05-02T11:00:00Z",
-      },
-      {
-        id: 3,
-        product_title: "Book C",
-        quantity: 3,
-        refund_amount: 60.0,
-        created_at: "2025-05-03T12:00:00Z",
-      },
-    ];
+    const fetchRefunds = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await fetch("http://localhost:8000/api/orders/refunds/mine/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch refunds");
+        const data = await res.json();
+        setRefunds(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setRefunds(mockRefunds);
-    setLoading(false);
+    fetchRefunds();
   }, []);
 
   const totalRefund = refunds.reduce((sum, r) => sum + Number(r.refund_amount), 0);

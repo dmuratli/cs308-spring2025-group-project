@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PlaceOrderView, OrderStatusUpdateView, OrderListView, OrderProductInfoView, OrderItemsView, MyOrderListView, RefundOrderView, CreateRefundRequestView, ListRefundRequestsView, ProcessRefundRequestView
+from .views import PlaceOrderView, OrderStatusUpdateView, MyRefundsView, OrderListView, OrderProductInfoView, OrderItemsView, MyOrderListView, RefundOrderView, CreateRefundRequestView, ListRefundRequestsView, ProcessRefundRequestView
 
 urlpatterns = [
     path("place/", PlaceOrderView.as_view(), name="place-order"),
@@ -12,4 +12,6 @@ urlpatterns = [
     path("<int:order_id>/refund-requests/",     CreateRefundRequestView.as_view(), name="refund-requests-create"),
     path("refund-requests/pending/",            ListRefundRequestsView.as_view(),   name="refund-requests-list"),
     path("refund-requests/<int:pk>/process/",   ProcessRefundRequestView.as_view(),  name="refund-requests-process"),
+    path("refunds/mine/", MyRefundsView.as_view(), name="my-refunds"),
+
 ]
