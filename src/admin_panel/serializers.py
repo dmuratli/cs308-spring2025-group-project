@@ -1,10 +1,11 @@
 from rest_framework import serializers
-from .models import Product, Order, User
+from .models import Product, Order, User, Genre
 from django.db.models import Avg
 
 class ProductSerializer(serializers.ModelSerializer):
     cover_image = serializers.ImageField(required=True)
     rating = serializers.SerializerMethodField()
+    genre_name = serializers.CharField(source="genre.name", read_only=True)
 
     class Meta:
         model = Product
@@ -34,3 +35,15 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = "__all__"
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ["id", "name"]
+
+    def validate_name(self, value):
+        if not value.strip():
+            raise serializers.ValidationError(
+                "Genre name cannot be empty."
+            )
+        return value

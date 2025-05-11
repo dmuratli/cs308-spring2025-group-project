@@ -27,25 +27,32 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import AddToCartButton from "../components/AddToCartButton";
 import axios from "axios";
 
-const ProductPage: React.FC = () => {
-  interface Product {
-    id: number;
-    title: string;
-    author: string;
-    genre: string;
-    language: string;
-    description: string;
-    price: number;
-    stock: number;
-    cover_image?: string;
-    rating: number;
-    canRate: boolean;
-    pages: number;
-    created_at: string;
-    ordered_number: number;
-  }
+interface Product {
+  id: number;
+  title: string;
+  author: string;
+  genre: number;        // FK id
+  genre_name: string;   // human-readable name
+  language: string;
+  description: string;
+  price: number;
+  stock: number;
+  cover_image?: string;
+  rating: number;
+  canRate: boolean;
+  pages: number;
+  created_at: string;
+  ordered_number: number;
+}
 
+interface Genre {
+  id: number;
+  name: string;
+}
+
+const ProductPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [genres, setGenres] = useState<Genre[]>([]);
   const [sortOption, setSortOption] = useState<string>("");
   const [selectedGenre, setSelectedGenre] = useState<string>("All");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("All");
@@ -53,14 +60,13 @@ const ProductPage: React.FC = () => {
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // price slider bounds & current range
   const [priceBounds, setPriceBounds] = useState<[number, number]>([0, 0]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
 
   const navigate = useNavigate();
 
-  // fetch products and compute price slider bounds
   useEffect(() => {
+    // fetch products
     axios
       .get("/api/products/?ordering=-ordered_number")
       .then((res) => {
@@ -75,6 +81,12 @@ const ProductPage: React.FC = () => {
         }
       })
       .catch((err) => console.error("Error fetching products:", err));
+
+    // fetch genres
+    axios
+      .get("/api/genres/")
+      .then((res) => setGenres(res.data))
+      .catch((err) => console.error("Error fetching genres:", err));
   }, []);
 
   const handleRatingChange = (index: number, newValue: number | null) => {
@@ -86,21 +98,16 @@ const ProductPage: React.FC = () => {
     });
   };
 
-  // build unique filter lists
-  const genres = Array.from(new Set(["All", ...products.map((p) => p.genre)]));
+  const uniqueGenres = ["All", ...genres.map((g) => g.name)];
   const languages = Array.from(new Set(["All", ...products.map((p) => p.language)]));
-
-  const defaultGenres = ["Fiction", "Non-Fiction", "Mystery", "Fantasy", "Biography"];
   const defaultLanguages = ["English", "Spanish", "German", "French", "Japanese"];
-
-  const uniqueGenres = Array.from(new Set([...genres, ...defaultGenres]));
   const uniqueLanguages = Array.from(new Set([...languages, ...defaultLanguages]));
 
   const sortedProducts = () => {
     let filtered = [...products];
 
     if (selectedGenre !== "All") {
-      filtered = filtered.filter((p) => p.genre === selectedGenre);
+      filtered = filtered.filter((p) => p.genre_name === selectedGenre);
     }
     if (selectedLanguage !== "All") {
       filtered = filtered.filter((p) => p.language === selectedLanguage);
@@ -120,12 +127,10 @@ const ProductPage: React.FC = () => {
       );
     }
 
-    // dynamic price filter
     filtered = filtered.filter(
       (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
     );
 
-    // sorting
     switch (sortOption) {
       case "price-low":
         filtered.sort((a, b) => a.price - b.price);
@@ -134,10 +139,10 @@ const ProductPage: React.FC = () => {
         filtered.sort((a, b) => b.price - a.price);
         break;
       case "pages-low":
-        filtered.sort((a, b) => (a.pages ?? 0) - (b.pages ?? 0));
+        filtered.sort((a, b) => a.pages - b.pages);
         break;
       case "pages-high":
-        filtered.sort((a, b) => (b.pages ?? 0) - (a.pages ?? 0));
+        filtered.sort((a, b) => b.pages - a.pages);
         break;
       case "newest":
         filtered.sort(
@@ -152,9 +157,7 @@ const ProductPage: React.FC = () => {
         );
         break;
       case "popularity":
-        filtered.sort(
-          (a, b) => (b.ordered_number ?? 0) - (a.ordered_number ?? 0)
-        );
+        filtered.sort((a, b) => b.ordered_number - a.ordered_number);
         break;
     }
 
@@ -174,12 +177,17 @@ const ProductPage: React.FC = () => {
           Our Book Collection
         </Typography>
 
-        <Paper elevation={3} sx={{ p: 3, borderRadius: 2, mb: 4, border: "1px solid #ddd" }}>
-          <Typography variant="h6" sx={{ mb: 2, textAlign: "center", fontWeight: "bold" }}>
+        <Paper
+          elevation={3}
+          sx={{ p: 3, borderRadius: 2, mb: 4, border: "1px solid #ddd" }}
+        >
+          <Typography
+            variant="h6"
+            sx={{ mb: 2, textAlign: "center", fontWeight: "bold" }}
+          >
             Filter Options
           </Typography>
           <Stack direction="row" spacing={2} flexWrap="wrap" justifyContent="center">
-            {/* Genre */}
             <FormControl sx={{ minWidth: 160 }}>
               <InputLabel id="genre-label">Genre</InputLabel>
               <Select
@@ -196,7 +204,6 @@ const ProductPage: React.FC = () => {
               </Select>
             </FormControl>
 
-            {/* Language */}
             <FormControl sx={{ minWidth: 160 }}>
               <InputLabel id="language-label">Language</InputLabel>
               <Select
@@ -213,7 +220,6 @@ const ProductPage: React.FC = () => {
               </Select>
             </FormControl>
 
-            {/* Min Rating */}
             <Box sx={{ width: 200 }}>
               <Typography gutterBottom>Min Rating: {minRating}</Typography>
               <Slider
@@ -227,7 +233,6 @@ const ProductPage: React.FC = () => {
               />
             </Box>
 
-            {/* In Stock */}
             <FormControlLabel
               control={
                 <Checkbox
@@ -238,7 +243,6 @@ const ProductPage: React.FC = () => {
               label="In Stock Only"
             />
 
-            {/* Sort By */}
             <FormControl sx={{ minWidth: 160 }}>
               <InputLabel id="sort-label">Sort By</InputLabel>
               <Select
@@ -257,7 +261,6 @@ const ProductPage: React.FC = () => {
               </Select>
             </FormControl>
 
-            {/* Search */}
             <TextField
               label="Search Title/Author"
               variant="outlined"
@@ -266,7 +269,6 @@ const ProductPage: React.FC = () => {
               sx={{ minWidth: 220 }}
             />
 
-            {/* Price Range */}
             <Box sx={{ width: 240 }}>
               <Typography gutterBottom>
                 Price: ${priceRange[0]} – ${priceRange[1]}
@@ -283,7 +285,6 @@ const ProductPage: React.FC = () => {
           </Stack>
         </Paper>
 
-        {/* Product Grid */}
         <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
           {sortedProducts().map((product, idx) => (
             <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
@@ -308,7 +309,7 @@ const ProductPage: React.FC = () => {
                   <CardMedia
                     component="img"
                     className="product-image"
-                    image={product.cover_image || "https://via.placeholder.com/250"}
+                    image={product.cover_image || "https://via.placeholder.com/250"} 
                     alt={product.title}
                     sx={{
                       width: "100%",
@@ -348,7 +349,7 @@ const ProductPage: React.FC = () => {
                     by {product.author}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    {product.genre} | {product.language}
+                    {product.genre_name} | {product.language}
                   </Typography>
                   {product.canRate ? (
                     <Rating

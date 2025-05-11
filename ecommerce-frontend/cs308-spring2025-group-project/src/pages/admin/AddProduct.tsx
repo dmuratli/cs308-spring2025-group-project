@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import axios from "axios";
 import {
@@ -12,7 +12,10 @@ import {
   Box,
 } from "@mui/material";
 
-const genres = ["Fiction", "Non-Fiction", "Sci-Fi", "Biography", "Mystery", "Fantasy"];
+interface Genre {
+  id: number;
+  name: string;
+}
 
 const AddProduct: React.FC = () => {
   const [product, setProduct] = useState({
@@ -28,21 +31,25 @@ const AddProduct: React.FC = () => {
     pages: "",
     language: "",
   });
+  const [genres, setGenres] = useState<Genre[]>([])
 
   const [image, setImage] = useState<File | null>(null); // ✅ File upload state
   const [preview, setPreview] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    let { name, value } = e.target;
-  
-    // ✅ Ensure publication date is in YYYY-MM-DD format
-    if (name === "publication_date") {
-      value = value.split(".").reverse().join("-"); // Converts "01.03.2025" -> "2025-03-01"
-    }
-  
-    setProduct({ ...product, [name]: value });
+   useEffect(() => {
+      axios
+        .get("/api/genres/")
+        .then(res => setGenres(res.data))
+        .catch(() => setGenres([]));
+    }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProduct(p => ({
+      ...p,
+      [name]: name === "genre" ? Number(value) : value
+    }));
   };
-  
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -142,10 +149,18 @@ const AddProduct: React.FC = () => {
               <TextField label="ISBN" name="isbn" fullWidth required value={product.isbn} onChange={handleChange} />
             </Grid>
             <Grid item xs={6}>
-              <TextField select label="Genre" name="genre" fullWidth required value={product.genre} onChange={handleChange}>
-                {genres.map((genre) => (
-                  <MenuItem key={genre} value={genre}>
-                    {genre}
+              <TextField
+                select
+                label="Genre"
+                name="genre"
+                fullWidth
+                required
+                value={product.genre}
+                onChange={handleChange}
+              >
+                {genres.map(g => (
+                  <MenuItem key={g.id} value={g.id}>
+                    {g.name}
                   </MenuItem>
                 ))}
               </TextField>

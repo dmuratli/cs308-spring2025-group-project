@@ -15,7 +15,7 @@ from users.views import (
     user_info,
 )
 from admin_panel.views import (
-    ProductViewSet, OrderViewSet, UserViewSet,
+    ProductViewSet, OrderViewSet, UserViewSet, GenreViewSet,
     product_detail_by_slug,
 )
 
@@ -25,6 +25,7 @@ router = DefaultRouter()
 router.register(r'products', ProductViewSet, basename='product')
 router.register(r'orders',    OrderViewSet,   basename='order')
 router.register(r'users',     UserViewSet,    basename='user')
+router.register(r'genres',    GenreViewSet,   basename='genre')
 
 urlpatterns = [
     # 1) Admin

@@ -9,8 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework.parsers import JSONParser
 
-from .models import Product, User
-from .serializers import ProductSerializer, UserSerializer
+from .models import Product, User, Genre
+from .serializers import ProductSerializer, UserSerializer, GenreSerializer
 from orders.models import Order, OrderItem
 from orders.serializers import OrderSerializer
 from cart.models import Cart
@@ -82,6 +82,24 @@ class ProductViewSet(viewsets.ModelViewSet):
         product.stock += change
         product.save()
         return Response({"message": "Stock updated", "stock": product.stock})
+
+class GenreViewSet(viewsets.GenericViewSet,
+    viewsets.mixins.CreateModelMixin,
+    viewsets.mixins.ListModelMixin,
+    viewsets.mixins.DestroyModelMixin
+):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = [permissions.IsAuthenticated, IsProductManager]
+
+    def destroy(self, request, *args, **kwargs):
+        g = self.get_object()
+        if g.products.exists():
+            return Response(
+                {"detail": "Cannot delete a genre with assigned products."},
+                status=400
+            )
+        return super().destroy(request, *args, **kwargs)
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()

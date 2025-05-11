@@ -30,13 +30,28 @@ class User(models.Model):
     def __str__(self):
         return self.name
 
+class Genre(models.Model):
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="Unique, non-empty genre name"
+    )
+
+    def __str__(self):
+        return self.name
+
 class Product(models.Model):
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField()
     isbn = models.CharField(max_length=13, unique=True)
-    genre = models.CharField(max_length=100)
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE,                     # ← delete product if its genre is deleted
+        related_name="products",
+        help_text="Each product must have a genre; deleting a genre deletes its products"
+    )
     description = models.TextField()
     publisher = models.CharField(max_length=255)
     publication_date = models.DateField()

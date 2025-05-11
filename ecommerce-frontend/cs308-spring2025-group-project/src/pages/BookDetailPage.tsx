@@ -1,4 +1,3 @@
-// src/pages/BookDetailsPage.tsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -31,34 +30,35 @@ interface Review {
   username?: string;
 }
 
-const BookDetailsPage: React.FC = () => {
-  interface Product {
-    id: number;
-    title: string;
-    author: string;
-    genre: string;
-    language: string;
-    description: string;
-    price: number;
-    stock: number;
-    cover_image?: string;
-    isbn?: string;
-    pages?: number;
-    publisher?: string;
-    publication_date?: string;
-    rating: number;
-  }
+interface Product {
+  id: number;
+  title: string;
+  author: string;
+  genre: number;          // FK id
+  genre_name: string;     // human-readable name
+  language: string;
+  description: string;
+  price: number;
+  stock: number;
+  cover_image?: string;
+  isbn?: string;
+  pages?: number;
+  publisher?: string;
+  publication_date?: string;
+  rating: number;
+}
 
+const BookDetailsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState({
-    open: false,
-    message: "",
-    type: "info" as "success" | "error" | "info",
-  });
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    type: "success" | "error" | "info";
+  }>({ open: false, message: "", type: "info" });
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
 
@@ -66,11 +66,15 @@ const BookDetailsPage: React.FC = () => {
 
   const fetchProduct = async () => {
     if (!slug) return;
-    const res = await axios.get<Product>(
-      `http://localhost:8000/api/products/${slug}/`,
-      { withCredentials: true }
-    );
-    setProduct(res.data);
+    try {
+      const res = await axios.get<Product>(
+        `http://localhost:8000/api/products/${slug}/`,
+        { withCredentials: true }
+      );
+      setProduct(res.data);
+    } catch (err) {
+      console.error("Error fetching product:", err);
+    }
   };
 
   const fetchReviews = async (prodId: number) => {
@@ -81,7 +85,8 @@ const BookDetailsPage: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setReviews(res.data);
-    } catch {
+    } catch (err) {
+      console.error("Error fetching reviews:", err);
     } finally {
       setReviewsLoading(false);
     }
@@ -92,7 +97,9 @@ const BookDetailsPage: React.FC = () => {
   }, [slug]);
 
   useEffect(() => {
-    if (product?.id) fetchReviews(product.id);
+    if (product?.id) {
+      fetchReviews(product.id);
+    }
   }, [product?.id]);
 
   const handleAddToCart = async () => {
@@ -114,21 +121,25 @@ const BookDetailsPage: React.FC = () => {
         : "There was a problem adding the product to cart.",
       type: ok ? "success" : "error",
     });
-    if (ok) fetchProduct();
+    if (ok) {
+      fetchProduct();
+    }
     setLoading(false);
   };
 
-  if (!product)
+  if (!product) {
     return (
       <Typography textAlign="center" mt={5}>
-        Loading…
+        <CircularProgress />
       </Typography>
     );
+  }
 
   return (
     <Box>
       <Navbar />
       <Toolbar />
+
       <Container sx={{ my: 5 }}>
         <Card
           sx={{
@@ -136,9 +147,7 @@ const BookDetailsPage: React.FC = () => {
             boxShadow: 5,
             borderRadius: 3,
             transition: "transform 0.3s ease",
-            "&:hover": {
-              transform: "scale(1.02)",
-            },
+            "&:hover": { transform: "scale(1.02)" },
           }}
         >
           <CardMedia
@@ -150,26 +159,35 @@ const BookDetailsPage: React.FC = () => {
           />
 
           <CardContent sx={{ flex: 1, p: 5 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-            <Box>
-              <Typography variant="h4" fontWeight="bold">
-                {product.title}
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary">
-                by {product.author}
-              </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+              <Box>
+                <Typography variant="h4" fontWeight="bold">
+                  {product.title}
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                  by {product.author}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Rating
+                  value={product.rating}
+                  precision={0.5}
+                  readOnly
+                  size="large"
+                />
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ ml: 1 }}
+                >
+                  {product.rating.toFixed(2)} / 5
+                </Typography>
+              </Box>
             </Box>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Rating value={product.rating} precision={0.5} readOnly size="large" />
-              <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                {product.rating.toFixed(2)} / 5
-              </Typography>
-            </Box>
-          </Box>
 
             <Typography variant="body2" color="text.secondary" mt={2}>
-              <strong>Genre:</strong> {product.genre} | <strong>Language:</strong>{" "}
-              {product.language}
+              <strong>Genre:</strong> {product.genre_name}{" "}
+              | <strong>Language:</strong> {product.language}
             </Typography>
 
             <Typography variant="h5" color="primary" mt={2}>
@@ -177,6 +195,7 @@ const BookDetailsPage: React.FC = () => {
             </Typography>
 
             <Divider sx={{ my: 2 }} />
+
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               Book Details
             </Typography>
@@ -221,7 +240,12 @@ const BookDetailsPage: React.FC = () => {
               )}
             </Grid>
 
-            <Typography variant="h6" fontWeight="bold" mt={3} gutterBottom>
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              mt={3}
+              gutterBottom
+            >
               Description
             </Typography>
             <Typography variant="body1" color="text.secondary">
@@ -276,7 +300,6 @@ const BookDetailsPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Reviews */}
         <Box sx={{ mt: 6 }}>
           <Typography variant="h5" gutterBottom fontWeight="bold">
             Reviews
@@ -331,7 +354,6 @@ const BookDetailsPage: React.FC = () => {
                     – {r.username || "Anonymous"}
                   </Typography>
                 </Box>
-
                 <Typography
                   variant="body1"
                   sx={{ ml: 1.5, fontSize: "1.05rem", color: "#333" }}

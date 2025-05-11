@@ -140,6 +140,11 @@ const ProductManagerDashboard: React.FC = () => {
             description="Add, edit, delete or update stock for all listed products."
             onClick={() => navigate("/product-manager/manage-products")}
           />
+          <ActionCard
+            title="Manage Genres"
+            description="Add or remove book genres."
+            onClick={() => navigate("/product-manager/genres")}
+          />
         </Stack>
       </Container>
     </Box>
