@@ -31,7 +31,6 @@ import ManageGenres            from "./pages/admin/ManageGenres";
 import SalesManagerDashboard   from "./pages/admin/SalesManagerDashboard";
 
 function App() {
-  // fetch CSRF on mount…
   useEffect(() => {
     axios.get("http://localhost:8000/api/csrf/", { withCredentials: true }).catch(console.error);
   }, []);
