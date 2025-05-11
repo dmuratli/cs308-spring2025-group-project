@@ -84,7 +84,6 @@ const ProductManagerDashboard: React.FC = () => {
       });
   }, []);
 
-  // 1) Show nothing or a spinner while loading
   if (loading) {
     return (
       <Box sx={{ backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
@@ -96,30 +95,7 @@ const ProductManagerDashboard: React.FC = () => {
       </Box>
     );
   }
-
-  // 2) If not a product manager, show “Unauthorized”
-  if (!roles.includes("product manager")) {
-    return (
-      <Box sx={{ backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
-        <Navbar />
-        <Toolbar />
-        <Container maxWidth="sm" sx={{ textAlign: "center", mt: 8 }}>
-          <Typography variant="h5" color="error" gutterBottom>
-            You are not allowed to view this page.
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate("/")}
-            sx={{ mt: 2 }}
-          >
-            Go Home
-          </Button>
-        </Container>
-      </Box>
-    );
-  }
-
-  // 3) Otherwise render the dashboard
+  
   return (
     <Box sx={{ backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
       <Navbar />
