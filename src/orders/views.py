@@ -31,6 +31,7 @@ from .serializers import (
     RefundResponseSerializer,
     CreateRefundRequestSerializer,
     ProcessRefundRequestSerializer,
+    InsRefundRequestSerializer,
 )
 
 VALID_TRANSITIONS = {
@@ -140,7 +141,7 @@ class RefundOrderView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = RefundRequestSerializer(data=request.data)
+        serializer = InsRefundRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         total_refund = Decimal("0")
