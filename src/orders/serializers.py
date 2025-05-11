@@ -4,6 +4,7 @@ from .models import Order, OrderItem, Refund, RefundRequest
 class OrderItemSerializer(serializers.ModelSerializer):
     # Include the product's title for frontend display
     product_title = serializers.CharField(source='product.title', read_only=True)
+    refundable_quantity = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
@@ -13,7 +14,10 @@ class OrderItemSerializer(serializers.ModelSerializer):
             'product_title',
             'quantity',
             'price_at_purchase',
+            'refundable_quantity'
         ]
+    def get_refundable_quantity(self, obj):
+        return obj.quantity - obj.refunded_quantity
 
 class OrderSerializer(serializers.ModelSerializer):
     # Expose the actual username of the customer (the Order model uses a `user` FK)

@@ -41,7 +41,7 @@ const RefundModal: React.FC<RefundModalProps> = ({
 }) => {
   const [items, setItems] = useState<RefundItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false); // ✅ Snackbar kontrolü
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -51,12 +51,14 @@ const RefundModal: React.FC<RefundModalProps> = ({
     })
       .then((res) => res.json())
       .then((data) => {
-        const withQty = data.map((item: any) => ({
-          id: item.id,
-          product_title: item.product_title,
-          refundable_quantity: item.refundable_quantity,
-          quantity: 0,
-        }));
+        const withQty = data
+          .filter((item: any) => item.refundable_quantity > 0) // ⛔ sıfır iade edilebilir ürünleri gösterme
+          .map((item: any) => ({
+            id: item.id,
+            product_title: item.product_title,
+            refundable_quantity: item.refundable_quantity,
+            quantity: 0,
+          }));
         setItems(withQty);
       });
   }, [open, orderId, accessToken]);
@@ -97,7 +99,7 @@ const RefundModal: React.FC<RefundModalProps> = ({
         return res.json();
       })
       .then(() => {
-        setShowSuccess(true); // ✅ Snackbar göster
+        setShowSuccess(true);
         onSuccess();
         onClose();
       })
@@ -112,7 +114,7 @@ const RefundModal: React.FC<RefundModalProps> = ({
         <DialogContent dividers>
           {items.length === 0 && (
             <Typography variant="body2" color="textSecondary">
-              Loading items or no refundable items.
+              No refundable items available.
             </Typography>
           )}
           {items.map((item) => (
@@ -155,8 +157,6 @@ const RefundModal: React.FC<RefundModalProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* ✅ Snackbar */}
       <Snackbar
         open={showSuccess}
         autoHideDuration={3000}
@@ -177,5 +177,3 @@ const RefundModal: React.FC<RefundModalProps> = ({
 };
 
 export default RefundModal;
-
-export {};
