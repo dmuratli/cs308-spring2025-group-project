@@ -255,7 +255,7 @@ const Navbar: React.FC = () => {
        navigate("/product-manager");
      }}
    >
-     Product Manager
+     Product Manager Dashboard
    </MenuItem>
  )}
 
@@ -266,7 +266,7 @@ const Navbar: React.FC = () => {
        navigate("/sales-manager");
      }}
    >
-     Sales Manager
+     Sales Manager Dashboard
    </MenuItem>
  )}
 
