@@ -39,3 +39,4 @@ Thumbs.db
 *.jpeg
 *.jpg
 *.png
+!ecommerce-frontend/cs308-spring2025-group-project/src/assets/Axo1.png
