@@ -80,7 +80,7 @@ function App() {
         >
           <Route index                          element={<ProductManagerDashboard />} />
           <Route path="manage-products"         element={<ManageProducts panel="manager" />} />
-          <Route path="genres"          element={<ManageGenres />} />
+          <Route path="genres"                  element={<ManageGenres />} />
           <Route path="add-product"             element={<AddProduct />} />
           <Route path="edit-product/:slug"      element={<EditProduct />} />
           <Route path="orders"                  element={<ManageOrders />} />
