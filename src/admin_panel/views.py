@@ -90,7 +90,11 @@ class GenreViewSet(viewsets.GenericViewSet,
 ):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [permissions.IsAuthenticated, IsProductManager]
+    
+    def get_permissions(self):
+        if self.action in ['create', 'destroy']:
+            return [IsAuthenticated(), IsProductManager()]
+        return [permissions.AllowAny()]
 
     def destroy(self, request, *args, **kwargs):
         g = self.get_object()
