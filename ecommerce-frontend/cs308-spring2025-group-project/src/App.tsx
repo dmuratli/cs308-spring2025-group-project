@@ -23,7 +23,8 @@ import RateReviewPage      from "./pages/RateReviewPage";
 import { CartProvider } from "./context/CartContext";
 import { Typography, Container } from "@mui/material";
 import RefundDetailsPage from "./pages/RefundDetailsPage";
-
+import SalesManagerRefundPage from "./pages/admin/SalesManagerRefundPage";
+ 
 function App() {
   useEffect(() => {
     axios.get("http://localhost:8000/api/csrf/", { withCredentials: true });
@@ -73,6 +74,7 @@ function App() {
         {/* — SALES MANAGER — */}
         <Route path="/sales-manager"            element={<SalesManagerDashboard />} />
         <Route path="/sales-manager/invoices"   element={<InvoicesPage />} />
+        <Route path="/sales-manager/refunds" element={<SalesManagerRefundPage />} /> 
 
         {/*REFUND*/}
         <Route path="/profile/refunds"          element={<RefundDetailsPage/>} />
