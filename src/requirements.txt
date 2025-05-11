@@ -12,4 +12,5 @@ python-dotenv==1.0.0
 pytest==7.4.0
 sqlparse==0.5.3
 tzdata>=2025.2,<2026.0
+pydyf<0.11
 weasyprint==59.0

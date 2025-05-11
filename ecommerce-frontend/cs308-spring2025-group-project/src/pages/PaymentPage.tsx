@@ -15,6 +15,8 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { getCSRFToken } from "../context/AuthContext";
 
+const API_BASE = process.env.REACT_APP_API_URL ?? "http://localhost:8000";
+
 const PaymentPage: React.FC = () => {
   const { cart, fetchCart } = useCart();
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ const PaymentPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const orderRes = await fetch("http://localhost:8000/api/orders/place/", {
+      const orderRes = await fetch(`${API_BASE}/api/orders/place/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,7 +67,7 @@ const PaymentPage: React.FC = () => {
       const { order_id } = orderData;
 
       const payRes = await fetch(
-        `http://localhost:8000/api/payment/process/${order_id}/`,
+        `${API_BASE}/api/payment/process/${order_id}/`,
         {
           method: "POST",
           headers: {
