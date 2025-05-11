@@ -5,6 +5,11 @@ from orders.models import OrderItem
 
 class ReviewSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
+    product_title = serializers.CharField(
+        source="product.title",
+        read_only=True,
+        help_text="Human-readable product title for pending reviews"
+    )
 
     class Meta:
         model = Review
@@ -12,11 +17,12 @@ class ReviewSerializer(serializers.ModelSerializer):
             "id", "user", "product",
             "stars", "review_text",
             "created_at", "status", "approved",
-            "username",
+            "username", "product_title",
         ]
         read_only_fields = [
             "id", "created_at", "user",
             "status", "approved", "username",
+            "product_title",
         ]
 
     def validate(self, data):
