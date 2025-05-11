@@ -70,41 +70,43 @@ const RefundModal: React.FC<RefundModalProps> = ({
     );
   };
 
-  const handleSubmit = () => {
-    const payload = {
-      items: items
-        .filter((i) => i.quantity > 0)
-        .map((i) => ({
-          order_item_id: i.id,
-          quantity: i.quantity,
-        })),
-    };
-
-    if (payload.items.length === 0) {
+  const handleSubmit = async () => {
+    const itemsToRefund = items.filter((i) => i.quantity > 0);
+  
+    if (itemsToRefund.length === 0) {
       alert("Please select at least one quantity to refund.");
       return;
     }
-
+  
     setLoading(true);
-    fetch(`http://localhost:8000/api/orders/${orderId}/refund/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Refund failed");
-        return res.json();
-      })
-      .then(() => {
-        setShowSuccess(true);
-        onSuccess();
-        onClose();
-      })
-      .catch((err) => alert(err.message))
-      .finally(() => setLoading(false));
+  
+    try {
+      const promises = itemsToRefund.map((item) =>
+        fetch(`http://localhost:8000/api/orders/${orderId}/refund-requests/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            order_item_id: item.id,
+            quantity: item.quantity,
+          }),
+        }).then((res) => {
+          if (!res.ok) throw new Error("Refund request failed.");
+          return res.json();
+        })
+      );
+  
+      await Promise.all(promises);
+      setShowSuccess(true);
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      alert(err.message || "An error occurred while submitting refund requests.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
