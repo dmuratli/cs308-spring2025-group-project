@@ -47,7 +47,7 @@ class RefundItemRequestSerializer(serializers.Serializer):
     order_item_id = serializers.IntegerField()
     quantity      = serializers.IntegerField(min_value=1)
 
-class RefundRequestSerializer(serializers.Serializer):
+class InsRefundRequestSerializer(serializers.Serializer):
     items = RefundItemRequestSerializer(many=True)
 
 class RefundResponseSerializer(serializers.Serializer):
