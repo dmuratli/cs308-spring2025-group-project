@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 from django.contrib.auth import login, logout, get_user_model
 from django.http import JsonResponse
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.views.decorators.http import require_POST, require_http_methods
 from django.utils.decorators import method_decorator
@@ -29,6 +29,7 @@ def get_csrf_token(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@transaction.atomic
 def register_view(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():

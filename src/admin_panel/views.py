@@ -8,6 +8,8 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework.parsers import JSONParser
+from django.db import transaction
+from django.db.models import F
 
 from .models import Product, User, Genre
 from .serializers import ProductSerializer, UserSerializer, GenreSerializer
@@ -72,16 +74,24 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     @method_decorator(csrf_exempt)
     @action(detail=True, methods=['post'], parser_classes=[JSONParser])
+    @transaction.atomic
     def adjust_stock(self, request, slug=None):
         product = self.get_object()
         change = int(request.data.get("change", 0))
 
-        if product.stock + change < 0:
-            return Response({"error": "Stock cannot go below zero."}, status=400)
+        updated = Product.objects.filter(
+            slug=slug, 
+            stock__gte= -change  # ensures stock + change ≥ 0
+        ).update(stock=F('stock') + change)
 
-        product.stock += change
-        product.save()
-        return Response({"message": "Stock updated", "stock": product.stock})
+        if not updated:
+            return Response(
+                {"error": "Insufficient stock or invalid slug."},
+                status=400
+            )
+
+        new_stock = Product.objects.get(slug=slug).stock
+        return Response({"message": "Stock updated", "stock": new_stock})
 
 class GenreViewSet(viewsets.GenericViewSet,
     viewsets.mixins.CreateModelMixin,

@@ -4,8 +4,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from cart.models import Cart, CartItem
 from .models import User, Profile
+from django.db import transaction
 
 @receiver(post_save, sender=User)
+@transaction.atomic
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         customer_group, _ = Group.objects.get_or_create(name="customer")

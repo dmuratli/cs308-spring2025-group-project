@@ -18,6 +18,7 @@ from invoices.models import Invoice
 from invoices.pdf_utils import generate_invoice_pdf  # Import the missing function
 from invoices.email_utils import send_invoice_email
 from django.template.loader import render_to_string
+from django.db.models import F
 
 class ProcessPaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -73,49 +74,55 @@ class ProcessPaymentView(APIView):
         # --- All validations passed; **now** we mutate the DB ---
         try:
             with transaction.atomic():
-                # 4) Retrieve items
                 items = OrderItem.objects.filter(order=order).select_related("product")
 
-                # 5) Decrement stock (rolls back if any item fails)
+                # Decrement stock & bump ordered_number in one shot per product
                 for item in items:
-                    prod: Product = item.product
-                    if prod.stock < item.quantity:
-                        raise serializers.ValidationError(f"Not enough stock for {prod.title}")
-                    prod.stock -= item.quantity
-                    prod.ordered_number += item.quantity
-                    prod.save()
+                    updated = Product.objects.filter(
+                        pk=item.product.pk,
+                        stock__gte=item.quantity
+                    ).update(
+                        stock=F("stock") - item.quantity,
+                        ordered_number=F("ordered_number") + item.quantity
+                    )
+                    if not updated:
+                        raise serializers.ValidationError(
+                            f"Not enough stock for {item.product.title}"
+                        )
 
-                # 6) Mark paid and record
-                order.status = "Processing"
-                order.save()
-                Transaction.objects.create(user=request.user, order=order, status="Completed")
-
-                # 7) Clear the cart
-                cart = Cart.objects.filter(user=request.user, is_active=True).first()
-                if cart:
-                    cart.items.all().delete()
-                    cart.is_active = False
-                    cart.save()
-
-                # 8) Create Invoice record
-                invoice = Invoice.objects.create(order=order)
-                # 9) Schedule email with PDF attachment
-                # Generate PDF
-                pdf_bytes = generate_invoice_pdf(invoice.order)
-
-                # Send email immediately
-                send_invoice_email(
-                    invoice.order.user.email,   # to_email
-                    pdf_bytes,                  # pdf
-                    invoice.order.id            # order_id
+                # 6) Mark paid and record transaction
+                Order.objects.filter(pk=order.pk).update(status="Processing")
+                Transaction.objects.create(
+                    user=request.user,
+                    order=order,
+                    status="Completed"
                 )
 
-                invoice_html = render_to_string("invoices/invoice.html",
-                                {"order": order})
-        
+                # 7) Clear the cart
+                cart = Cart.objects.filter(
+                    user=request.user, is_active=True
+                ).first()
+                if cart:
+                    cart.items.all().delete()
+                    Cart.objects.filter(pk=cart.pk).update(is_active=False)
+
         except serializers.ValidationError as e:
             order.delete()
             return Response({"error": str(e.detail)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # -------------------
+        # 8–9) Non-DB work: invoice, PDF & email
+        # -------------------
+        invoice = Invoice.objects.create(order=order)
+        pdf_bytes = generate_invoice_pdf(invoice.order)
+        send_invoice_email(
+            invoice.order.user.email,
+            pdf_bytes,
+            invoice.order.id
+        )
+        invoice_html = render_to_string(
+            "invoices/invoice.html", {"order": order}
+        )
 
         # 10) Success JSON returned to the frontend
         return Response(

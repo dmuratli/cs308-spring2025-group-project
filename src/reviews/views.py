@@ -9,6 +9,7 @@ from django.db.models import Avg
 from users.permissions import IsProductManager
 from rest_framework.views import APIView
 from rest_framework import status
+from django.db import transaction
 
 class ReviewCreateView(generics.CreateAPIView):
     """
@@ -20,15 +21,21 @@ class ReviewCreateView(generics.CreateAPIView):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @transaction.atomic
     def perform_create(self, serializer):
         product = serializer.validated_data['product']
 
+        # 1) Create the review
         review = serializer.save(
             user=self.request.user,
             status='pending'
         )
 
-        avg = Review.objects.filter(product=product).aggregate(avg=Avg('stars'))['avg'] or 0
+        # 2) Recalculate and persist the product’s average rating
+        avg = Review.objects.filter(product=product).aggregate(
+            avg=Avg('stars')
+        )['avg'] or 0
+
         product.rating = round(avg, 2)
         product.save()
 

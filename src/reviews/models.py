@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from orders.models import Product
+from admin_panel.models import Product
 
 class Review(models.Model):
     STATUS_CHOICES = (

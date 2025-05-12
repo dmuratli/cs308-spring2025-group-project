@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
-
+from django.db import transaction
+from django.db.models import F
 # Create your models here.
 
 # Order Model
@@ -63,14 +64,25 @@ class Product(models.Model):
     ordered_number = models.PositiveIntegerField(default=0)
 
     def decrease_stock(self, quantity):
-        if quantity > self.stock:
-            raise ValueError("Not enough stock to fulfill the request")
-        self.stock -= quantity
-        self.save()
+        """
+        Atomically subtract `quantity` from stock, error if insufficient.
+        """
+        with transaction.atomic():
+            updated = Product.objects.filter(
+                pk=self.pk,
+                stock__gte=quantity
+            ).update(stock=F('stock') - quantity)
+            if not updated:
+                raise ValueError("Not enough stock to fulfill the request")
+            # refresh self so .stock is up to date
+            self.refresh_from_db(fields=['stock'])
 
     def increase_stock(self, quantity):
-        self.stock += quantity
-        self.save()
+        """
+        Atomically add `quantity` to stock.
+        """
+        Product.objects.filter(pk=self.pk).update(stock=F('stock') + quantity)
+        self.refresh_from_db(fields=['stock'])
 
     def save(self, *args, **kwargs):
         # Always regenerate slug from title and author, ensuring uniqueness

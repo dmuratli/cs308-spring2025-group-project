@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.db import transaction
+from django.db.models import F
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -121,9 +122,13 @@ class OrderStatusUpdateView(APIView):
         order.save()
 
         if new_status == "Cancelled":
+            # atomically return stock for each item
+            from django.db.models import F
+
             for item in order.items.select_related("product").all():
-                item.product.stock += item.quantity
-                item.product.save()
+                Product.objects.filter(pk=item.product.pk).update(
+                    stock=F("stock") + item.quantity
+                )
 
         OrderStatusHistory.objects.create(order=order, status=new_status)
 
@@ -138,6 +143,7 @@ class RefundOrderView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request, order_id):
         order = Order.objects.filter(pk=order_id, user=request.user).first()
         if not order:
@@ -175,18 +181,22 @@ class RefundOrderView(APIView):
                 quantity=qty,
                 refund_amount=refund_amount
             )
-            oi.refunded_quantity += qty
-            oi.save()
+            # atomically bump refunded_quantity
+            OrderItem.objects.filter(pk=oi.pk).update(
+                refunded_quantity=F("refunded_quantity") + qty
+            )
 
-            oi.product.stock += qty
-            oi.product.save()
+            # atomically restock the product
+            Product.objects.filter(pk=oi.product.pk).update(
+                stock=F("stock") + qty
+            )
 
             total_refund += refund_amount
 
         if all(i.quantity == i.refunded_quantity for i in order.items.all()):
-            order.status = 'Refunded'
-            order.save()
-            OrderStatusHistory.objects.create(order=order, status='Refunded')
+            # atomically update status
+            Order.objects.filter(pk=order.pk).update(status="Refunded")
+            OrderStatusHistory.objects.create(order=order, status="Refunded")
 
         return Response(
             RefundResponseSerializer({
@@ -232,6 +242,7 @@ class CreateRefundRequestView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request, order_id):
         serializer = CreateRefundRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -281,6 +292,7 @@ class ProcessRefundRequestView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated, IsSalesManager]
 
+    @transaction.atomic
     def post(self, request, pk):
         rr = RefundRequest.objects.filter(pk=pk, status="Pending").first()
         if not rr:
@@ -303,16 +315,20 @@ class ProcessRefundRequestView(APIView):
                 quantity=rr.quantity,
                 refund_amount=amount
             )
-            oi.refunded_quantity += rr.quantity
-            oi.save()
+            # bump refunded_quantity
+            OrderItem.objects.filter(pk=oi.pk).update(
+                refunded_quantity=F("refunded_quantity") + rr.quantity
+            )
+            # restock product
+            Product.objects.filter(pk=oi.product.pk).update(
+                stock=F("stock") + rr.quantity
+            )
 
-            oi.product.stock += rr.quantity
-            oi.product.save()
-
-            if all(i.refundable_quantity() == 0 for i in oi.order.items.all()):
-                oi.order.status = "Refunded"
-                oi.order.save()
+            # if fully refunded, mark order refunded
+            if not oi.order.items.exclude(refunded_quantity=F("quantity")).exists():
+                Order.objects.filter(pk=oi.order.pk).update(status="Refunded")
                 OrderStatusHistory.objects.create(order=oi.order, status="Refunded")
+
 
             # send email notification
             send_mail(

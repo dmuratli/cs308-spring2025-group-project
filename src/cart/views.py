@@ -7,6 +7,7 @@ from .serializers import CartSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import AllowAny
 from django.db.models import Q
+from django.db import transaction
 
 class CartView(APIView):
     permission_classes = [AllowAny]
@@ -26,36 +27,38 @@ class CartView(APIView):
         # Merge guest cart into user cart if JWT-authenticated
         session_key = request.session.session_key
         if session_key and request.user.is_authenticated:
-            try:
-                guest_cart = Cart.objects.get(
-                    session_key=session_key,
-                    is_active=True,
-                    user__isnull=True
-                )
-            except Cart.DoesNotExist:
-                guest_cart = None
+            with transaction.atomic():
+                try:
+                    guest_cart = Cart.objects.get(
+                        session_key=session_key,
+                        is_active=True,
+                        user__isnull=True
+                    )
+                except Cart.DoesNotExist:
+                    guest_cart = None
 
-            if guest_cart:
-                user_cart, _ = Cart.objects.get_or_create(
-                    user=request.user,
-                    is_active=True
-                )
-                for item in guest_cart.items.all():
-                    existing = user_cart.items.filter(product=item.product).first()
-                    if existing:
-                        existing.quantity += item.quantity
-                        existing.save()
-                    else:
-                        item.cart = user_cart
-                        item.save()
-                guest_cart.is_active = False
-                guest_cart.save()
+                if guest_cart:
+                    user_cart, _ = Cart.objects.get_or_create(
+                        user=request.user,
+                        is_active=True
+                    )
+                    for item in guest_cart.items.all():
+                        existing = user_cart.items.filter(product=item.product).first()
+                        if existing:
+                            existing.quantity += item.quantity
+                            existing.save()
+                        else:
+                            item.cart = user_cart
+                            item.save()
+                    guest_cart.is_active = False
+                    guest_cart.save()
 
         # Return the current cart (merged if applicable)
         cart = self.get_cart(request)
         serializer = CartSerializer(cart)
         return Response(serializer.data)
 
+    @transaction.atomic
     def post(self, request):
         cart = self.get_cart(request)
         product_id = request.data.get("product_id")
