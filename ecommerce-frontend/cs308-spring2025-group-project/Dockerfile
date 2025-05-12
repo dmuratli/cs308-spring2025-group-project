@@ -10,6 +10,8 @@ RUN npm run build
 
 # 2) Serve stage: Nginx
 FROM nginx:stable-alpine
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Remove default static files
 RUN rm -rf /usr/share/nginx/html/*
