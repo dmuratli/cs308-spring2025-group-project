@@ -100,7 +100,7 @@ function App() {
         >
           <Route index                element={<SalesManagerDashboard />} />
           <Route path="invoices"      element={<InvoicesPage />} />
-          <Route path="refunds" element={<SalesManagerRefundPage />} /> 
+          <Route path="refunds"       element={<SalesManagerRefundPage />} /> 
         </Route>
 
         {/* 404 catch-all */}

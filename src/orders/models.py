@@ -44,6 +44,9 @@ class OrderItem(models.Model):
     @property
     def refundable_quantity(self):
        return self.quantity - self.refunded_quantity
+    
+    def refundable_quantity(self):
+        return self.quantity - self.refunded_quantity
 
     def within_refund_window(self):
         # only within 30 days of order.created_at
