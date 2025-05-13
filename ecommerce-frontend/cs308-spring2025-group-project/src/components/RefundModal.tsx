@@ -84,23 +84,25 @@ const RefundModal: React.FC<RefundModalProps> = ({
     }
   
     setLoading(true);
+  
     try {
-      const responses = await Promise.all(
-        payloads.map((data) =>
-          fetch(`http://localhost:8000/api/orders/${orderId}/refund-requests/`, {
+      for (const data of payloads) {
+        const res = await fetch(
+          `http://localhost:8000/api/orders/${orderId}/refund-requests/`,
+          {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
             body: JSON.stringify(data),
-          })
-        )
-      );
+          }
+        );
   
-      const failed = responses.filter((r) => !r.ok);
-      if (failed.length > 0) {
-        throw new Error("Some refund requests failed.");
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || "Refund request failed");
+        }
       }
   
       setShowSuccess(true);
@@ -112,6 +114,7 @@ const RefundModal: React.FC<RefundModalProps> = ({
       setLoading(false);
     }
   };
+  
   
   return (
     <>
