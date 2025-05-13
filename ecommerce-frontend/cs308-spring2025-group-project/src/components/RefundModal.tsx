@@ -70,43 +70,49 @@ const RefundModal: React.FC<RefundModalProps> = ({
     );
   };
 
-  const handleSubmit = () => {
-    const payload = {
-      items: items
-        .filter((i) => i.quantity > 0)
-        .map((i) => ({
-          order_item_id: i.id,
-          quantity: i.quantity,
-        })),
-    };
-
-    if (payload.items.length === 0) {
+  const handleSubmit = async () => {
+    const payloads = items
+      .filter((i) => i.quantity > 0)
+      .map((i) => ({
+        order_item_id: i.id,
+        quantity: i.quantity,
+      }));
+  
+    if (payloads.length === 0) {
       alert("Please select at least one quantity to refund.");
       return;
     }
-
+  
     setLoading(true);
-    fetch(`http://localhost:8000/api/orders/${orderId}/refund/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Refund failed");
-        return res.json();
-      })
-      .then(() => {
-        setShowSuccess(true);
-        onSuccess();
-        onClose();
-      })
-      .catch((err) => alert(err.message))
-      .finally(() => setLoading(false));
+    try {
+      const responses = await Promise.all(
+        payloads.map((data) =>
+          fetch(`http://localhost:8000/api/orders/${orderId}/refund-requests/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify(data),
+          })
+        )
+      );
+  
+      const failed = responses.filter((r) => !r.ok);
+      if (failed.length > 0) {
+        throw new Error("Some refund requests failed.");
+      }
+  
+      setShowSuccess(true);
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
-
+  
   return (
     <>
       <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
