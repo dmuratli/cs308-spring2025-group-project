@@ -14,7 +14,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
             'product_title',
             'quantity',
             'price_at_purchase',
-            'refundable_quantity'
+            'refundable_quantity',
         ]
     def get_refundable_quantity(self, obj):
         return obj.quantity - obj.refunded_quantity
@@ -59,9 +59,27 @@ class RefundResponseSerializer(serializers.Serializer):
     status          = serializers.CharField()
 
 class RefundRequestSerializer(serializers.ModelSerializer):
+    order_item_details = serializers.SerializerMethodField()
+
     class Meta:
         model = RefundRequest
-        fields = ['id','order_item','quantity','status','requested_at','processed_at','response_message']
+        fields = [
+            'id',
+            'order_item',
+            'quantity',
+            'status',
+            'requested_at',
+            'processed_at',
+            'response_message',
+            'order_item_details',  
+        ]
+
+    def get_order_item_details(self, obj):
+        return {
+            "product_title": obj.order_item.product.title,
+            "price_at_purchase": obj.order_item.price_at_purchase,
+        }
+
 
 class CreateRefundRequestSerializer(serializers.Serializer):
     order_item_id = serializers.IntegerField()
