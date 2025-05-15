@@ -32,6 +32,7 @@ import ManageGenres            from "./pages/admin/ManageGenres";
 // sales-manager screens
 import SalesManagerDashboard   from "./pages/admin/SalesManagerDashboard";
 import SalesManagerRefundPage  from "./pages/admin/SalesManagerRefundPage";
+import RevenueReportPage from "./pages/admin/RevenueReportPage";
 
 function App() {
   useEffect(() => {
@@ -90,6 +91,8 @@ function App() {
           <Route path="orders"                  element={<ManageOrders />} />
           <Route path="comments"                element={<CommentsPage />} />
           <Route path="invoices"                element={<InvoicesPage />} />
+          <Route path="revenue"                 element={<RevenueReportPage />} />
+
         </Route>
 
         {/* Sales-Manager area */}
