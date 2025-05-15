@@ -162,11 +162,11 @@ const RevenueReportPage: React.FC = () => {
                   <Stack spacing={1}>
                     <Typography>
                       <Paid sx={{ verticalAlign: "middle", mr: 1 }} />
-                      <strong>Revenue:</strong> ₺{result.revenue.toFixed(2)}
+                      <strong>Revenue:</strong> ${result.revenue.toFixed(2)}
                     </Typography>
                     <Typography>
                       <MoneyOff sx={{ verticalAlign: "middle", mr: 1 }} />
-                      <strong>Cost:</strong> ₺{result.cost.toFixed(2)}
+                      <strong>Cost:</strong> ${result.cost.toFixed(2)}
                     </Typography>
                     <Divider />
                     <Typography
@@ -179,11 +179,11 @@ const RevenueReportPage: React.FC = () => {
                       {result.profit >= 0 ? (
                         <>
                           <TrendingUp sx={{ verticalAlign: "middle", mr: 1 }} />
-                          Profit: ₺{result.profit.toFixed(2)}
+                          Profit: ${result.profit.toFixed(2)}
                         </>
                       ) : (
                         <>
-                          📉 Loss: ₺{result.profit.toFixed(2)}
+                          📉 Loss: ${result.profit.toFixed(2)}
                         </>
                       )}
                     </Typography>
