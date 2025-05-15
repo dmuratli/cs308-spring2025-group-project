@@ -23,12 +23,15 @@ import { useCart } from "../context/CartContext";
 import axios from "axios";
 import { motion } from "framer-motion";
 import logo from "../assets/Axo1.png";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import { useWishlist } from "../context/WishlistContext";
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const { isAuthenticated, logout } = useAuth();
   const { itemCount } = useCart();
+  const { itemCount: wishlistItemCount } = useWishlist();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -285,6 +288,11 @@ const Navbar: React.FC = () => {
           <IconButton onClick={() => navigate("/cart")} sx={{ ml: 1 }}>
             <Badge badgeContent={itemCount} color="error">
               <ShoppingCartIcon />
+            </Badge>
+          </IconButton>
+          <IconButton onClick={() => navigate("/wishlist")} sx={{ ml: 1 }}>
+            <Badge badgeContent={wishlistItemCount} color="error">
+              <FavoriteIcon />
             </Badge>
           </IconButton>
         </Box>

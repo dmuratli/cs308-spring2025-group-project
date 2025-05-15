@@ -21,6 +21,8 @@ import {
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
+import AddToWishlistButton from "../components/AddToWishlistButton";
 
 interface Review {
   id: number;
@@ -51,6 +53,7 @@ interface Product {
 const BookDetailsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { addToCart } = useCart();
+  const { isInWishlist } = useWishlist();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
@@ -159,7 +162,13 @@ const BookDetailsPage: React.FC = () => {
           />
 
           <CardContent sx={{ flex: 1, p: 5 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              width: '100%',
+              mb: 2
+            }}>
               <Box>
                 <Typography variant="h4" fontWeight="bold">
                   {product.title}
@@ -168,6 +177,11 @@ const BookDetailsPage: React.FC = () => {
                   by {product.author}
                 </Typography>
               </Box>
+              <AddToWishlistButton productId={product.id} size="large" />
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Rating
                   value={product.rating}
@@ -270,33 +284,33 @@ const BookDetailsPage: React.FC = () => {
                 Hurry! Only {product.stock} left in stock.
               </Typography>
             )}
-
-            <Button
-              variant="contained"
-              fullWidth
-              sx={{
-                mt: 2,
-                background: "linear-gradient(to right, #f6ad55, #fbd38d)",
-                color: "white",
-                fontWeight: "bold",
-                fontSize: "1rem",
-                py: 1.5,
-                borderRadius: 3,
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  background: "linear-gradient(to right, #f9a826, #f6ad55)",
-                  transform: "scale(1.03)",
-                },
-              }}
-              disabled={product.stock === 0 || loading}
-              onClick={handleAddToCart}
-            >
-              {loading
-                ? "Adding…"
-                : product.stock > 0
-                ? "ADD TO CART"
-                : "OUT OF STOCK"}
-            </Button>
+             
+             <Button
+               variant="contained"
+               fullWidth
+               sx={{
+                 mt: 2,
+                 background: "linear-gradient(to right, #f6ad55, #fbd38d)",
+                 color: "white",
+                 fontWeight: "bold",
+                 fontSize: "1rem",
+                 py: 1.5,
+                 borderRadius: 3,
+                 transition: "all 0.3s ease",
+                 "&:hover": {
+                   background: "linear-gradient(to right, #f9a826, #f6ad55)",
+                   transform: "scale(1.03)",
+                 },
+               }}
+               disabled={product.stock === 0 || loading}
+               onClick={handleAddToCart}
+             >
+               {loading
+                 ? "Adding…"
+                 : product.stock > 0
+                 ? "ADD TO CART"
+                 : "OUT OF STOCK"}
+             </Button>
           </CardContent>
         </Card>
 

@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { Routes, Route, Outlet } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./components/Navbar";
+import WishlistProvider from "./context/WishlistContext";
 import HomePage                from "./pages/HomePage";
 import LoginPage               from "./pages/LoginPage";
 import RegisterPage            from "./pages/RegisterPage";
@@ -11,6 +12,7 @@ import TransactionHistoryPage  from "./pages/TransactionHistoryPage";
 import ProductPage             from "./pages/ProductPage";
 import BookDetailsPage         from "./pages/BookDetailPage";
 import CartPage                from "./pages/CartPage";
+import WishlistPage            from "./pages/WishlistPage";
 import PaymentPage             from "./pages/PaymentPage";
 import RateReviewPage          from "./pages/RateReviewPage";
 import RefundDetailsPage       from "./pages/RefundDetailsPage";
@@ -65,6 +67,7 @@ function App() {
 
         {/* Cart & Checkout */}
         <Route path="/cart"    element={<CartPage />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/payment" element={<PaymentPage />} />
 
         {/* Post-purchase review */}
