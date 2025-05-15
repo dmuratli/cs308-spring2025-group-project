@@ -91,8 +91,6 @@ function App() {
           <Route path="orders"                  element={<ManageOrders />} />
           <Route path="comments"                element={<CommentsPage />} />
           <Route path="invoices"                element={<InvoicesPage />} />
-          <Route path="revenue"                 element={<RevenueReportPage />} />
-
         </Route>
 
         {/* Sales-Manager area */}
@@ -106,7 +104,8 @@ function App() {
         >
           <Route index                element={<SalesManagerDashboard />} />
           <Route path="invoices"      element={<InvoicesPage />} />
-          <Route path="refunds"       element={<SalesManagerRefundPage />} /> 
+          <Route path="refunds"       element={<SalesManagerRefundPage />} />
+          <Route path="revenue"       element={<RevenueReportPage />} />
         </Route>
 
         {/* 404 catch-all */}

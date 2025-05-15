@@ -156,11 +156,6 @@ const ProductManagerDashboard: React.FC = () => {
             description="Add or remove book genres."
             onClick={() => navigate("/product-manager/genres")}
           />
-          <ActionCard
-          title="Revenue Report"
-          description="View revenue, cost, and profit/loss summaries."
-          onClick={() => navigate("/product-manager/revenue")}
-          />
         </Stack>
       </Container>
     </Box>
