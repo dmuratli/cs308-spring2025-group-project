@@ -20,6 +20,16 @@ import {
   InsertChartOutlined,
 } from "@mui/icons-material";
 
+import {
+  ResponsiveContainer,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Bar,
+} from "recharts";
+
 const MotionPaper = motion(Paper);
 
 const toISODate = (dateStr: string) => {
@@ -57,7 +67,16 @@ const RevenueReportPage: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setResult(res.data);
+      const chartData = [
+        { name: "Revenue", value: res.data.revenue },
+        { name: "Cost", value: res.data.cost },
+        {
+          name: res.data.profit >= 0 ? "Profit" : "Loss",
+          value: Math.abs(res.data.profit),
+        },
+      ];
+
+      setResult({ ...res.data, chart: chartData });
       setError("");
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -126,38 +145,70 @@ const RevenueReportPage: React.FC = () => {
             )}
 
             {result && (
-              <MotionPaper
-                elevation={2}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                sx={{
-                  mt: 2,
-                  p: 3,
-                  backgroundColor: "#FFF0E6",
-                  borderRadius: 3,
-                  border: "1px solid #FFD7BA",
-                }}
-              >
-                <Stack spacing={1}>
-                  <Typography>
-                    📊 <strong>Revenue:</strong> ₺{result.revenue.toFixed(2)}
-                  </Typography>
-                  <Typography>
-                    💸 <strong>Cost:</strong> ₺{result.cost.toFixed(2)}
-                  </Typography>
-                  <Divider />
-                  <Typography
-                    sx={{
-                      color: result.profit >= 0 ? "green" : "red",
-                      fontWeight: "bold",
-                      fontSize: "1.1rem",
-                    }}
-                  >
-                    {result.profit >= 0 ? "📈 Profit" : "📉 Loss"}: ₺{result.profit.toFixed(2)}
-                  </Typography>
-                </Stack>
-              </MotionPaper>
+              <>
+                <MotionPaper
+                  elevation={2}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  sx={{
+                    mt: 2,
+                    p: 3,
+                    backgroundColor: "#FFF0E6",
+                    borderRadius: 3,
+                    border: "1px solid #FFD7BA",
+                  }}
+                >
+                  <Stack spacing={1}>
+                    <Typography>
+                      <Paid sx={{ verticalAlign: "middle", mr: 1 }} />
+                      <strong>Revenue:</strong> ₺{result.revenue.toFixed(2)}
+                    </Typography>
+                    <Typography>
+                      <MoneyOff sx={{ verticalAlign: "middle", mr: 1 }} />
+                      <strong>Cost:</strong> ₺{result.cost.toFixed(2)}
+                    </Typography>
+                    <Divider />
+                    <Typography
+                      sx={{
+                        color: result.profit >= 0 ? "green" : "red",
+                        fontWeight: "bold",
+                        fontSize: "1.1rem",
+                      }}
+                    >
+                      {result.profit >= 0 ? (
+                        <>
+                          <TrendingUp sx={{ verticalAlign: "middle", mr: 1 }} />
+                          Profit: ₺{result.profit.toFixed(2)}
+                        </>
+                      ) : (
+                        <>
+                          📉 Loss: ₺{result.profit.toFixed(2)}
+                        </>
+                      )}
+                    </Typography>
+                  </Stack>
+                </MotionPaper>
+
+                {/* Chart Section */}
+                {result.revenue > 0 && (
+                  <Box mt={4} height={250}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={result.chart}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                        <Bar
+                          dataKey="value"
+                          fill="#FFA559"
+                          radius={[10, 10, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </Box>
+                )}
+              </>
             )}
 
             {result && result.revenue === 0 && (
