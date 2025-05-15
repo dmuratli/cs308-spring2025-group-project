@@ -20,13 +20,6 @@ class IsSalesManager(BasePermission):
     """
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.groups.filter(name="sales manager").exists()
-
-class IsAdmin(BasePermission): # SHOULD BE PHASED OUT!
-    """
-    Allows access only to users in the 'admin' group.
-    """
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.groups.filter(name="admin").exists()
     
 class IsProductManagerOrSalesManager(BasePermission):
     """
