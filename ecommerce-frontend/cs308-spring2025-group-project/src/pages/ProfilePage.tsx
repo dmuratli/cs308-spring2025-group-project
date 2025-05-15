@@ -12,9 +12,9 @@ import {
   Avatar,
   Fade,
   List,
-  ListItem,
   ListItemText,
   keyframes,
+  IconButton
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -23,16 +23,17 @@ import {
   Inventory as InventoryIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
+  Info as InfoIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import RefundModal from "../components/RefundModal";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 
-
 // --- Types --- //
 interface ProfileData {
-  username: string; // from request.user.username
-  name: string;     // full name stored in Profile (can be empty)
+  username: string;
+  name: string;
   email: string;
   address: string;
 }
@@ -43,6 +44,8 @@ interface Order {
   total: string;
   status: string;
   products: string;
+  refund_status?: string; // Eğer API'den geliyorsa
+  refund_updated_at?: string; // Eğer API'den geliyorsa
 }
 
 // --- Animations & Styled Components --- //
@@ -140,13 +143,15 @@ const STATUS_COLORS: Record<string, string> = {
   "In Transit": "#2196f3",
   Processing: "#ff9800",
   Refunded: "#9e9e9e",
-  Cancelled: "#f44336"
+  Cancelled: "#f44336",
+  "Refund Approved": "#388e3c",
+  "Refund Rejected": "#d32f2f",
 };
 
+// --- Status Icon ---
 interface StatusIconProps {
   status: string;
 }
-
 const StatusIcon: React.FC<StatusIconProps> = React.memo(({ status }) => {
   switch (status) {
     case "Delivered":
@@ -156,20 +161,23 @@ const StatusIcon: React.FC<StatusIconProps> = React.memo(({ status }) => {
     case "Processing":
       return <InventoryIcon sx={{ color: STATUS_COLORS.Processing }} />;
     case "Refunded":
-      return <EditIcon sx={{ color: STATUS_COLORS.Refunded }} />;
+    case "Refund Approved":
+      return <CheckCircleIcon sx={{ color: STATUS_COLORS["Refund Approved"] }} />;
+    case "Refund Rejected":
+      return <CancelIcon sx={{ color: STATUS_COLORS["Refund Rejected"] }} />;
     case "Cancelled":
       return <CancelIcon sx={{ color: STATUS_COLORS.Cancelled }} />;
-      default:
+    default:
       return null;
   }
 });
 
+// --- Order Item ---
 interface OrderItemProps {
   order: Order;
   setRefundModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedOrderId: React.Dispatch<React.SetStateAction<number | null>>;
 }
-
 const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalOpen, setSelectedOrderId }) => (
   <>
     <ListItemText
@@ -203,8 +211,23 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalO
               >
                 Request Refund
               </Button>
-              {/* The RefundModal will now be rendered in ProfilePage */}
             </>
+          )}
+
+          {/* Refund Approved/Rejected extra badge */}
+          {order.status === "Refund Approved" && (
+            <Box sx={{ mt: 1 }}>
+              <Typography sx={{ color: STATUS_COLORS["Refund Approved"], fontWeight: "bold" }}>
+                ✅ Refund Approved
+              </Typography>
+            </Box>
+          )}
+          {order.status === "Refund Rejected" && (
+            <Box sx={{ mt: 1 }}>
+              <Typography sx={{ color: STATUS_COLORS["Refund Rejected"], fontWeight: "bold" }}>
+                ❌ Refund Rejected
+              </Typography>
+            </Box>
           )}
         </Box>
       }
@@ -213,13 +236,13 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalO
   </>
 ));
 
+// --- Order Status Section ---
 interface OrderStatusSectionProps {
   status: string;
   orders: Order[];
   setRefundModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedOrderId: React.Dispatch<React.SetStateAction<number | null>>;
 }
-
 const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ status, orders, setRefundModalOpen, setSelectedOrderId }) => {
   const navigate = useNavigate();
   const filteredOrders = useMemo(() => orders.filter(order => order.status === status), [orders, status]);
@@ -234,14 +257,14 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
         </Typography>
         {status === 'Refunded' && (
           <Button
-          variant="outlined"
-          size="small"
-          onClick={() => navigate("/profile/refunds")}
-          sx={{ ml: 2 }}
+            variant="outlined"
+            size="small"
+            onClick={() => navigate("/profile/refunds")}
+            sx={{ ml: 2 }}
           >
-          View All Refunds in Detail
+            View All Refunds in Detail
           </Button>
-         )}
+        )}
       </Box>
       {filteredOrders.length > 0 ? (
         <List sx={{ width: "100%" }}>
@@ -263,13 +286,13 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
   );
 });
 
-// --- Profile Page Component --- //
+// --- Main Component ---
 const ProfilePage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [refundModalOpen, setRefundModalOpen] = useState(false); 
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  // Call hooks unconditionally
+
   const [profileData, setProfileData] = useState<ProfileData>({
     username: "",
     name: "",
@@ -278,6 +301,9 @@ const ProfilePage: React.FC = () => {
   });
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Refund notification state
+  const [refundNotification, setRefundNotification] = useState<null | { status: string; orderId: number }>(null);
 
   // Redirect in an effect if not authenticated
   useEffect(() => {
@@ -315,18 +341,15 @@ const ProfilePage: React.FC = () => {
     }
   }, [isAuthenticated]);
 
-  // Handle input changes when editing profile
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  // Toggle edit mode
   const toggleEditMode = useCallback(() => {
     setIsEditing((prev) => !prev);
   }, []);
 
-  // Save changes to profile
   const handleSaveChanges = async () => {
     const accessToken = localStorage.getItem("access_token");
     try {
@@ -356,46 +379,74 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  // Compute initials for the Avatar from username
   const userInitials = useMemo(() => {
     return profileData.username ? profileData.username.charAt(0).toUpperCase() : "U";
   }, [profileData.username]);
 
-  // ─────────── Real order-history state & fetch ───────────
-const [orders, setOrders]               = useState<Order[]>([]);
-const [loadingOrders, setLoadingOrders] = useState<boolean>(true);
+  // Orders & Refund Status Fetch
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState<boolean>(true);
 
-const statusTypes = useMemo<string[]>(() =>
-  ["Processing", "In Transit", "Delivered", "Refunded", "Cancelled"],
-  []
-);
+  // Tüm refund statülerini diziye ekliyoruz!
+  const statusTypes = useMemo<string[]>(
+    () => [
+      "Processing",
+      "In Transit",
+      "Delivered",
+      "Refund Approved",
+      "Refund Rejected",
+      "Refunded",
+      "Cancelled",
+    ],
+    []
+  );
 
-useEffect(() => {
-  if (!isAuthenticated) return;
-  const token = localStorage.getItem("access_token");
-  fetch("http://127.0.0.1:8000/api/orders/mine/", {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error("Cannot load orders");
-      return res.json();
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const token = localStorage.getItem("access_token");
+    fetch("http://127.0.0.1:8000/api/orders/mine/", {
+      headers: { Authorization: `Bearer ${token}` },
     })
-    .then((data: any[]) =>
-      setOrders(
-        data.map((o) => ({
-          id:       o.id,
-          date:     new Date(o.created_at).toLocaleDateString(),
-          total:    `$${parseFloat(o.total as string).toFixed(2)}`,
-          status:   o.status === "Shipped" ? "In Transit" : o.status,
-          products: (o.items as any[])
-            .map(i => `${i.product_title} (x${i.quantity})`)
-            .join(", "),
-        }))
-      )
-    )
-    .catch(console.error)
-    .finally(() => setLoadingOrders(false));
-}, [isAuthenticated]);
+      .then((res) => {
+        if (!res.ok) throw new Error("Cannot load orders");
+        return res.json();
+      })
+      .then((data: any[]) => {
+        const ordersFetched = data.map((o) => {
+          let displayStatus = o.status === "Shipped" ? "In Transit" : o.status;
+          if (o.refund_status === "Approved") displayStatus = "Refund Approved";
+          if (o.refund_status === "Rejected") displayStatus = "Refund Rejected";
+          return {
+            id: o.id,
+            date: new Date(o.created_at).toLocaleDateString(),
+            total: `$${parseFloat(o.total as string).toFixed(2)}`,
+            status: displayStatus,
+            products: (o.items as any[])
+              .map((i: any) => `${i.product_title} (x${i.quantity})`)
+              .join(", "),
+            refund_status: o.refund_status,
+            refund_updated_at: o.refund_updated_at,
+          };
+        });
+        setOrders(ordersFetched);
+
+        // Son 5 dakika içinde refund statüsü değişen varsa notification göster
+        const recentRefund = data.find(
+          (o) =>
+            (o.refund_status === "Approved" || o.refund_status === "Rejected") &&
+            o.refund_updated_at &&
+            new Date(o.refund_updated_at) > new Date(Date.now() - 1000 * 60 * 5)
+        );
+        if (recentRefund) {
+          setRefundNotification({
+            status: recentRefund.refund_status,
+            orderId: recentRefund.id,
+          });
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoadingOrders(false));
+  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -409,6 +460,71 @@ useEffect(() => {
 
   return (
     <Container sx={{ marginTop: 12, minHeight: "80vh", marginBottom: 8 }}>
+      {/* REFUND NOTIFICATION */}
+      {refundNotification && (
+        <Fade in={true}>
+          <Paper
+            elevation={5}
+            sx={{
+              position: "fixed",
+              top: 90,
+              right: 30,
+              zIndex: 1200,
+              px: 3,
+              py: 2,
+              background:
+                refundNotification.status === "Approved"
+                  ? "#e8f5e9"
+                  : "#ffebee",
+              borderLeft: `6px solid ${
+                refundNotification.status === "Approved"
+                  ? STATUS_COLORS["Refund Approved"]
+                  : STATUS_COLORS["Refund Rejected"]
+              }`,
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              minWidth: 260,
+            }}
+          >
+            <InfoIcon
+              sx={{
+                color:
+                  refundNotification.status === "Approved"
+                    ? STATUS_COLORS["Refund Approved"]
+                    : STATUS_COLORS["Refund Rejected"],
+              }}
+            />
+            <Box flex={1}>
+              <Typography fontWeight="bold">
+                {refundNotification.status === "Approved"
+                  ? "Refund Approved"
+                  : "Refund Rejected"}
+              </Typography>
+              <Typography variant="body2">
+                Order #{refundNotification.orderId} refund has been{" "}
+                <span
+                  style={{
+                    color:
+                      refundNotification.status === "Approved"
+                        ? STATUS_COLORS["Refund Approved"]
+                        : STATUS_COLORS["Refund Rejected"],
+                    fontWeight: "bold",
+                  }}
+                >
+                  {refundNotification.status === "Approved"
+                    ? "APPROVED"
+                    : "REJECTED"}
+                </span>
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setRefundNotification(null)}>
+              <CloseIcon />
+            </IconButton>
+          </Paper>
+        </Fade>
+      )}
+
       <Typography
         variant="h4"
         fontWeight="bold"
@@ -435,7 +551,6 @@ useEffect(() => {
           {isEditing ? (
             <Fade in={true}>
               <Box component="form" sx={{ "& .MuiTextField-root": styles.textFieldStyles }}>
-                {/* Username displayed as read-only */}
                 <TextField
                   label="Username"
                   name="username"
@@ -444,7 +559,6 @@ useEffect(() => {
                   value={profileData.username}
                   disabled
                 />
-                {/* Full Name field: initially blank if not set */}
                 <TextField
                   label="Full Name"
                   name="name"
@@ -546,62 +660,61 @@ useEffect(() => {
       {/* Order History Section */}
       <Fade in={true} timeout={1000}>
         <Paper elevation={3} sx={{ ...styles.paperStyles, marginTop: 6, maxWidth: 600, marginX: "auto" }}>
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          mb={1}
-        >
-          <Typography variant="h6" fontWeight="bold">
-            Order History
-          </Typography>
-          <Button
-            onClick={() => navigate("/profile/transactions")}
-            sx={{
-              background: 'linear-gradient(45deg, #f6ad55, #f97316)',
-              color: 'white',
-              fontWeight: 'bold',
-              borderRadius: 3,
-              px: 2,
-              py: 0.5,
-              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #f97316, #ea580c)',
-                transform: 'scale(1.05)',
-              },
-              '&:active': {
-                transform: 'scale(0.97)',
-              },
-            }}
-            size="small"
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            mb={1}
           >
-            View Transaction History
-          </Button>
-        </Box>
+            <Typography variant="h6" fontWeight="bold">
+              Order History
+            </Typography>
+            <Button
+              onClick={() => navigate("/profile/transactions")}
+              sx={{
+                background: 'linear-gradient(45deg, #f6ad55, #f97316)',
+                color: 'white',
+                fontWeight: 'bold',
+                borderRadius: 3,
+                px: 2,
+                py: 0.5,
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #f97316, #ea580c)',
+                  transform: 'scale(1.05)',
+                },
+                '&:active': {
+                  transform: 'scale(0.97)',
+                },
+              }}
+              size="small"
+            >
+              View Transaction History
+            </Button>
+          </Box>
           <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 3 }}>
             Your recent purchases organized by status
           </Typography>
           <Divider sx={{ marginBottom: 3 }} />
           {selectedOrderId !== null && (
-        <RefundModal
-          open={refundModalOpen}
-          onClose={() => setRefundModalOpen(false)}
-          orderId={selectedOrderId}
-          accessToken={localStorage.getItem("access_token") || ""}
-          onSuccess={() => window.location.reload()}
-        />
-      )}
-      {statusTypes.map((status) => (
-        <OrderStatusSection
-          key={status}
-          status={status}
-          orders={orders}
-          setRefundModalOpen={setRefundModalOpen}
-          setSelectedOrderId={setSelectedOrderId}
-        />
-      ))}
-          
+            <RefundModal
+              open={refundModalOpen}
+              onClose={() => setRefundModalOpen(false)}
+              orderId={selectedOrderId}
+              accessToken={localStorage.getItem("access_token") || ""}
+              onSuccess={() => window.location.reload()}
+            />
+          )}
+          {statusTypes.map((status) => (
+            <OrderStatusSection
+              key={status}
+              status={status}
+              orders={orders}
+              setRefundModalOpen={setRefundModalOpen}
+              setSelectedOrderId={setSelectedOrderId}
+            />
+          ))}
         </Paper>
       </Fade>
     </Container>

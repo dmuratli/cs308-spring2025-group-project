@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+src/node_modules/
+src/package*.json
+src/db.sqlite3*
