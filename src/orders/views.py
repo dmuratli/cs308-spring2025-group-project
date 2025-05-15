@@ -1,10 +1,8 @@
-# orders/views.py
-
 from decimal import Decimal
-from django.utils import timezone
+from django.utils import timezone, dateparse
 from django.core.mail import send_mail
 from django.db import transaction
-from django.db.models import F
+from django.db.models import F, Sum
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -13,8 +11,7 @@ from rest_framework import status, permissions
 from rest_framework.exceptions import PermissionDenied
 
 from users.permissions import IsProductManager, IsSalesManager
-
-from cart.models import Cart, CartItem
+from cart.models import Cart
 from admin_panel.models import Product
 
 from .models import (
@@ -42,7 +39,6 @@ VALID_TRANSITIONS = {
     'Refunded':   [],
 }
 
-
 class OrderProductInfoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -57,10 +53,10 @@ class OrderProductInfoView(APIView):
 
         items = [
             {
-                "product_id":   oi.product.id,
+                "product_id": oi.product.id,
                 "product_slug": oi.product.slug,
                 "product_title": oi.product.title,
-                "quantity":     oi.quantity,
+                "quantity": oi.quantity,
             }
             for oi in qs
         ]
@@ -123,9 +119,6 @@ class OrderStatusUpdateView(APIView):
         order.save()
 
         if new_status == "Cancelled":
-            # atomically return stock for each item
-            from django.db.models import F
-
             for item in order.items.select_related("product").all():
                 Product.objects.filter(pk=item.product.pk).update(
                     stock=F("stock") + item.quantity
@@ -137,11 +130,6 @@ class OrderStatusUpdateView(APIView):
 
 
 class RefundOrderView(APIView):
-    """
-    Instant‐refund endpoint (no manager approval)
-    POST /api/orders/<order_id>/refund/
-    { items: [ { order_item_id, quantity }, … ] }
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     @transaction.atomic
@@ -182,12 +170,10 @@ class RefundOrderView(APIView):
                 quantity=qty,
                 refund_amount=refund_amount
             )
-            # atomically bump refunded_quantity
+
             OrderItem.objects.filter(pk=oi.pk).update(
                 refunded_quantity=F("refunded_quantity") + qty
             )
-
-            # atomically restock the product
             Product.objects.filter(pk=oi.product.pk).update(
                 stock=F("stock") + qty
             )
@@ -195,19 +181,18 @@ class RefundOrderView(APIView):
             total_refund += refund_amount
 
         if all(i.quantity == i.refunded_quantity for i in order.items.all()):
-            # atomically update status
             Order.objects.filter(pk=order.pk).update(status="Refunded")
             OrderStatusHistory.objects.create(order=order, status="Refunded")
 
         return Response(
             RefundResponseSerializer({
                 'refunded_amount': total_refund,
-                'status':          order.status
+                'status': order.status
             }).data,
             status=status.HTTP_200_OK
         )
 
-# views.py
+
 class MyRefundsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -225,6 +210,7 @@ class MyRefundsView(APIView):
         ]
         return Response(data)
 
+
 class OrderListView(ListAPIView):
     permission_classes = [permissions.IsAuthenticated, IsProductManager]
     queryset = Order.objects.all()
@@ -233,7 +219,7 @@ class OrderListView(ListAPIView):
 
 class MyOrderListView(ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class   = OrderSerializer
+    serializer_class = OrderSerializer
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
@@ -250,14 +236,7 @@ class OrderItemsView(APIView):
         return Response(serializer.data)
 
 
-# --- Sales‐Manager mediated refund requests ---
-
 class CreateRefundRequestView(APIView):
-    """
-    Customer requests a refund; goes into Pending until manager approval.
-    POST /api/orders/<order_id>/refund-requests/
-    { order_item_id, quantity }
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     @transaction.atomic
@@ -289,10 +268,6 @@ class CreateRefundRequestView(APIView):
 
 
 class ListRefundRequestsView(APIView):
-    """
-    Sales Manager views all pending refund requests.
-    GET /api/orders/refund-requests/pending/
-    """
     permission_classes = [permissions.IsAuthenticated, IsSalesManager]
 
     def get(self, request):
@@ -303,11 +278,6 @@ class ListRefundRequestsView(APIView):
 
 
 class ProcessRefundRequestView(APIView):
-    """
-    Sales Manager approves/rejects.
-    POST /api/orders/refund-requests/<pk>/process/
-    { status: "Approved"|"Rejected", response_message }
-    """
     permission_classes = [permissions.IsAuthenticated, IsSalesManager]
 
     @transaction.atomic
@@ -333,27 +303,23 @@ class ProcessRefundRequestView(APIView):
                 quantity=rr.quantity,
                 refund_amount=amount
             )
-            # bump refunded_quantity
+
             OrderItem.objects.filter(pk=oi.pk).update(
                 refunded_quantity=F("refunded_quantity") + rr.quantity
             )
-            # restock product
             Product.objects.filter(pk=oi.product.pk).update(
                 stock=F("stock") + rr.quantity
             )
 
-            # if fully refunded, mark order refunded
             if not oi.order.items.exclude(refunded_quantity=F("quantity")).exists():
                 Order.objects.filter(pk=oi.order.pk).update(status="Refunded")
                 OrderStatusHistory.objects.create(order=oi.order, status="Refunded")
 
-
-            # send email notification
             send_mail(
                 subject="Your refund is approved",
                 message=(
                     f"Hello {rr.user.username},\n\n"
-                    f"Your refund for {rr.quantity}× “{oi.product_title}” has been APPROVED.\n"
+                    f"Your refund for {rr.quantity}× “{oi.product.title}” has been APPROVED.\n"
                     f"Amount refunded: {amount:.2f}\n\nThank you."
                 ),
                 from_email="no-reply@yourshop.com",
@@ -362,3 +328,32 @@ class ProcessRefundRequestView(APIView):
             )
 
         return Response(RefundRequestSerializer(rr).data, status=status.HTTP_200_OK)
+
+
+# ✅ Revenue Report
+class RevenueReportView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsSalesManager]
+
+    def get(self, request):
+        start = dateparse.parse_date(request.GET.get("start"))
+        end = dateparse.parse_date(request.GET.get("end"))
+
+        if not start or not end or start > end:
+            return Response({"error": "Invalid date range"}, status=status.HTTP_400_BAD_REQUEST)
+
+        delivered_order_ids = OrderStatusHistory.objects.filter(
+            status="Delivered",
+            timestamp__date__range=(start, end)
+        ).values_list("order_id", flat=True)
+
+        orders = Order.objects.filter(id__in=delivered_order_ids)
+
+        total_revenue = orders.aggregate(total=Sum("total_price"))["total"] or Decimal("0.0")
+        total_cost = total_revenue * Decimal("0.5")
+        profit = total_revenue - total_cost
+
+        return Response({
+            "revenue": float(total_revenue),
+            "cost": float(total_cost),
+            "profit": float(profit),
+        })
