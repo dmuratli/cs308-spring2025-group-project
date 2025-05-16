@@ -29,6 +29,8 @@ import {
 import RefundModal from "../components/RefundModal";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";   
+const MotionPaper = motion(Paper);     
 
 // --- Types --- //
 interface ProfileData {
@@ -56,28 +58,39 @@ const truckLoopAnimation = keyframes`
   100% { transform: translateX(60px); opacity: 0; }
 `;
 
+const titlePulse = keyframes`
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-4px); }
+`;
+
+
 const MovingTruck = styled(ShippingIcon)(({ theme }) => ({
   animation: `${truckLoopAnimation} 2s infinite`,
   color: "#2196f3",
 }));
 
+
+
 // --- Styles --- //
 const styles = {
   headerText: {
-    position: "relative",
-    background: "linear-gradient(45deg, #EF977F 30%, #f5b39e 90%)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-    "&:after": {
+    position: 'relative',
+    /* KOYU TURUNCU gradient */
+    background: 'linear-gradient(45deg, #FF7C3E 30%, #FF6B3E 70%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    /* animasyon */
+    animation: `${titlePulse} 3s ease-in-out infinite`,
+    '&:after': {
       content: '""',
-      position: "absolute",
+      position: 'absolute',
       bottom: -10,
-      left: "50%",
-      transform: "translateX(-50%)",
-      width: "80px",
-      height: "3px",
-      background: "linear-gradient(45deg, #EF977F 30%, #f5b39e 90%)",
-      borderRadius: "4px",
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: 90,
+      height: 3,
+      background: 'linear-gradient(90deg, #FF7C3E, #FFB473)',
+      borderRadius: 4,
     },
   },
   paperStyles: {
@@ -86,7 +99,7 @@ const styles = {
     transition: "transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
     "&:hover": {
       boxShadow:
-        "rgba(239, 151, 127, 0.1) 0px 10px 20px, rgba(239, 151, 127, 0.08) 0px 6px 6px",
+        "rgba(255, 165, 89, 0.1) 0px 10px 20px, rgba(255, 165, 89, 0.20) 0px 6px 6px",
       transform: "translateY(-4px)",
     },
     borderLeft: "4px solid #EF977F",
@@ -94,12 +107,12 @@ const styles = {
   avatarStyles: {
     width: 64,
     height: 64,
-    background: "linear-gradient(45deg, #EF977F 30%, #d46c4e 90%)",
+    background: "linear-gradient(45deg, #EF977F 30%, #FF7C3E 90%)",
     color: "white",
     marginRight: 2,
     fontSize: "1.5rem",
     fontWeight: "bold",
-    boxShadow: "0 4px 8px rgba(239, 151, 127, 0.3)",
+    boxShadow: "0 4px 8px rgba(255, 165, 89, 0.20)",
   },
   savedButton: {
     background: "linear-gradient(45deg, #EF977F 30%, #d46c4e 90%)",
@@ -139,11 +152,11 @@ const styles = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  Delivered: "#4caf50",
-  "In Transit": "#2196f3",
+  Delivered: "#FFA559",
+  "In Transit": "#FF7C3E",
   Processing: "#ff9800",
-  Refunded: "#9e9e9e",
-  Cancelled: "#f44336",
+  Refunded: "#FFC499",
+  Cancelled: "#FF6B3E",
   "Refund Approved": "#388e3c",
   "Refund Rejected": "#d32f2f",
 };
@@ -475,7 +488,7 @@ const ProfilePage: React.FC = () => {
               background:
                 refundNotification.status === "Approved"
                   ? "#e8f5e9"
-                  : "#ffebee",
+                  : "#FFF3ED",
               borderLeft: `6px solid ${
                 refundNotification.status === "Approved"
                   ? STATUS_COLORS["Refund Approved"]
@@ -542,6 +555,7 @@ const ProfilePage: React.FC = () => {
             <Box>
               <Typography variant="h6" fontWeight="bold" gutterBottom>
                 {profileData.username}
+
               </Typography>
             </Box>
           </Box>
