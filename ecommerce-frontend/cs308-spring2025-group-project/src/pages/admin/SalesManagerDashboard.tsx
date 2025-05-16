@@ -1,17 +1,72 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Paper,
+  Button,
   Stack,
   Container,
   Toolbar,
-  Button,
+  Paper,
 } from "@mui/material";
+import { motion } from "framer-motion";
 import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router-dom";
 
-const SalesManagerDashboard = () => {
+interface ActionCardProps {
+  title: string;
+  description: string;
+  onClick?: () => void;
+}
+
+const MotionPaper = motion(Paper);
+
+const ActionCard: React.FC<ActionCardProps> = ({
+  title,
+  description,
+  onClick = () => {},
+}) => (
+  <MotionPaper
+    elevation={4}
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    whileHover={{ scale: 1.03, boxShadow: "0 12px 24px rgba(0,0,0,0.1)" }}
+    transition={{ duration: 0.4, ease: "easeOut", type: "spring" }}
+    sx={{
+      p: 4,
+      borderRadius: 4,
+      backgroundColor: "white",
+      display: "flex",
+      flexDirection: "column",
+      gap: 1,
+    }}
+  >
+    <Typography variant="h6" fontWeight="bold">
+      {title}
+    </Typography>
+    <Typography variant="body2" color="text.secondary">
+      {description}
+    </Typography>
+    <Box display="flex" justifyContent="flex-end" mt={2}>
+      <Button variant="outlined" sx={btnStyle} onClick={onClick}>
+        OPEN
+      </Button>
+    </Box>
+  </MotionPaper>
+);
+
+const btnStyle = {
+  borderColor: "#EF977F",
+  color: "#EF977F",
+  fontWeight: "bold",
+  "&:hover": {
+    borderColor: "#d46c4e",
+    color: "#d46c4e",
+  },
+};
+
+const SalesManagerDashboard: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <Box sx={{ backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
       <Navbar />
@@ -22,7 +77,7 @@ const SalesManagerDashboard = () => {
         sx={{
           py: 6,
           textAlign: "center",
-          backgroundColor: "#EF977F", // Pembe tema
+          backgroundColor: "#EF977F",
           color: "white",
         }}
       >
@@ -35,86 +90,36 @@ const SalesManagerDashboard = () => {
       </Box>
 
       <Container maxWidth="md" sx={{ py: 6 }}>
-        <Stack spacing={3}>
+        <Stack spacing={4}>
           <ActionCard
             title="Set Prices for New Products"
             description="Define prices for products added by product managers."
+            onClick={() => navigate("/sales-manager/pricing")}
           />
           <ActionCard
             title="Set Discount Campaigns"
             description="Choose products and discount rates to update sale prices."
+            onClick={() => navigate("/sales-manager/discounts")}
           />
           <ActionCard
             title="View & Export Invoices"
             description="Filter invoices by date range, print or save as PDF."
+            onClick={() => navigate("/sales-manager/invoices")}
           />
           <ActionCard
-            title="Revenue & Profit Reports"
-            description="View charts and summaries of revenue and profit/loss."
+            title="Revenue Report"
+            description="View revenue, cost, and profit/loss summaries."
+            onClick={() => navigate("/sales-manager/revenue")}
           />
           <ActionCard
             title="Manage Refund Requests"
             description="Review customer refund requests and restock returned items."
+            onClick={() => navigate("/sales-manager/refunds")}
           />
         </Stack>
       </Container>
     </Box>
   );
-};
-
-interface ActionCardProps {
-  title: string;
-  description: string;
-}
-
-const ActionCard: React.FC<ActionCardProps> = ({ title, description }) => {
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    if(title.includes("Invoices")) navigate("/sales-manager/invoices")
-    else if (title.includes("Refund")) navigate("/sales-manager/refunds");
-    //if (title.includes("Prices")) navigate("");
-    //else if (title.includes("Discount")) navigate("");
-    //else if (title.includes("Invoices")) navigate("/sales-manager/invoices");
-    //else if (title.includes("Revenue")) navigate("");
-    //else if (title.includes("Refund")) navigate("");
-  };
-
-  return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 4,
-        borderRadius: 3,
-        backgroundColor: "white",
-        display: "flex",
-        flexDirection: "column",
-        gap: 1,
-      }}
-    >
-      <Typography variant="h6" fontWeight="bold">
-        {title}
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        {description}
-      </Typography>
-      <Box display="flex" justifyContent="flex-end" mt={2}>
-        <Button variant="outlined" sx={btnStyle} onClick={handleClick}>
-          Open
-        </Button>
-      </Box>
-    </Paper>
-  );
-};
-
-const btnStyle = {
-  borderColor: "#EF977F",
-  color: "#EF977F",
-  fontWeight: "bold",
-  "&:hover": {
-    borderColor: "#d46c4e",
-    color: "#d46c4e",
-  },
 };
 
 export default SalesManagerDashboard;

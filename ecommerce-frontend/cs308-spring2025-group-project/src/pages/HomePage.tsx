@@ -199,10 +199,10 @@ const HomePage: React.FC = () => {
                       noWrap
                       gutterBottom
                     >
-                      {p.genre}
+                      {p.genre_name}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {p.price}₺
+                      ${p.price}
                     </Typography>
 
                     <LearnMoreBtn
@@ -310,10 +310,10 @@ const HomePage: React.FC = () => {
                       noWrap
                       gutterBottom
                     >
-                      {p.genre}
+                      {p.genre_name}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {p.price}₺
+                      ${p.price}
                     </Typography>
 
                     <LearnMoreBtn
