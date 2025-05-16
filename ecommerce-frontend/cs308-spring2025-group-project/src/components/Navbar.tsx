@@ -25,6 +25,34 @@ import { motion } from "framer-motion";
 import logo from "../assets/Axo1.png";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useWishlist } from "../context/WishlistContext";
+import { styled } from "@mui/material/styles";
+
+// --- STYLED ICONS --- //
+const SoftIconButton = styled(IconButton)(({ theme }) => ({
+  background: "#FFF6F0",
+  borderRadius: "50%",
+  boxShadow: "0 2px 8px rgba(255, 165, 89, 0.09)",
+  marginLeft: 8,
+  transition: "box-shadow 0.18s, background 0.22s",
+  "&:hover": {
+    background: "#FFD7BA",
+    boxShadow: "0 4px 16px rgba(255, 165, 89, 0.18)",
+  },
+  padding: 6,
+}));
+
+const StyledBadge = styled(Badge)(({ theme }) => ({
+  "& .MuiBadge-badge": {
+    backgroundColor: "#FFA559",
+    color: "white",
+    fontWeight: "bold",
+    boxShadow: "0 2px 6px rgba(255, 165, 89, 0.18)",
+    border: "2px solid white",
+    minWidth: 20,
+    height: 20,
+    fontSize: "0.8rem",
+  },
+}));
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -55,7 +83,6 @@ const Navbar: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
-        // normalize to lowercase so your includes() checks are consistent:
         const fetched = res.data.roles.map((r: string) => r.toLowerCase());
         setRoles(fetched);
       })
@@ -103,7 +130,7 @@ const Navbar: React.FC = () => {
           alignItems: "center",
         }}
       >
-        {/** Logo + Brand */}
+        {/* Logo + Brand */}
         <Box
           component={motion.div}
           whileHover={{ scale: 1.1 }}
@@ -139,7 +166,7 @@ const Navbar: React.FC = () => {
           </Typography>
         </Box>
 
-        {/** Search Bar */}
+        {/* Search Bar */}
         <Box sx={{ position: "relative", width: { xs: "70%", md: "45%" } }}>
           <Paper
             sx={{
@@ -191,7 +218,7 @@ const Navbar: React.FC = () => {
           )}
         </Box>
 
-        {/** Auth & Cart */}
+        {/* Auth & Cart */}
         <Box display="flex" alignItems="center">
           {!isAuthenticated ? (
             <>
@@ -228,14 +255,11 @@ const Navbar: React.FC = () => {
             </>
           ) : (
             <>
-              <IconButton
+              <SoftIconButton
                 onClick={(e) => setAnchorEl(e.currentTarget)}
-                sx={{ ml: 1 }}
               >
-                <AccountCircleIcon
-                  sx={{ fontSize: 30, color: "#EF977F" }}
-                />
-              </IconButton>
+                <AccountCircleIcon sx={{ fontSize: 30, color: "#FFA559" }} />
+              </SoftIconButton>
 
               <Menu
                 anchorEl={anchorEl}
@@ -250,29 +274,26 @@ const Navbar: React.FC = () => {
                 >
                   Profile
                 </MenuItem>
-
                 {roles.includes("product manager") && (
-   <MenuItem
-     onClick={() => {
-       setAnchorEl(null);
-       navigate("/product-manager");
-     }}
-   >
-     Product Manager Dashboard
-   </MenuItem>
- )}
-
- {roles.includes("sales manager") && (
-   <MenuItem
-     onClick={() => {
-       setAnchorEl(null);
-       navigate("/sales-manager");
-     }}
-   >
-     Sales Manager Dashboard
-   </MenuItem>
- )}
-
+                  <MenuItem
+                    onClick={() => {
+                      setAnchorEl(null);
+                      navigate("/product-manager");
+                    }}
+                  >
+                    Product Manager Dashboard
+                  </MenuItem>
+                )}
+                {roles.includes("sales manager") && (
+                  <MenuItem
+                    onClick={() => {
+                      setAnchorEl(null);
+                      navigate("/sales-manager");
+                    }}
+                  >
+                    Sales Manager Dashboard
+                  </MenuItem>
+                )}
                 <MenuItem
                   onClick={() => {
                     setAnchorEl(null);
@@ -285,16 +306,16 @@ const Navbar: React.FC = () => {
             </>
           )}
 
-          <IconButton onClick={() => navigate("/cart")} sx={{ ml: 1 }}>
-            <Badge badgeContent={itemCount} color="error">
-              <ShoppingCartIcon />
-            </Badge>
-          </IconButton>
-          <IconButton onClick={() => navigate("/wishlist")} sx={{ ml: 1 }}>
-            <Badge badgeContent={wishlistItemCount} color="error">
-              <FavoriteIcon />
-            </Badge>
-          </IconButton>
+          <SoftIconButton onClick={() => navigate("/cart")}>
+            <StyledBadge badgeContent={itemCount}>
+              <ShoppingCartIcon sx={{ fontSize: 28, color: "#FFA559" }} />
+            </StyledBadge>
+          </SoftIconButton>
+          <SoftIconButton onClick={() => navigate("/wishlist")}>
+            <StyledBadge badgeContent={wishlistItemCount}>
+              <FavoriteIcon sx={{ fontSize: 28, color: "#FFA559" }} />
+            </StyledBadge>
+          </SoftIconButton>
         </Box>
       </Toolbar>
     </AppBar>

@@ -6,8 +6,9 @@ import {
   Button,
   Stack,
   Container,
-  Toolbar,
   Paper,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import Navbar from "../../components/Navbar";
@@ -65,6 +66,9 @@ const btnStyle = {
 
 const ProductManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -96,8 +100,7 @@ const ProductManagerDashboard: React.FC = () => {
     return (
       <Box sx={{ backgroundColor: "#FFF5EC", minHeight: "100vh" }}>
         <Navbar />
-        <Toolbar />
-        <Typography align="center" sx={{ mt: 4 }}>
+        <Typography align="center" sx={{ mt: 6 }}>
           Loading…
         </Typography>
       </Box>
@@ -107,21 +110,22 @@ const ProductManagerDashboard: React.FC = () => {
   return (
     <Box sx={{ backgroundColor: "#FFF5EC", minHeight: "100vh" }}>
       <Navbar />
-      <Toolbar />
 
-      {/* Header */}
+      {/* Header: Responsive paddingTop ile her zaman aşağıda ve ortada */}
       <Box
         sx={{
-          py: 6,
+          pt: { xs: 10, sm: 14, md: 16 }, // Navbar'ın altında bolca boşluk bırakır
+          pb: { xs: 4, sm: 6 },
           textAlign: "center",
           backgroundColor: "#FFA559",
           color: "white",
           borderBottomLeftRadius: 40,
           borderBottomRightRadius: 40,
           boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+          mb: 6,
         }}
       >
-        <Typography variant="h4" fontWeight="bold">
+        <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
           Product Manager Dashboard
         </Typography>
         <Typography variant="subtitle1" mt={1}>
@@ -157,9 +161,9 @@ const ProductManagerDashboard: React.FC = () => {
             onClick={() => navigate("/product-manager/genres")}
           />
           <ActionCard
-          title="Revenue Report"
-          description="View revenue, cost, and profit/loss summaries."
-          onClick={() => navigate("/product-manager/revenue")}
+            title="Revenue Report"
+            description="View revenue, cost, and profit/loss summaries."
+            onClick={() => navigate("/product-manager/revenue")}
           />
         </Stack>
       </Container>
