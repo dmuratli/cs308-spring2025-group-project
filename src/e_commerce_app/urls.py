@@ -28,9 +28,6 @@ router.register(r'users',     UserViewSet,    basename='user')
 router.register(r'genres',    GenreViewSet,   basename='genre')
 
 urlpatterns = [
-    # 1) Admin
-    path('admin/', admin.site.urls),
-
     # 2) Reviews (you already had)
     path('api/reviews/', include('reviews.urls')),
 

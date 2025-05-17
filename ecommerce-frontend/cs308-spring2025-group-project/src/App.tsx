@@ -33,6 +33,7 @@ import ManageGenres            from "./pages/admin/ManageGenres";
 import SalesManagerDashboard   from "./pages/admin/SalesManagerDashboard";
 import SalesManagerRefundPage  from "./pages/admin/SalesManagerRefundPage";
 import RevenueReportPage from "./pages/admin/RevenueReportPage";
+import SalesPricing from "./pages/admin/SalesPricing";
 
 function App() {
   useEffect(() => {
@@ -106,6 +107,7 @@ function App() {
           <Route path="invoices"      element={<InvoicesPage />} />
           <Route path="refunds"       element={<SalesManagerRefundPage />} />
           <Route path="revenue"       element={<RevenueReportPage />} />
+          <Route path="pricing"       element={<SalesPricing />} />
         </Route>
 
         {/* 404 catch-all */}

@@ -21,7 +21,6 @@ const AddProduct: React.FC = () => {
   const [product, setProduct] = useState({
     title: "",
     author: "",
-    price: "",
     stock: "",
     isbn: "",
     genre: "",
@@ -75,9 +74,9 @@ const AddProduct: React.FC = () => {
     const formData = new FormData();
   
     // Append text data
-    Object.keys(product).forEach((key) => {
-      formData.append(key, (product as any)[key]);
-    });
+    Object.entries(product)
+      .filter(([k]) => k !== "price")
+      .forEach(([k, v]) => formData.append(k, v as string));
   
     // Append image file
     if (image) {
@@ -103,7 +102,6 @@ const AddProduct: React.FC = () => {
       setProduct({
         title: "",
         author: "",
-        price: "",
         stock: "",
         isbn: "",
         genre: "",
@@ -140,12 +138,9 @@ const AddProduct: React.FC = () => {
               <TextField label="Author" name="author" fullWidth required value={product.author} onChange={handleChange} />
             </Grid>
             <Grid item xs={6}>
-              <TextField label="Price ($)" name="price" type="number" fullWidth required value={product.price} onChange={handleChange} />
-            </Grid>
-            <Grid item xs={6}>
               <TextField label="Stock" name="stock" type="number" fullWidth required value={product.stock} onChange={handleChange} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField label="ISBN" name="isbn" fullWidth required value={product.isbn} onChange={handleChange} />
             </Grid>
             <Grid item xs={6}>

@@ -27,7 +27,6 @@ interface Product {
   slug: string;
   title: string;
   author: string;
-  price: number;
   stock: number;
 }
 
@@ -123,7 +122,6 @@ const ManageProducts: React.FC<ManageProductsProps> = ({ panel }) => {
               <TableCell>ID</TableCell>
               <TableCell>Title</TableCell>
               <TableCell>Author</TableCell>
-              <TableCell>Price</TableCell>
               <TableCell>Stock</TableCell>
               <TableCell>Adjust Stock</TableCell>
               <TableCell>Actions</TableCell>
@@ -136,7 +134,6 @@ const ManageProducts: React.FC<ManageProductsProps> = ({ panel }) => {
                 <TableCell>{product.id}</TableCell>
                 <TableCell>{product.title}</TableCell>
                 <TableCell>{product.author}</TableCell>
-                <TableCell>${product.price}</TableCell>
                 <TableCell>{product.stock}</TableCell>
 
                 <TableCell>

@@ -10,6 +10,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = "__all__"
+        read_only_fields = ("price",)
 
     def validate_isbn(self, value):
         """Ensure ISBN is exactly 13 digits."""
@@ -25,6 +26,11 @@ class ProductSerializer(serializers.ModelSerializer):
                .get('stars__avg')
         )
         return round(avg or 0, 2)
+
+class ProductPriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ("price",)
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:

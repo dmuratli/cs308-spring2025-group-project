@@ -23,7 +23,6 @@ const EditProduct: React.FC = () => {
   const [product, setProduct] = useState<any>({
     title: "",
     author: "",
-    price: "",
     stock: "",
     isbn: "",
     genre: "",
@@ -75,9 +74,9 @@ const EditProduct: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData();
-    Object.entries(product).forEach(([k, v]) =>
-      formData.append(k, v as string)
-    );
+     Object.entries(product)
+      .filter(([k]) => k !== "price")
+      .forEach(([k, v]) => formData.append(k, v as string));
     if (image) formData.append("cover_image", image);
 
     try {
@@ -138,18 +137,7 @@ const EditProduct: React.FC = () => {
               />
             </Grid>
 
-            {/* Price + Stock – half + half */}
-            <Grid item xs={6}>
-              <TextField
-                label="Price ($)"
-                name="price"
-                type="number"
-                fullWidth
-                required
-                value={product.price}
-                onChange={handleChange}
-              />
-            </Grid>
+            {/* Stock – half width */}
             <Grid item xs={6}>
               <TextField
                 label="Stock"
@@ -162,8 +150,8 @@ const EditProduct: React.FC = () => {
               />
             </Grid>
 
-            {/* ISBN – full width */}
-            <Grid item xs={12}>
+            {/* ISBN – half width */}
+            <Grid item xs={6}>
               <TextField
                 label="ISBN"
                 name="isbn"

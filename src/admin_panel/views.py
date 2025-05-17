@@ -12,7 +12,7 @@ from django.db import transaction
 from django.db.models import F
 
 from .models import Product, User, Genre
-from .serializers import ProductSerializer, UserSerializer, GenreSerializer
+from .serializers import ProductSerializer, UserSerializer, GenreSerializer, ProductPriceSerializer
 from orders.models import Order, OrderItem
 from orders.serializers import OrderSerializer
 from cart.models import Cart
@@ -23,6 +23,7 @@ from users.permissions import IsProductManager, IsSalesManager, IsCustomer, IsPr
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
     parser_classes = (MultiPartParser, FormParser, JSONParser)
     lookup_field = 'slug'
     filter_backends = [filters.SearchFilter]
@@ -47,6 +48,31 @@ class ProductViewSet(viewsets.ModelViewSet):
         perms = self.permission_classes_by_action.get(self.action, self.permission_classes)
         return [p() for p in perms]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.action in ["list", "retrieve"]:
+            return qs.filter(price__isnull=False)
+        return qs
+
+    @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated, IsSalesManager])
+    def pending(self, request):
+        pending = self.get_queryset().filter(price__isnull=True)
+        serializer = ProductSerializer(pending, many=True)
+        return Response(serializer.data)
+    
+    @action(
+        detail=True, methods=["post"],
+        permission_classes=[permissions.IsAuthenticated, IsSalesManager],
+        url_path="set_price"
+    )
+    def set_price(self, request, slug=None, *args, **kwargs):
+        product = self.get_object()
+        serializer = ProductPriceSerializer(product, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        product.price = serializer.validated_data["price"]
+        product.save(update_fields=["price"])
+        return Response(ProductSerializer(product).data)
+    
     def perform_create(self, serializer):
         serializer.save()
 

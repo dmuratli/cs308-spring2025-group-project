@@ -44,7 +44,7 @@ class Genre(models.Model):
 class Product(models.Model):
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     stock = models.IntegerField()
     isbn = models.CharField(max_length=13, unique=True)
     genre = models.ForeignKey(
