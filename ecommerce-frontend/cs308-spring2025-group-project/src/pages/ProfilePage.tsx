@@ -1,3 +1,4 @@
+// src/pages/admin/ProfilePage.tsx
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { getCSRFToken, useAuth } from "../context/AuthContext";
 import {
@@ -25,16 +26,19 @@ import {
   Cancel as CancelIcon,
   Info as InfoIcon,
   Close as CloseIcon,
+  DoneAll as DoneAllIcon,
 } from "@mui/icons-material";
 import RefundModal from "../components/RefundModal";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";   
-const MotionPaper = motion(Paper);     
+const MotionPaper = motion(Paper);
 
 // --- Types --- //
 interface ProfileData {
+  id: number;
   username: string;
+  password: string;
   name: string;
   email: string;
   phoneNumber: string;
@@ -50,8 +54,8 @@ interface Order {
   total: string;
   status: string;
   products: string;
-  refund_status?: string; // Eğer API'den geliyorsa
-  refund_updated_at?: string; // Eğer API'den geliyorsa
+  refund_status?: string;
+  refund_updated_at?: string;
 }
 
 // --- Animations & Styled Components --- //
@@ -67,23 +71,18 @@ const titlePulse = keyframes`
   50%     { transform: translateY(-4px); }
 `;
 
-
 const MovingTruck = styled(ShippingIcon)(({ theme }) => ({
   animation: `${truckLoopAnimation} 2s infinite`,
   color: "#2196f3",
 }));
 
-
-
 // --- Styles --- //
 const styles = {
   headerText: {
     position: 'relative',
-    /* KOYU TURUNCU gradient */
     background: 'linear-gradient(45deg, #FF7C3E 30%, #FF6B3E 70%)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    /* animasyon */
     animation: `${titlePulse} 3s ease-in-out infinite`,
     '&:after': {
       content: '""',
@@ -156,36 +155,25 @@ const styles = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  Delivered: "#FFA559",
-  "In Transit": "#FF7C3E",
-  Processing: "#ff9800",
-  Refunded: "#FFC499",
-  Cancelled: "#FF6B3E",
+  "Delivered": "#4CAF50",
+  "In Transit": "#2196f3",
+  "Processing": "#ff9800",
+  "Refunded": "#388e3c",            
+  "Cancelled": "#FF6B3E",
   "Refund Approved": "#388e3c",
   "Refund Rejected": "#d32f2f",
 };
 
 // --- Status Icon ---
-interface StatusIconProps {
-  status: string;
-}
+interface StatusIconProps { status: string; }
 const StatusIcon: React.FC<StatusIconProps> = React.memo(({ status }) => {
   switch (status) {
-    case "Delivered":
-      return <CheckCircleIcon sx={{ color: STATUS_COLORS.Delivered }} />;
-    case "In Transit":
-      return <MovingTruck />;
-    case "Processing":
-      return <InventoryIcon sx={{ color: STATUS_COLORS.Processing }} />;
-    case "Refunded":
-    case "Refund Approved":
-      return <CheckCircleIcon sx={{ color: STATUS_COLORS["Refund Approved"] }} />;
-    case "Refund Rejected":
-      return <CancelIcon sx={{ color: STATUS_COLORS["Refund Rejected"] }} />;
-    case "Cancelled":
-      return <CancelIcon sx={{ color: STATUS_COLORS.Cancelled }} />;
-    default:
-      return null;
+    case "Delivered":      return <DoneAllIcon sx={{ color: STATUS_COLORS.Delivered }} />;
+    case "In Transit":     return <MovingTruck />;
+    case "Processing":     return <InventoryIcon sx={{ color: STATUS_COLORS.Processing }} />;
+    case "Refunded":       return <CheckCircleIcon sx={{ color: STATUS_COLORS.Refunded }} />;
+    case "Cancelled":      return <CancelIcon sx={{ color: STATUS_COLORS.Cancelled }} />;
+    default:               return null;
   }
 });
 
@@ -213,39 +201,21 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalO
           <Typography variant="body2" fontWeight="medium">
             Total: {order.total}
           </Typography>
-
           {order.status === "Delivered" && (
-            <>
-              <Button
-                variant="outlined"
-                color="secondary"
-                size="small"
-                onClick={() => {
-                  setSelectedOrderId(order.id);
-                  setRefundModalOpen(true);
-                }}
-                sx={{ width: "fit-content", textTransform: "none" }}
-              >
-                Request Refund
-              </Button>
-            </>
+            <Button
+              variant="outlined"
+              color="secondary"
+              size="small"
+              onClick={() => {
+                setSelectedOrderId(order.id);
+                setRefundModalOpen(true);
+              }}
+              sx={{ width: "fit-content", textTransform: "none" }}
+            >
+              Request Refund
+            </Button>
           )}
-
-          {/* Refund Approved/Rejected extra badge */}
-          {order.status === "Refund Approved" && (
-            <Box sx={{ mt: 1 }}>
-              <Typography sx={{ color: STATUS_COLORS["Refund Approved"], fontWeight: "bold" }}>
-                ✅ Refund Approved
-              </Typography>
-            </Box>
-          )}
-          {order.status === "Refund Rejected" && (
-            <Box sx={{ mt: 1 }}>
-              <Typography sx={{ color: STATUS_COLORS["Refund Rejected"], fontWeight: "bold" }}>
-                ❌ Refund Rejected
-              </Typography>
-            </Box>
-          )}
+          {/* removed Refund Approved / Rejected badges */}
         </Box>
       }
     />
@@ -263,9 +233,16 @@ interface OrderStatusSectionProps {
 const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ status, orders, setRefundModalOpen, setSelectedOrderId }) => {
   const navigate = useNavigate();
   const filteredOrders = useMemo(() => orders.filter(order => order.status === status), [orders, status]);
+
   return (
     <Box sx={{ marginBottom: 4 }}>
-      <Box sx={{ display: "flex", alignItems: "center", marginBottom: 2, paddingBottom: 1, borderBottom: "1px dashed rgba(0,0,0,0.1)" }}>
+      <Box sx={{
+        display: "flex",
+        alignItems: "center",
+        marginBottom: 2,
+        paddingBottom: 1,
+        borderBottom: "1px dashed rgba(0,0,0,0.1)"
+      }}>
         <Box sx={{ marginRight: 1, width: "30px", position: "relative", overflow: "hidden" }}>
           <StatusIcon status={status} />
         </Box>
@@ -283,6 +260,7 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
           </Button>
         )}
       </Box>
+
       {filteredOrders.length > 0 ? (
         <List sx={{ width: "100%" }}>
           {filteredOrders.map(order => (
@@ -307,456 +285,260 @@ const OrderStatusSection: React.FC<OrderStatusSectionProps> = React.memo(({ stat
 const ProfilePage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [refundModalOpen, setRefundModalOpen] = useState(false); 
+  const [refundModalOpen, setRefundModalOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
   const [profileData, setProfileData] = useState<ProfileData>({
+    id: 0,
     username: "",
+    password: "",
     name: "",
     email: "",
     phoneNumber: "",
     addressLine1: "",
     addressLine2: "",
-    city:        "",
-    postalCode:  "",
+    city: "",
+    postalCode: "",
   });
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Refund notification state
+  // Refund notification state (unchanged)
   const [refundNotification, setRefundNotification] = useState<null | { status: string; orderId: number }>(null);
 
-  // Redirect in an effect if not authenticated
+  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login?next=/profile", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
-  // Fetch profile data when authenticated
+  // Fetch profile data
   useEffect(() => {
-    if (isAuthenticated) {
-      const fetchProfileData = async () => {
-        const accessToken = localStorage.getItem("access_token");
-        try {
-          const response = await fetch("http://localhost:8000/profile/", {
-            method: "GET",
-            credentials: "include",
-            headers: {
-              "Authorization": `Bearer ${accessToken}`,
-            },
+    if (!isAuthenticated) return;
+    (async () => {
+      const accessToken = localStorage.getItem("access_token");
+      try {
+        const res = await fetch("http://localhost:8000/profile/", {
+          method: "GET",
+          credentials: "include",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setProfileData({
+            id:           data.id,
+            username:     data.username,
+            password:     "",
+            name:         data.name         || "",
+            email:        data.email        || "",
+            phoneNumber:  data.phone_number || "",
+            addressLine1: data.address_line1|| "",
+            addressLine2: data.address_line2|| "",
+            city:         data.city         || "",
+            postalCode:   data.postal_code  || "",
           });
-          if (response.ok) {
-            const data = await response.json();
-            setProfileData({
-              username:     data.username,
-              name:         data.name         || "",
-              email:        data.email        || "",
-              phoneNumber:  data.phone_number || "",
-              addressLine1: data.address_line1 || "",
-              addressLine2: data.address_line2 || "",
-              city:         data.city         || "",
-              postalCode:   data.postal_code  || "",
-            });
-          } else {
-            console.error("Failed to fetch profile data:", response.statusText);
-          }
-        } catch (error) {
-          console.error("Error fetching profile data:", error);
-        } finally {
-          setLoading(false);
         }
-      };
-      fetchProfileData();
-    }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [isAuthenticated]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setProfileData((prev) => ({ ...prev, [name]: value }));
+    setProfileData(prev => ({ ...prev, [name]: value }));
   }, []);
 
-  const toggleEditMode = useCallback(() => {
-    setIsEditing((prev) => !prev);
-  }, []);
+  const toggleEditMode = useCallback(() => setIsEditing(prev => !prev), []);
 
   const handleSaveChanges = async () => {
     const accessToken = localStorage.getItem("access_token");
     try {
-      const response = await fetch("http://localhost:8000/profile/edit/", {
+      const res = await fetch("http://localhost:8000/profile/edit/", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCSRFToken(),
-          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type":  "application/json",
+          "X-CSRFToken":    getCSRFToken(),
+          "Authorization":  `Bearer ${accessToken}`,
         },
         credentials: "include",
         body: JSON.stringify({
-          name: profileData.name,
-          email: profileData.email,
+          name:          profileData.name,
+          email:         profileData.email,
           phone_number:  profileData.phoneNumber,
           address_line1: profileData.addressLine1,
           address_line2: profileData.addressLine2,
           city:          profileData.city,
           postal_code:   profileData.postalCode,
+          ...(profileData.password ? { password: profileData.password } : {}),
         }),
       });
-      if (response.ok) {
-        const updatedData = await response.json();
-        setProfileData((prev) => ({ ...prev, ...updatedData }));
+      if (res.ok) {
+        const updated = await res.json();
+        setProfileData(prev => ({ ...prev, ...updated, password: "" }));
         setIsEditing(false);
-      } else {
-        console.error("Failed to update profile:", response.statusText);
       }
-    } catch (error) {
-      console.error("Error updating profile:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const userInitials = useMemo(() => {
-    return profileData.username ? profileData.username.charAt(0).toUpperCase() : "U";
-  }, [profileData.username]);
-
-  // Orders & Refund Status Fetch
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loadingOrders, setLoadingOrders] = useState<boolean>(true);
-
-  // Tüm refund statülerini diziye ekliyoruz!
-  const statusTypes = useMemo<string[]>(
-    () => [
-      "Processing",
-      "In Transit",
-      "Delivered",
-      "Refund Approved",
-      "Refund Rejected",
-      "Refunded",
-      "Cancelled",
-    ],
-    []
+  const userInitials = useMemo(
+    () => profileData.username.charAt(0).toUpperCase() || "U",
+    [profileData.username]
   );
 
+  // Orders fetch
+  const [orders, setOrders] = useState<Order[]>([]);
   useEffect(() => {
     if (!isAuthenticated) return;
     const token = localStorage.getItem("access_token");
-    fetch("http://127.0.0.1:8000/api/orders/mine/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Cannot load orders");
-        return res.json();
-      })
+    fetch("http://127.0.0.1:8000/api/orders/mine/", { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => res.ok ? res.json() : Promise.reject("Cannot load orders"))
       .then((data: any[]) => {
-        const ordersFetched = data.map((o) => {
-          let displayStatus = o.status === "Shipped" ? "In Transit" : o.status;
-          if (o.refund_status === "Approved") displayStatus = "Refund Approved";
-          if (o.refund_status === "Rejected") displayStatus = "Refund Rejected";
+        const list = data.map(o => {
+          const displayStatus = o.status === "Shipped" ? "In Transit" : o.status;
           return {
-            id: o.id,
-            date: new Date(o.created_at).toLocaleDateString(),
+            id:    o.id,
+            date:  new Date(o.created_at).toLocaleDateString(),
             total: `$${parseFloat(o.total as string).toFixed(2)}`,
             status: displayStatus,
             products: (o.items as any[])
               .map((i: any) => `${i.product_title} (x${i.quantity})`)
               .join(", "),
-            refund_status: o.refund_status,
-            refund_updated_at: o.refund_updated_at,
+            refund_status:      o.refund_status,
+            refund_updated_at:  o.refund_updated_at,
           };
         });
-        setOrders(ordersFetched);
+        setOrders(list);
 
-        // Son 5 dakika içinde refund statüsü değişen varsa notification göster
-        const recentRefund = data.find(
-          (o) =>
-            (o.refund_status === "Approved" || o.refund_status === "Rejected") &&
-            o.refund_updated_at &&
-            new Date(o.refund_updated_at) > new Date(Date.now() - 1000 * 60 * 5)
+        const recent = data.find(o =>
+          o.refund_status &&
+          new Date(o.refund_updated_at) > new Date(Date.now() - 1000 * 60 * 5)
         );
-        if (recentRefund) {
-          setRefundNotification({
-            status: recentRefund.refund_status,
-            orderId: recentRefund.id,
-          });
+        if (recent) {
+          setRefundNotification({ status: recent.refund_status, orderId: recent.id });
         }
       })
-      .catch(console.error)
-      .finally(() => setLoadingOrders(false));
+      .catch(console.error);
   }, [isAuthenticated]);
 
   if (loading) {
     return (
-      <Container sx={{ marginTop: 12, minHeight: "80vh", marginBottom: 8 }}>
-        <Typography variant="h6" textAlign="center">
-          Loading profile...
-        </Typography>
+      <Container sx={{ mt:12, minHeight:"80vh" }}>
+        <Typography variant="h6" textAlign="center">Loading profile...</Typography>
       </Container>
     );
   }
 
   return (
-    <Container sx={{ marginTop: 12, minHeight: "80vh", marginBottom: 8 }}>
-      {/* REFUND NOTIFICATION */}
+    <Container sx={{ mt:12, minHeight:"80vh", mb:8 }}>
       {refundNotification && (
-        <Fade in={true}>
-          <Paper
-            elevation={5}
-            sx={{
-              position: "fixed",
-              top: 90,
-              right: 30,
-              zIndex: 1200,
-              px: 3,
-              py: 2,
-              background:
-                refundNotification.status === "Approved"
-                  ? "#e8f5e9"
-                  : "#FFF3ED",
-              borderLeft: `6px solid ${
-                refundNotification.status === "Approved"
-                  ? STATUS_COLORS["Refund Approved"]
-                  : STATUS_COLORS["Refund Rejected"]
-              }`,
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              minWidth: 260,
-            }}
-          >
-            <InfoIcon
-              sx={{
-                color:
-                  refundNotification.status === "Approved"
-                    ? STATUS_COLORS["Refund Approved"]
-                    : STATUS_COLORS["Refund Rejected"],
-              }}
-            />
+        <Fade in>
+          <Paper elevation={5} sx={{
+            position: "fixed", top:90, right:30, zIndex:1200,
+            px:3, py:2,
+            background: refundNotification.status==="Approved"?"#e8f5e9":"#FFF3ED",
+            borderLeft: `6px solid ${
+              refundNotification.status==="Approved"
+                ? STATUS_COLORS["Refund Approved"]
+                : STATUS_COLORS["Refund Rejected"]
+            }`,
+            display:"flex", alignItems:"center", gap:2, minWidth:260
+          }}>
+            <InfoIcon sx={{
+              color: refundNotification.status==="Approved"
+                ? STATUS_COLORS["Refund Approved"]
+                : STATUS_COLORS["Refund Rejected"]
+            }}/>
             <Box flex={1}>
               <Typography fontWeight="bold">
-                {refundNotification.status === "Approved"
-                  ? "Refund Approved"
-                  : "Refund Rejected"}
+                {refundNotification.status==="Approved"?"Refund Approved":"Refund Rejected"}
               </Typography>
               <Typography variant="body2">
                 Order #{refundNotification.orderId} refund has been{" "}
-                <span
-                  style={{
-                    color:
-                      refundNotification.status === "Approved"
-                        ? STATUS_COLORS["Refund Approved"]
-                        : STATUS_COLORS["Refund Rejected"],
-                    fontWeight: "bold",
-                  }}
-                >
-                  {refundNotification.status === "Approved"
-                    ? "APPROVED"
-                    : "REJECTED"}
-                </span>
+                <strong style={{
+                  color: refundNotification.status==="Approved"
+                    ? STATUS_COLORS["Refund Approved"]
+                    : STATUS_COLORS["Refund Rejected"]
+                }}>
+                  {refundNotification.status.toUpperCase()}
+                </strong>
               </Typography>
             </Box>
             <IconButton onClick={() => setRefundNotification(null)}>
-              <CloseIcon />
+              <CloseIcon/>
             </IconButton>
           </Paper>
         </Fade>
       )}
 
-      <Typography
-        variant="h4"
-        fontWeight="bold"
-        gutterBottom
-        textAlign="center"
-        sx={styles.headerText}
-      >
+      <Typography variant="h4" fontWeight="bold" gutterBottom textAlign="center" sx={styles.headerText}>
         My Profile
       </Typography>
 
-      <Fade in={true} timeout={800}>
-        <Paper elevation={3} sx={{ ...styles.paperStyles, marginTop: 6, maxWidth: 600, marginX: "auto" }}>
-          <Box sx={{ display: "flex", alignItems: "center", marginBottom: 3 }}>
+      <Fade in timeout={800}>
+        <Paper elevation={3} sx={{ ...styles.paperStyles, mt:6, maxWidth:600, mx:"auto" }}>
+          <Box sx={{ display:"flex", alignItems:"center", mb:3 }}>
             <Avatar sx={styles.avatarStyles}>{userInitials}</Avatar>
-            <Box>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                {profileData.username}
-
-              </Typography>
-            </Box>
+            <Typography variant="h6" fontWeight="bold">
+              {profileData.username}
+            </Typography>
           </Box>
-
-          <Divider sx={{ marginBottom: 3 }} />
+          <Divider sx={{ mb:3 }} />
 
           {isEditing ? (
-            <Fade in={true}>
+            <Fade in>
               <Box component="form" sx={{ "& .MuiTextField-root": styles.textFieldStyles }}>
-                <TextField
-                  label="Username"
-                  name="username"
-                  fullWidth
-                  variant="outlined"
-                  value={profileData.username}
-                  disabled
-                />
-                <TextField
-                  label="Full Name"
-                  name="name"
-                  fullWidth
-                  variant="outlined"
-                  placeholder="Enter your full name"
-                  value={profileData.name}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Email"
-                  name="email"
-                  fullWidth
-                  variant="outlined"
-                  value={profileData.email}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Phone Number"
-                  name="phoneNumber"
-                  fullWidth
-                  variant="outlined"
-                  value={profileData.phoneNumber}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Address Line 1"
-                  name="addressLine1"
-                  fullWidth
-                  variant="outlined"
-                  value={profileData.addressLine1}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Address Line 2"
-                  name="addressLine2"
-                  fullWidth
-                  variant="outlined"
-                  value={profileData.addressLine2}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="City"
-                  name="city"
-                  fullWidth
-                  variant="outlined"
-                  value={profileData.city}
-                  onChange={handleInputChange}
-                />
-                <TextField
-                  label="Postal Code"
-                  name="postalCode"
-                  fullWidth
-                  variant="outlined"
-                  value={profileData.postalCode}
-                  onChange={handleInputChange}
-                />
+                <TextField label="Customer ID" name="id" fullWidth value={profileData.id} disabled />
+                <TextField label="Username" name="username" fullWidth value={profileData.username} disabled />
+                <TextField label="Full Name" name="name" fullWidth value={profileData.name} onChange={handleInputChange} />
+                <TextField label="Email" name="email" fullWidth value={profileData.email} onChange={handleInputChange} />
+                <TextField label="New Password" name="password" type="password" fullWidth value={profileData.password} onChange={handleInputChange} />
+                <TextField label="Phone Number" name="phoneNumber" fullWidth value={profileData.phoneNumber} onChange={handleInputChange} />
+                <TextField label="Address Line 1" name="addressLine1" fullWidth value={profileData.addressLine1} onChange={handleInputChange} />
+                <TextField label="Address Line 2" name="addressLine2" fullWidth value={profileData.addressLine2} onChange={handleInputChange} />
+                <TextField label="City" name="city" fullWidth value={profileData.city} onChange={handleInputChange} />
+                <TextField label="Postal Code" name="postalCode" fullWidth value={profileData.postalCode} onChange={handleInputChange} />
               </Box>
             </Fade>
           ) : (
-            <Box sx={{ marginBottom: 3 }}>
+            <Box mb={3}>
               <Grid container spacing={1}>
-                <Grid item xs={4}>
-                  <Typography color="text.secondary" variant="body1">
-                    Username:
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Typography fontWeight="medium" variant="body1">
-                    {profileData.username}
-                  </Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography color="text.secondary" variant="body1">
-                    Full Name:
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Typography fontWeight="medium" variant="body1">
-                    {profileData.name || "(NOT SET)"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography color="text.secondary" variant="body1">
-                    Email:
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Typography fontWeight="medium" variant="body1">
-                    {profileData.email}
-                  </Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography color="text.secondary" variant="body1">
-                    Phone Number:
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Typography fontWeight="medium" variant="body1">
-                    {profileData.phoneNumber || "(NOT SET)"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography color="text.secondary" variant="body1">
-                    Address Line 1:
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Typography fontWeight="medium" variant="body1">
-                    {profileData.addressLine1 || "(NOT SET)"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography color="text.secondary" variant="body1">
-                    Address Line 2:
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Typography fontWeight="medium" variant="body1">
-                    {profileData.addressLine2 || "(NOT SET)"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography color="text.secondary" variant="body1">
-                    City:
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Typography fontWeight="medium" variant="body1">
-                    {profileData.city || "(NOT SET)"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={4}>
-                  <Typography color="text.secondary" variant="body1">
-                    Postal Code:
-                  </Typography>
-                </Grid>
-                <Grid item xs={8}>
-                  <Typography fontWeight="medium" variant="body1">
-                    {profileData.postalCode || "(NOT SET)"}
-                  </Typography>
-                </Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Customer ID:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.id}</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Username:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.username}</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Password:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">••••••••</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Full Name:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.name || "(NOT SET)"}</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Email:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.email}</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Phone Number:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.phoneNumber || "(NOT SET)"}</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Address Line 1:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.addressLine1 || "(NOT SET)"}</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Address Line 2:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.addressLine2 || "(NOT SET)"}</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">City:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.city || "(NOT SET)"}</Typography></Grid>
+                <Grid item xs={4}><Typography color="text.secondary">Postal Code:</Typography></Grid>
+                <Grid item xs={8}><Typography fontWeight="medium">{profileData.postalCode || "(NOT SET)"}</Typography></Grid>
               </Grid>
             </Box>
           )}
 
           <Box mt={4} display="flex" justifyContent="flex-end">
             {isEditing ? (
-              <Button
-                variant="contained"
-                startIcon={<SaveIcon />}
-                sx={styles.savedButton}
-                onClick={handleSaveChanges}
-              >
+              <Button variant="contained" startIcon={<SaveIcon />} sx={styles.savedButton} onClick={handleSaveChanges}>
                 Save Changes
               </Button>
             ) : (
-              <Button
-                variant="outlined"
-                startIcon={<EditIcon />}
-                sx={styles.editButton}
-                onClick={toggleEditMode}
-              >
+              <Button variant="outlined" startIcon={<EditIcon />} sx={styles.editButton} onClick={toggleEditMode}>
                 Edit Profile
               </Button>
             )}
@@ -764,18 +546,10 @@ const ProfilePage: React.FC = () => {
         </Paper>
       </Fade>
 
-      {/* Order History Section */}
-      <Fade in={true} timeout={1000}>
-        <Paper elevation={3} sx={{ ...styles.paperStyles, marginTop: 6, maxWidth: 600, marginX: "auto" }}>
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            mb={1}
-          >
-            <Typography variant="h6" fontWeight="bold">
-              Order History
-            </Typography>
+      <Fade in timeout={1000}>
+        <Paper elevation={3} sx={{ ...styles.paperStyles, mt:6, maxWidth:600, mx:"auto" }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+            <Typography variant="h6" fontWeight="bold">Order History</Typography>
             <Button
               onClick={() => navigate("/profile/transactions")}
               sx={{
@@ -787,23 +561,18 @@ const ProfilePage: React.FC = () => {
                 py: 0.5,
                 boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                 transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #f97316, #ea580c)',
-                  transform: 'scale(1.05)',
-                },
-                '&:active': {
-                  transform: 'scale(0.97)',
-                },
+                '&:hover': { background: 'linear-gradient(45deg, #f97316, #ea580c)', transform: 'scale(1.05)' },
+                '&:active': { transform: 'scale(0.97)' },
               }}
               size="small"
             >
               View Transaction History
             </Button>
           </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 3 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb:3 }}>
             Your recent purchases organized by status
           </Typography>
-          <Divider sx={{ marginBottom: 3 }} />
+          <Divider sx={{ mb:3 }} />
           {selectedOrderId !== null && (
             <RefundModal
               open={refundModalOpen}
@@ -813,7 +582,7 @@ const ProfilePage: React.FC = () => {
               onSuccess={() => window.location.reload()}
             />
           )}
-          {statusTypes.map((status) => (
+          {["Processing","In Transit","Delivered","Refunded","Cancelled"].map(status => (
             <OrderStatusSection
               key={status}
               status={status}

@@ -71,6 +71,7 @@ def profile_view(request):
             "postal_code",
         ],
     )
+    data["id"] = request.user.id
     data["username"] = request.user.username
     data["email"] = request.user.email
     return Response(data, status=status.HTTP_200_OK)
@@ -113,6 +114,10 @@ def profile_update_view(request):
     )
     out["username"] = request.user.username
     out["email"] = request.user.email
+    
+    if payload.get("password"):
+        request.user.set_password(payload["password"])
+        request.user.save()
 
     return Response(out, status=status.HTTP_200_OK)
     
