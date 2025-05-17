@@ -92,7 +92,7 @@ const SalesManagerDashboard: React.FC = () => {
           Sales Manager Dashboard
         </Typography>
         <Typography variant="subtitle1" mt={1}>
-          Manage your stock, orders, comments, and deliveries at a glance.
+          Manage product pricing, discounts, refunds, and revenue reports.
         </Typography>
       </Box>
 
