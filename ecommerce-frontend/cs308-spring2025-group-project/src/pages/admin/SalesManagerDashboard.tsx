@@ -11,6 +11,7 @@ import {
 import { motion } from "framer-motion";
 import Navbar from "../../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import { useMediaQuery, useTheme } from "@mui/material";
 
 interface ActionCardProps {
   title: string;
@@ -66,26 +67,32 @@ const btnStyle = {
 
 const SalesManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Box sx={{ backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
+    <Box sx={{ backgroundColor: "#FFF5EC", minHeight: "100vh" }}>
       <Navbar />
-      <Toolbar />
 
       {/* Header */}
       <Box
         sx={{
-          py: 6,
+          pt: { xs: 10, sm: 14, md: 16 },   // same
+          pb: { xs: 4, sm: 6 },
           textAlign: "center",
-          backgroundColor: "#EF977F",
+          backgroundColor: "#FFA559",
           color: "white",
+          borderBottomLeftRadius: 40,
+          borderBottomRightRadius: 40,
+          boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+          mb: 6,
         }}
       >
-        <Typography variant="h4" fontWeight="bold">
+        <Typography variant={isMobile ? "h5" : "h4"} fontWeight="bold">
           Sales Manager Dashboard
         </Typography>
         <Typography variant="subtitle1" mt={1}>
-          Manage product pricing, discounts, refunds, and revenue reports.
+          Manage your stock, orders, comments, and deliveries at a glance.
         </Typography>
       </Box>
 
