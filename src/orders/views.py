@@ -329,7 +329,7 @@ class ProcessRefundRequestView(APIView):
                 subject="Your refund is approved",
                 message=(
                     f"Hello {rr.user.username},\n\n"
-                    f"Your refund for {rr.quantity}× “{oi.product.title}” has been APPROVED.\n"
+                    f"Your refund for {rr.quantity}x “{oi.product.title}” has been APPROVED.\n"
                     f"Amount refunded: {amount:.2f}\n\nThank you."
                 ),
                 from_email="no-reply@yourshop.com",

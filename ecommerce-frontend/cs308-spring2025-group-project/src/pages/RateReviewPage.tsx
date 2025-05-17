@@ -178,7 +178,7 @@ const RateReviewPage: React.FC = () => {
           >
             {items.map((it) => (
               <MenuItem key={it.product_id} value={it.product_id}>
-                {it.product_title} ×{it.quantity}
+                {it.product_title} x{it.quantity}
               </MenuItem>
             ))}
           </Select>

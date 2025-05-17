@@ -22,6 +22,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     # Expose the actual username of the customer (the Order model uses a `user` FK)
     customer = serializers.CharField(source='user.username', read_only=True)
+    customer_id = serializers.IntegerField(source='user.id', read_only=True)
     # Expose the total price as a decimal field
     total = serializers.DecimalField(
         source='total_price',
@@ -34,7 +35,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'customer', 'items', 'total', 'status', 'created_at',
+            'id', 'customer', 'customer_id', 'items', 'total', 'status', 'created_at',
             'shipping_full_name',
             'shipping_phone_number',
             'shipping_address_line1',

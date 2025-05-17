@@ -15,15 +15,32 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 
+interface RawOrder {
+  id:                       number;
+  customer:                 string | { id: number; username?: string; name?: string };
+  user?:                    number;
+  customer_id?:             number;
+  total:                    string;
+  status:                   string;
+  items?:                   { product_title: string; quantity: number }[];
+  shipping_address_line1?:  string;
+  shipping_address_line2?:  string;
+  shipping_city?:           string;
+  shipping_postal_code?:    string;
+}
+
 interface Order {
-  id:        number;
-  customer:  string;
-  total:     string;
-  status:    string;
-  shipping_address_line1?: string;
-  shipping_address_line2?: string;
-  shipping_city?:          string;
-  shipping_postal_code?:   string;
+  id:                       number;
+  customer:                 string;
+  customerId:               number;
+  total:                    string;
+  status:                   string;
+  quantity:                 number;
+  itemsDesc:                string;
+  shipping_address_line1?:  string;
+  shipping_address_line2?:  string;
+  shipping_city?:           string;
+  shipping_postal_code?:    string;
 }
 
 const validTransitions: Record<string, string[]> = {
@@ -54,18 +71,44 @@ const ManageOrders: React.FC = () => {
         if (!res.ok) throw new Error(`Failed to load orders (${res.status})`);
         return res.json();
       })
-      .then((data: any[]) => {
-        const formatted: Order[] = data.map((o) => ({
-          id:       o.id,
-          customer: o.customer,
-          total:    `$${parseFloat(o.total as string).toFixed(2)}`,
-          status:   o.status,
-          // map the shipping fields from the API response
-          shipping_address_line1: o.shipping_address_line1,
-          shipping_address_line2: o.shipping_address_line2,
-          shipping_city:          o.shipping_city,
-          shipping_postal_code:   o.shipping_postal_code,
-        }));
+      .then((data: RawOrder[]) => {
+        const formatted: Order[] = data.map((o) => {
+          // pick a numeric customer ID from whichever field exists
+          const customerId: number =
+            o.user ??
+            o.customer_id ??
+            (typeof o.customer === "object" ? o.customer.id : undefined) ??
+            0;
+
+          // extract the human-readable name
+          const customerName: string =
+            typeof o.customer === "string"
+              ? o.customer
+              : o.customer.username ?? o.customer.name ?? "";
+
+          // sum quantities
+          const quantity: number = Array.isArray(o.items)
+            ? o.items.reduce((sum, i) => sum + (i.quantity || 0), 0)
+            : 0;
+
+          const itemsDesc: string = Array.isArray(o.items)
+            ? o.items.map(i => `${i.quantity}x ${i.product_title}`).join(", ")
+            : "";
+          return {
+            id:                      o.id,
+            customer:                customerName,
+            customerId,
+            total:                   `$${parseFloat(o.total).toFixed(2)}`,
+            status:                  o.status,
+            quantity,
+            itemsDesc,
+            shipping_address_line1:  o.shipping_address_line1,
+            shipping_address_line2:  o.shipping_address_line2,
+            shipping_city:           o.shipping_city,
+            shipping_postal_code:    o.shipping_postal_code,
+          };
+        });
+
         setOrders(formatted);
       })
       .catch((err) => window.alert(err.message));
@@ -92,9 +135,7 @@ const ManageOrders: React.FC = () => {
       })
       .then(() =>
         setOrders((prev) =>
-          prev.map((o) =>
-            o.id === id ? { ...o, status: newStatus } : o
-          )
+          prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
         )
       )
       .catch((err) => window.alert(err.message));
@@ -102,6 +143,7 @@ const ManageOrders: React.FC = () => {
 
   const handleDelete = (id: number) => {
     if (!window.confirm("Delete this order permanently?")) return;
+
     fetch(`http://127.0.0.1:8000/api/orders/${id}/`, {
       method: "DELETE",
       headers: {
@@ -133,8 +175,11 @@ const ManageOrders: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
+              <TableCell>Customer ID</TableCell>
               <TableCell>Customer</TableCell>
-              <TableCell>Total</TableCell>
+              <TableCell>Items</TableCell>
+              <TableCell>Total Price</TableCell>
+              <TableCell>Total Quantity</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Shipping Address</TableCell>
               <TableCell>Actions</TableCell>
@@ -145,14 +190,18 @@ const ManageOrders: React.FC = () => {
             {orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell>{order.id}</TableCell>
+                <TableCell>{order.customerId}</TableCell>
                 <TableCell>{order.customer}</TableCell>
+                <TableCell>{order.itemsDesc}</TableCell>
                 <TableCell>{order.total}</TableCell>
+                <TableCell>{order.quantity}</TableCell>
                 <TableCell>
                   <Select
                     value={order.status}
                     onChange={(e) =>
                       handleStatusChange(order.id, e.target.value as string)
                     }
+                    size="small"
                   >
                     <MenuItem value={order.status} disabled>
                       {order.status}
@@ -165,9 +214,13 @@ const ManageOrders: React.FC = () => {
                   </Select>
                 </TableCell>
                 <TableCell>
-                  {order.shipping_address_line1}<br/>
+                  {order.shipping_address_line1}
+                  <br />
                   {order.shipping_address_line2 && (
-                    <>{order.shipping_address_line2}<br/></>
+                    <>
+                      {order.shipping_address_line2}
+                      <br />
+                    </>
                   )}
                   {order.shipping_city}, {order.shipping_postal_code}
                 </TableCell>

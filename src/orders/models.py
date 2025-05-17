@@ -74,7 +74,7 @@ class Refund(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Refund {self.id} of {self.quantity}× item#{self.order_item.id}"
+        return f"Refund {self.id} of {self.quantity}x item#{self.order_item.id}"
 
 class RefundRequest(models.Model):
     STATUS_CHOICES = [
@@ -91,4 +91,4 @@ class RefundRequest(models.Model):
     response_message= models.TextField(blank=True)
 
     def __str__(self):
-        return f"RefundRequest#{self.id} of {self.quantity}×Item#{self.order_item.id} [{self.status}]"
+        return f"RefundRequest#{self.id} of {self.quantity}xItem#{self.order_item.id} [{self.status}]"
