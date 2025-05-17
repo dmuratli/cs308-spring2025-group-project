@@ -44,10 +44,9 @@ interface Order {
 }
 
 const validTransitions: Record<string, string[]> = {
-  Processing: ["Shipped", "Cancelled"],
+  Processing: ["Shipped"],
   Shipped:    ["Delivered"],
-  Delivered:  ["Refunded"],
-  Refunded:   [],
+  Delivered:  [],
 };
 
 const ManageOrders: React.FC = () => {

@@ -215,7 +215,35 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalO
               Request Refund
             </Button>
           )}
-          {/* removed Refund Approved / Rejected badges */}
+          {order.status === "Processing" && (
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            onClick={() => {
+              if (!window.confirm("Cancel this order?")) return;
+              const token = localStorage.getItem("access_token");
+              fetch(`http://127.0.0.1:8000/api/orders/${order.id}/status/`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCSRFToken(),
+                  "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({ status: "Cancelled" }),
+              })
+                .then((res) => {
+                  if (!res.ok) throw new Error("Cannot cancel order");
+                  return res.json();
+                })
+                .then(() => window.location.reload())
+                .catch((err) => window.alert(err.message));
+            }}
+            sx={{ width: "fit-content", textTransform: "none" }}
+          >
+            Cancel Order
+          </Button>
+        )}
         </Box>
       }
     />

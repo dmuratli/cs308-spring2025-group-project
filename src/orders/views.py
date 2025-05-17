@@ -110,7 +110,7 @@ class PlaceOrderView(APIView):
 
 
 class OrderStatusUpdateView(APIView):
-    permission_classes = [permissions.IsAuthenticated, IsProductManager]
+    permission_classes = [permissions.IsAuthenticated]
 
     @transaction.atomic
     def patch(self, request, pk):
@@ -119,6 +119,10 @@ class OrderStatusUpdateView(APIView):
             return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         new_status = request.data.get('status')
+        if new_status == "Cancelled" and order.status == "Processing" and order.user == request.user:
+            pass
+        elif not IsProductManager().has_permission(request, self):
+            raise PermissionDenied("Only product managers can update order status.")
         if new_status not in VALID_TRANSITIONS[order.status]:
             return Response(
                 {'error': f"Invalid transition: {order.status} → {new_status}"},
