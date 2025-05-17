@@ -25,6 +25,8 @@ find . \
 # ── 2) Delete every SQLite DB under the project tree ───────────────────────────
 echo "Removing **all** db.sqlite3 files…"
 find . -type f -name "db.sqlite3" -exec rm -v {} +
+find . -type f -name "db.sqlite3-shm" -exec rm -v {} +
+find . -type f -name "db.sqlite3-wal" -exec rm -v {} +
 
 # ── 3) Recreate your migrations and apply them ────────────────────────────────
 echo "Making new migrations…"
