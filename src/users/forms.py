@@ -9,4 +9,12 @@ class RegisterForm(forms.Form):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ["name", "email", "address"]
+        fields = [
+            "name",
+            "email",
+            "phone_number",
+            "address_line1",
+            "address_line2",
+            "city",
+            "postal_code",
+        ]

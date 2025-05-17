@@ -167,9 +167,13 @@
         <div class="section-title">Bill To</div>
         <div class="customer-name">{{ order.user.get_full_name|default:order.user.username }}</div>
         <div>{{ order.user.email }}</div>
-        {% if order.user.profile.address %}
-        <div>{{ order.user.profile.address }}</div>
+        <!-- print the full shipping address captured on the order -->
+        <div>{{ order.shipping_full_name }}</div>
+        <div>{{ order.shipping_address_line1 }}</div>
+        {% if order.shipping_address_line2 %}
+        <div>{{ order.shipping_address_line2 }}</div>
         {% endif %}
+        <div>{{ order.shipping_city }}, {{ order.shipping_postal_code }}</div>
       </div>
       <div class="payment-info">
         <div class="section-title">Payment Information</div>

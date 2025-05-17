@@ -15,6 +15,7 @@ import {
 import axios, { AxiosError } from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { getCSRFToken } from "../context/AuthContext";
 
 const formatPrice = (price: any): string => {
   if (typeof price === "number") {
@@ -85,12 +86,32 @@ const CartPage = () => {
       } else {
         showNotification("Failed to load cart data", "error");
       }
-    } catch (err) {
+    } catch {
       showNotification("Error loading cart", "error");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Load existing shipping info from profile
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/profile/`, { withCredentials: true });
+        const d = res.data;
+        setShippingInfo({
+          fullName:     d.name || "",
+          phoneNumber:  d.phone_number || "",
+          addressLine1: d.address_line1 || "",
+          addressLine2: d.address_line2 || "",
+          city:         d.city || "",
+          postalCode:   d.postal_code || "",
+        });
+      } catch {
+        // ignore if not authenticated
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     fetchCart();
@@ -166,7 +187,7 @@ const CartPage = () => {
       setCart(response.data);
       updateCartItemCount(0);
       showNotification("Item removed from cart", "success", 2000);
-    } catch (err) {
+    } catch {
       showNotification("Failed to remove item", "error", 3000);
       fetchCart();
     } finally {
@@ -179,12 +200,39 @@ const CartPage = () => {
     setShippingInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleProceedToCheckout = () => {
+  const handleProceedToCheckout = async () => {
     const { fullName, phoneNumber, addressLine1, city, postalCode } = shippingInfo;
     if (!fullName || !phoneNumber || !addressLine1 || !city || !postalCode) {
       showNotification("Please fill in all required shipping fields", "error", 4000);
       return;
     }
+
+    try {
+      const accessToken = localStorage.getItem("access_token");
+      
+      // save to user profile
+      const response = await fetch("http://localhost:8000/profile/edit/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken(),
+          "Authorization": `Bearer ${accessToken}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          name:           fullName,
+          phone_number:   phoneNumber,
+          address_line1:  addressLine1,
+          address_line2:  shippingInfo.addressLine2,
+          city:           city,
+          postal_code:    postalCode,
+        }),
+      });
+    } catch {
+      showNotification("Failed to save shipping info", "error", 3000);
+      return;
+    }
+
     navigate("/payment");
   };
 
@@ -198,9 +246,24 @@ const CartPage = () => {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", background: "linear-gradient(to bottom right, #fcf9f4, #e8f1fc)", pt: 16, pb: 4 }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: "linear-gradient(to bottom right, #fcf9f4, #e8f1fc)",
+        pt: 16,
+        pb: 4,
+      }}
+    >
       <Container>
-        <Typography variant="h4" sx={{ fontWeight: "bold", textAlign: "center", mb: 4, color: "#1f2937" }}>
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: "bold",
+            textAlign: "center",
+            mb: 4,
+            color: "#1f2937",
+          }}
+        >
           Your Shopping Cart
         </Typography>
 
@@ -209,40 +272,81 @@ const CartPage = () => {
             <Grid container spacing={3}>
               {cart.items.map((item) => (
                 <Grid item xs={12} key={item.id}>
-                  <Card sx={{
-                    display: "flex",
-                    p: 2,
-                    alignItems: "center",
-                    borderRadius: 3,
-                    boxShadow: 4,
-                    background: "linear-gradient(to right, #fff5f0, #f0f4ff)",
-                    transition: "transform 0.3s ease",
-                    "&:hover": { transform: "scale(1.02)" }
-                  }}>
+                  <Card
+                    sx={{
+                      display: "flex",
+                      p: 2,
+                      alignItems: "center",
+                      borderRadius: 3,
+                      boxShadow: 4,
+                      background: "linear-gradient(to right, #fff5f0, #f0f4ff)",
+                      transition: "transform 0.3s ease",
+                      "&:hover": { transform: "scale(1.02)" },
+                    }}
+                  >
                     <CardMedia
                       component="img"
-                      sx={{ width: 100, height: 100, borderRadius: 2, mr: 2, objectFit: "cover", backgroundColor: "#f8f9fa" }}
-                      image={item.cover_image ? `${API_BASE_URL}${item.cover_image}` : "https://via.placeholder.com/100x140?text=No+Image"}
+                      sx={{
+                        width: 100,
+                        height: 100,
+                        borderRadius: 2,
+                        mr: 2,
+                        objectFit: "cover",
+                        backgroundColor: "#f8f9fa",
+                      }}
+                      image={
+                        item.cover_image
+                          ? `${API_BASE_URL}${item.cover_image}`
+                          : "https://via.placeholder.com/100x140?text=No+Image"
+                      }
                       alt={item.product_title}
                     />
                     <Box sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2d3748" }}>{item.product_title}</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Unit Price: ${formatPrice(item.product_price)}</Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: "bold", color: "#2d3748" }}
+                      >
+                        {item.product_title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 1 }}
+                      >
+                        Unit Price: ${formatPrice(item.product_price)}
+                      </Typography>
                       <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography variant="body2" sx={{ mr: 1 }}>Quantity:</Typography>
+                        <Typography variant="body2" sx={{ mr: 1 }}>
+                          Quantity:
+                        </Typography>
                         <TextField
                           type="number"
                           size="small"
                           value={item.quantity}
-                          onChange={(e) => handleQuantityChange(item.product, parseInt(e.target.value, 10), item.quantity)}
+                          onChange={(e) =>
+                            handleQuantityChange(
+                              item.product,
+                              parseInt(e.target.value, 10),
+                              item.quantity
+                            )
+                          }
                           sx={{ width: 70 }}
                           inputProps={{ min: 0, step: 1 }}
                           disabled={updatingItems.includes(item.product)}
                         />
-                        {updatingItems.includes(item.product) && <CircularProgress size={20} sx={{ ml: 1 }} />}
+                        {updatingItems.includes(item.product) && (
+                          <CircularProgress size={20} sx={{ ml: 1 }} />
+                        )}
                       </Box>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2d3748", mx: 2 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: "bold",
+                        color: "#2d3748",
+                        mx: 2,
+                      }}
+                    >
                       ${formatPrice(item.total_price)}
                     </Typography>
                     <Button
@@ -253,7 +357,10 @@ const CartPage = () => {
                         color: "#6b0d0d",
                         fontWeight: "bold",
                         borderRadius: 2,
-                        "&:hover": { transform: "scale(1.05)", background: "linear-gradient(45deg, #fca5a5, #f9a8d4)" },
+                        "&:hover": {
+                          transform: "scale(1.05)",
+                          background: "linear-gradient(45deg, #fca5a5, #f9a8d4)",
+                        },
                       }}
                     >
                       Remove
@@ -264,45 +371,94 @@ const CartPage = () => {
             </Grid>
 
             {/* Shipping Info Form */}
-            <Box sx={{
-              mt: 6,
-              p: 4,
-              borderRadius: 5,
-              background: "linear-gradient(to right, #fdf6ec, #f0f4ff)",
-              boxShadow: "0px 4px 20px rgba(0,0,0,0.1)",
-              animation: "fadeIn 1s ease-in-out",
-              "@keyframes fadeIn": {
-                from: { opacity: 0, transform: "translateY(20px)" },
-                to: { opacity: 1, transform: "translateY(0)" },
-              },
-            }}>
-              <Typography variant="h5" sx={{ fontWeight: "bold", mb: 3, textAlign: "center" }}>
+            <Box
+              sx={{
+                mt: 6,
+                p: 4,
+                borderRadius: 5,
+                background: "linear-gradient(to right, #fdf6ec, #f0f4ff)",
+                boxShadow: "0px 4px 20px rgba(0,0,0,0.1)",
+                animation: "fadeIn 1s ease-in-out",
+                "@keyframes fadeIn": {
+                  from: { opacity: 0, transform: "translateY(20px)" },
+                  to: { opacity: 1, transform: "translateY(0)" },
+                },
+              }}
+            >
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: "bold", mb: 3, textAlign: "center" }}
+              >
                 Shipping Information
               </Typography>
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
-                  <TextField label="Full Name" name="fullName" value={shippingInfo.fullName} onChange={handleInputChange} fullWidth required />
+                  <TextField
+                    label="Full Name"
+                    name="fullName"
+                    value={shippingInfo.fullName}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                  />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField label="Phone Number" name="phoneNumber" value={shippingInfo.phoneNumber} onChange={handleInputChange} fullWidth required />
+                  <TextField
+                    label="Phone Number"
+                    name="phoneNumber"
+                    value={shippingInfo.phoneNumber}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                  />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField label="Address Line 1" name="addressLine1" value={shippingInfo.addressLine1} onChange={handleInputChange} fullWidth required />
+                  <TextField
+                    label="Address Line 1"
+                    name="addressLine1"
+                    value={shippingInfo.addressLine1}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                  />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField label="Address Line 2" name="addressLine2" value={shippingInfo.addressLine2} onChange={handleInputChange} fullWidth />
+                  <TextField
+                    label="Address Line 2"
+                    name="addressLine2"
+                    value={shippingInfo.addressLine2}
+                    onChange={handleInputChange}
+                    fullWidth
+                  />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField label="City" name="city" value={shippingInfo.city} onChange={handleInputChange} fullWidth required />
+                  <TextField
+                    label="City"
+                    name="city"
+                    value={shippingInfo.city}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                  />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <TextField label="Postal Code" name="postalCode" value={shippingInfo.postalCode} onChange={handleInputChange} fullWidth required />
+                  <TextField
+                    label="Postal Code"
+                    name="postalCode"
+                    value={shippingInfo.postalCode}
+                    onChange={handleInputChange}
+                    fullWidth
+                    required
+                  />
                 </Grid>
               </Grid>
             </Box>
 
             <Box sx={{ textAlign: "right", mt: 4 }}>
-              <Typography variant="h5" sx={{ fontWeight: "bold", color: "#2d3748" }}>
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: "bold", color: "#2d3748" }}
+              >
                 Total: ${formatPrice(cart.total)}
               </Typography>
               <Button
@@ -313,7 +469,10 @@ const CartPage = () => {
                   color: "white",
                   fontWeight: "bold",
                   borderRadius: 3,
-                  "&:hover": { background: "linear-gradient(to right, #f97316, #ea580c)", transform: "scale(1.05)" },
+                  "&:hover": {
+                    background: "linear-gradient(to right, #f97316, #ea580c)",
+                    transform: "scale(1.05)",
+                  },
                 }}
                 onClick={handleProceedToCheckout}
               >
@@ -322,7 +481,9 @@ const CartPage = () => {
             </Box>
           </>
         ) : (
-          <Alert severity="info" sx={{ mt: 6 }}>Your cart is empty.</Alert>
+          <Alert severity="info" sx={{ mt: 6 }}>
+            Your cart is empty.
+          </Alert>
         )}
       </Container>
 
@@ -332,7 +493,11 @@ const CartPage = () => {
         onClose={closeNotification}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={closeNotification} severity={notification.type} sx={{ width: "100%" }}>
+        <Alert
+          onClose={closeNotification}
+          severity={notification.type}
+          sx={{ width: "100%" }}
+        >
           {notification.message}
         </Alert>
       </Snackbar>

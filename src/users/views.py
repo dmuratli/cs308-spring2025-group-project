@@ -59,27 +59,62 @@ def logout_view(request):
 @permission_classes([IsAuthenticated])
 def profile_view(request):
     profile = get_object_or_404(Profile, user=request.user)
-    profile_data = model_to_dict(profile)
-
-    profile_data["username"] = request.user.username
-    
-    return JsonResponse(profile_data, status=200)
+    # Only pull out the fields we care about:
+    data = model_to_dict(
+        profile,
+        fields=[
+            "name",
+            "phone_number",
+            "address_line1",
+            "address_line2",
+            "city",
+            "postal_code",
+        ],
+    )
+    data["username"] = request.user.username
+    data["email"] = request.user.email
+    return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def profile_update_view(request):
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON."}, status=400)
     profile = get_object_or_404(Profile, user=request.user)
-    form = ProfileForm(data, instance=profile)
-    if form.is_valid():
-        form.save()
-        updated_profile = model_to_dict(profile)
-        return JsonResponse(updated_profile, status=200)
-    else:
-        return JsonResponse(form.errors, status=400)
+    payload = request.data
+
+    updatable = [
+        "name",
+        "phone_number",
+        "address_line1",
+        "address_line2",
+        "city",
+        "postal_code",
+    ]
+
+    for field in updatable:
+        if field in payload:
+            setattr(profile, field, payload[field])
+
+    if "email" in payload:
+        request.user.email = payload["email"]
+        request.user.save()
+
+    profile.save()
+
+    out = model_to_dict(
+        profile,
+        fields=[
+            "name",
+            "phone_number",
+            "address_line1",
+            "address_line2",
+            "city",
+            "postal_code",
+        ],
+    )
+    out["username"] = request.user.username
+    out["email"] = request.user.email
+
+    return Response(out, status=status.HTTP_200_OK)
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

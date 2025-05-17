@@ -37,7 +37,11 @@ interface ProfileData {
   username: string;
   name: string;
   email: string;
-  address: string;
+  phoneNumber: string;
+  addressLine1: string;
+  addressLine2: string;
+  city:        string;
+  postalCode:  string;
 }
 
 interface Order {
@@ -310,7 +314,11 @@ const ProfilePage: React.FC = () => {
     username: "",
     name: "",
     email: "",
-    address: "",
+    phoneNumber: "",
+    addressLine1: "",
+    addressLine2: "",
+    city:        "",
+    postalCode:  "",
   });
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -340,7 +348,16 @@ const ProfilePage: React.FC = () => {
           });
           if (response.ok) {
             const data = await response.json();
-            setProfileData(data);
+            setProfileData({
+              username:     data.username,
+              name:         data.name         || "",
+              email:        data.email        || "",
+              phoneNumber:  data.phone_number || "",
+              addressLine1: data.address_line1 || "",
+              addressLine2: data.address_line2 || "",
+              city:         data.city         || "",
+              postalCode:   data.postal_code  || "",
+            });
           } else {
             console.error("Failed to fetch profile data:", response.statusText);
           }
@@ -377,7 +394,11 @@ const ProfilePage: React.FC = () => {
         body: JSON.stringify({
           name: profileData.name,
           email: profileData.email,
-          address: profileData.address,
+          phone_number:  profileData.phoneNumber,
+          address_line1: profileData.addressLine1,
+          address_line2: profileData.addressLine2,
+          city:          profileData.city,
+          postal_code:   profileData.postalCode,
         }),
       });
       if (response.ok) {
@@ -591,11 +612,43 @@ const ProfilePage: React.FC = () => {
                   onChange={handleInputChange}
                 />
                 <TextField
-                  label="Address"
-                  name="address"
+                  label="Phone Number"
+                  name="phoneNumber"
                   fullWidth
                   variant="outlined"
-                  value={profileData.address}
+                  value={profileData.phoneNumber}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  label="Address Line 1"
+                  name="addressLine1"
+                  fullWidth
+                  variant="outlined"
+                  value={profileData.addressLine1}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  label="Address Line 2"
+                  name="addressLine2"
+                  fullWidth
+                  variant="outlined"
+                  value={profileData.addressLine2}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  label="City"
+                  name="city"
+                  fullWidth
+                  variant="outlined"
+                  value={profileData.city}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  label="Postal Code"
+                  name="postalCode"
+                  fullWidth
+                  variant="outlined"
+                  value={profileData.postalCode}
                   onChange={handleInputChange}
                 />
               </Box>
@@ -635,12 +688,52 @@ const ProfilePage: React.FC = () => {
                 </Grid>
                 <Grid item xs={4}>
                   <Typography color="text.secondary" variant="body1">
-                    Address:
+                    Phone Number:
                   </Typography>
                 </Grid>
                 <Grid item xs={8}>
                   <Typography fontWeight="medium" variant="body1">
-                    {profileData.address || "(NOT SET)"}
+                    {profileData.phoneNumber || "(NOT SET)"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={4}>
+                  <Typography color="text.secondary" variant="body1">
+                    Address Line 1:
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Typography fontWeight="medium" variant="body1">
+                    {profileData.addressLine1 || "(NOT SET)"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={4}>
+                  <Typography color="text.secondary" variant="body1">
+                    Address Line 2:
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Typography fontWeight="medium" variant="body1">
+                    {profileData.addressLine2 || "(NOT SET)"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={4}>
+                  <Typography color="text.secondary" variant="body1">
+                    City:
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Typography fontWeight="medium" variant="body1">
+                    {profileData.city || "(NOT SET)"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={4}>
+                  <Typography color="text.secondary" variant="body1">
+                    Postal Code:
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Typography fontWeight="medium" variant="body1">
+                    {profileData.postalCode || "(NOT SET)"}
                   </Typography>
                 </Grid>
               </Grid>

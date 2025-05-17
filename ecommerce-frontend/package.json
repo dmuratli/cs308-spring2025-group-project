@@ -3,6 +3,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.4.11",
-    "react-router-dom": "^7.5.0"
+    "react-router-dom": "^7.5.0",
+    "recharts": "^2.15.3"
   }
 }

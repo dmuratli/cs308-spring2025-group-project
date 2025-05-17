@@ -79,7 +79,17 @@ class PlaceOrderView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        order = Order.objects.create(user=request.user, total_price=0)
+        order = Order.objects.create(
+            user=request.user,
+            total_price=0,
+            shipping_full_name     = request.user.profile.name,
+            shipping_phone_number  = request.user.profile.phone_number,
+            shipping_address_line1 = request.user.profile.address_line1,
+            shipping_address_line2 = request.user.profile.address_line2,
+            shipping_city          = request.user.profile.city,
+            shipping_postal_code   = request.user.profile.postal_code,
+        )
+        
         total = Decimal("0")
         for item in cart.items.all():
             OrderItem.objects.create(

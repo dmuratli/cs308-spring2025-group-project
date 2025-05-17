@@ -34,12 +34,13 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id',
-            'customer',
-            'items',
-            'total',
-            'status',
-            'created_at',
+            'id', 'customer', 'items', 'total', 'status', 'created_at',
+            'shipping_full_name',
+            'shipping_phone_number',
+            'shipping_address_line1',
+            'shipping_address_line2',
+            'shipping_city',
+            'shipping_postal_code',
         ]
 
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):

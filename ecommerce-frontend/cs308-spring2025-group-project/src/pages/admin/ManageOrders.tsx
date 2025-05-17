@@ -20,6 +20,10 @@ interface Order {
   customer:  string;
   total:     string;
   status:    string;
+  shipping_address_line1?: string;
+  shipping_address_line2?: string;
+  shipping_city?:          string;
+  shipping_postal_code?:   string;
 }
 
 const validTransitions: Record<string, string[]> = {
@@ -53,9 +57,14 @@ const ManageOrders: React.FC = () => {
       .then((data: any[]) => {
         const formatted: Order[] = data.map((o) => ({
           id:       o.id,
-          customer: o.customer,                                   // use API’s customer.username
-          total:    `$${parseFloat(o.total as string).toFixed(2)}`, 
+          customer: o.customer,
+          total:    `$${parseFloat(o.total as string).toFixed(2)}`,
           status:   o.status,
+          // map the shipping fields from the API response
+          shipping_address_line1: o.shipping_address_line1,
+          shipping_address_line2: o.shipping_address_line2,
+          shipping_city:          o.shipping_city,
+          shipping_postal_code:   o.shipping_postal_code,
         }));
         setOrders(formatted);
       })
@@ -127,6 +136,7 @@ const ManageOrders: React.FC = () => {
               <TableCell>Customer</TableCell>
               <TableCell>Total</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Shipping Address</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -154,7 +164,13 @@ const ManageOrders: React.FC = () => {
                     ))}
                   </Select>
                 </TableCell>
-
+                <TableCell>
+                  {order.shipping_address_line1}<br/>
+                  {order.shipping_address_line2 && (
+                    <>{order.shipping_address_line2}<br/></>
+                  )}
+                  {order.shipping_city}, {order.shipping_postal_code}
+                </TableCell>
                 <TableCell>
                   <IconButton
                     color="error"
