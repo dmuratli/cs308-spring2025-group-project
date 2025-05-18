@@ -3,7 +3,7 @@ from django.utils import timezone, dateparse
 from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import F, Sum
-
+from datetime import timedelta
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
@@ -266,7 +266,8 @@ class CreateRefundRequestView(APIView):
         ).first()
         if not oi:
             return Response({"error": "Item not found or not delivered."}, status=status.HTTP_404_NOT_FOUND)
-
+        if timezone.now() - oi.order.created_at > timedelta(days=30):
+             return Response({"error": "Refund window expired."}, status=status.HTTP_400_BAD_REQUEST)
         qty = serializer.validated_data['quantity']
         if qty > oi.refundable_quantity():
             return Response({"error": "Exceeds refundable quantity."}, status=status.HTTP_400_BAD_REQUEST)

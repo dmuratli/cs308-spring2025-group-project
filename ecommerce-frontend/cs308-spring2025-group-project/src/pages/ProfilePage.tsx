@@ -56,6 +56,7 @@ interface Order {
   products: string;
   refund_status?: string;
   refund_updated_at?: string;
+   displayDate?: string;
 }
 
 // --- Animations & Styled Components --- //
@@ -192,7 +193,7 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalO
             {order.products || `Order #${order.id}`}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {order.date}
+             {order.displayDate}
           </Typography>
         </Box>
       }
@@ -201,7 +202,7 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalO
           <Typography variant="body2" fontWeight="medium">
             Total: {order.total}
           </Typography>
-          {order.status === "Delivered" && (
+          {order.status === "Delivered" && new Date(order.date) >= new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) && (
             <Button
               variant="outlined"
               color="secondary"
@@ -429,9 +430,17 @@ const ProfilePage: React.FC = () => {
       .then((data: any[]) => {
         const list = data.map(o => {
           const displayStatus = o.status === "Shipped" ? "In Transit" : o.status;
+          const createdAtDate = new Date(o.created_at);
           return {
             id:    o.id,
-            date:  new Date(o.created_at).toLocaleDateString(),
+            date: o.created_at,
+            displayDate: createdAtDate.toLocaleString("en-US", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
             total: `$${parseFloat(o.total as string).toFixed(2)}`,
             status: displayStatus,
             products: (o.items as any[])
