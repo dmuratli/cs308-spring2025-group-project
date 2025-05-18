@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework import status, permissions
 from rest_framework.exceptions import PermissionDenied
-
+from datetime import timedelta
 from users.permissions import IsProductManager, IsSalesManager
 from cart.models import Cart
 from admin_panel.models import Product
@@ -266,7 +266,8 @@ class CreateRefundRequestView(APIView):
         ).first()
         if not oi:
             return Response({"error": "Item not found or not delivered."}, status=status.HTTP_404_NOT_FOUND)
-
+        if timezone.now() - oi.order.created_at > timedelta(days=30):
+            return Response({"error": "Refund period has expired."}, status=status.HTTP_400_BAD_REQUEST)
         qty = serializer.validated_data['quantity']
         if qty > oi.refundable_quantity():
             return Response({"error": "Exceeds refundable quantity."}, status=status.HTTP_400_BAD_REQUEST)

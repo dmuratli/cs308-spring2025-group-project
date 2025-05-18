@@ -201,20 +201,20 @@ const OrderItem: React.FC<OrderItemProps> = React.memo(({ order, setRefundModalO
           <Typography variant="body2" fontWeight="medium">
             Total: {order.total}
           </Typography>
-          {order.status === "Delivered" && (
+          {order.status === "Delivered" && new Date(order.date) >= new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) && (
             <Button
               variant="outlined"
               color="secondary"
               size="small"
               onClick={() => {
-                setSelectedOrderId(order.id);
-                setRefundModalOpen(true);
-              }}
-              sx={{ width: "fit-content", textTransform: "none" }}
-            >
-              Request Refund
-            </Button>
-          )}
+              setSelectedOrderId(order.id);
+              setRefundModalOpen(true);
+          }}
+    sx={{ width: "fit-content", textTransform: "none" }}
+  >
+    Request Refund
+  </Button>
+)}
           {order.status === "Processing" && (
           <Button
             variant="outlined"
