@@ -27,6 +27,10 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import { useWishlist } from "../context/WishlistContext";
 import { styled } from "@mui/material/styles";
 
+// <───✨ EKLENDİ
+const LogoMotion = motion.div;
+// ────────────────────────────────
+
 // --- STYLED ICONS --- //
 const SoftIconButton = styled(IconButton)(({ theme }) => ({
   background: "#FFF6F0",
@@ -73,25 +77,15 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
     const token = localStorage.getItem("access_token");
-    if (!token) {
-      console.warn("No token found in localStorage");
-      return;
-    }
+    if (!token) return;
 
     axios
       .get("http://127.0.0.1:8000/api/user-info/", {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => {
-        const fetched = res.data.roles.map((r: string) => r.toLowerCase());
-        setRoles(fetched);
-      })
-      .catch((err) => {
-        console.error("user-info failed", err);
-        setRoles([]);
-      });
+      .then((res) => setRoles(res.data.roles.map((r: string) => r.toLowerCase())))
+      .catch(() => setRoles([]));
   }, [isAuthenticated]);
-
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -149,21 +143,31 @@ const Navbar: React.FC = () => {
             alt="AxoReads"
             sx={{ height: 70, pointerEvents: "none" }}
           />
-          <Typography
-            variant="h5"
-            sx={{
-              background: gradientBg,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              fontFamily: "'Poppins', sans-serif",
-              fontWeight: 800,
-              letterSpacing: "0.08em",
-              fontSize: { xs: "1.25rem", sm: "1.5rem" },
-              pointerEvents: "none",
-            }}
+
+          {/* ───── ANİMASYONLU LOGO METNİ ───── */}
+          <LogoMotion
+            initial={{ y: 0 }}
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            whileHover={{ scale: 1.05 }}
           >
-            AxoReads
-          </Typography>
+            <Typography
+              variant="h5"
+              sx={{
+                background: gradientBg,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 800,
+                letterSpacing: "0.08em",
+                fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                pointerEvents: "none",
+              }}
+            >
+              AxoReads
+            </Typography>
+          </LogoMotion>
+          {/* ─────────────────────────────── */}
         </Box>
 
         {/* Search Bar */}
@@ -255,9 +259,7 @@ const Navbar: React.FC = () => {
             </>
           ) : (
             <>
-              <SoftIconButton
-                onClick={(e) => setAnchorEl(e.currentTarget)}
-              >
+              <SoftIconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
                 <AccountCircleIcon sx={{ fontSize: 30, color: "#FFA559" }} />
               </SoftIconButton>
 
