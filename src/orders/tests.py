@@ -1,7 +1,8 @@
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from admin_panel.models import Product
+from admin_panel.models import Genre, Product
+from datetime import date
 from cart.models import Cart, CartItem
 from orders.models import Order, OrderItem
 from rest_framework import status
@@ -21,18 +22,20 @@ class OrderTests(APITestCase):
         pm_group, _ = Group.objects.get_or_create(name="product manager")
         self.pm_user.groups.add(pm_group)
 
+        self.genre, _ = Genre.objects.get_or_create(name="Fiction")  # ✅ Create Genre object
+
         self.product = Product.objects.create(
             title="Test Book",
-            price=100.00,
-            stock=5,
-            isbn="1234567890123",
-            genre="Fiction",
-            description="A great test book",
-            publisher="TestPub",
-            publication_date="2025-01-01",
+            author="Author",
+            price=Decimal("50.00"),
+            stock=10,
+            genre=self.genre,  # ✅ Pass actual instance
+            isbn="1234567890",
+            description="A test book.",
+            publisher="Test Publisher",
+            publication_date=date.today(),
             pages=100,
-            language="EN",
-            slug="test-book"
+            language="English",
         )
 
         self.client_user = APIClient()
@@ -147,12 +150,14 @@ class RefundRequestsTestCase(APITestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.customer)
 
+        self.genre, _ = Genre.objects.get_or_create(name="Fiction")
+
         # 4) Seed a valid Product (all non-null fields)
         self.prod = Product.objects.create(
             title="Book",
             slug="book",
             isbn="0000000000000",
-            genre="Test",
+            genre= self.genre,
             description="A test book",
             publisher="TestPub",
             publication_date="2025-01-01",

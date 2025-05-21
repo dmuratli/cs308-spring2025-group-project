@@ -5,8 +5,9 @@ from users.models import Profile
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from decimal import Decimal
+from datetime import date
 
-from admin_panel.models import Product
+from admin_panel.models import Product, Genre
 from cart.models import Cart, CartItem
 from orders.models import Order, OrderItem, Refund
 
@@ -75,12 +76,21 @@ class UserViewsTests(APITestCase):
         self.client = APIClient()
         self.client.login(username="alice", password="pass")
 
+        self.genre, _ = Genre.objects.get_or_create(name="Fiction")
+
         # 2) Create a product with stock=10
         self.prod = Product.objects.create(
-            title="The Great Gatsby",
-            slug="great-gatsby",
-            price=Decimal("20.00"),
-            stock=10
+            title="Sample Book",
+            author="Test Author",
+            price=20,
+            stock=10,
+            genre=self.genre,
+            isbn="1234567890",
+            description="Test book description",
+            publisher="Test Publisher",
+            publication_date=date.today(),  # ✅ This is what you were missing
+            pages=100,
+            language="English",
         )
 
         # 3) Create an active cart with 3 copies
