@@ -370,16 +370,22 @@ const ProductPage: React.FC = () => {
                     buttonText={product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                   />
                 </CardContent>
-                <CardActions sx={{ justifyContent: "center", pb: 2 }}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="secondary"
-                    startIcon={<FavoriteBorderIcon />}
-                  >
-                    Wishlist
-                  </Button>
-                </CardActions>
+                  <CardActions sx={{ justifyContent: "center", pb: 2 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="secondary"
+                      startIcon={<FavoriteBorderIcon />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        axios.post("/api/wishlist/add/", { product_id: product.id }).then(() => {
+                          alert(`${product.title} added to wishlist!`);
+                        });
+                      }}
+                    >
+                      Wishlist
+                    </Button>
+                  </CardActions>
               </Card>
             </Grid>
           ))}
