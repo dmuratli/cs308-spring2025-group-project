@@ -2,7 +2,7 @@ from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from orders.models import Order, OrderItem
-from admin_panel.models import Product
+from admin_panel.models import Product, Genre
 from payment.models import Transaction
 from unittest.mock import patch
 from datetime import datetime, timedelta
@@ -15,10 +15,12 @@ class PaymentViewsTests(APITestCase):
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
+        self.genre, _ = Genre.objects.get_or_create(name="Genre")
+
         # Create product
         self.product = Product.objects.create(
             title="Book A", author="Author", price=20, stock=5,
-            isbn="1111111111111", genre="Genre", description="Desc",
+            isbn="1111111111111", genre=self.genre, description="Desc",
             publisher="Pub", publication_date="2025-01-01",
             pages=100, language="EN", slug="book-a"
         )
