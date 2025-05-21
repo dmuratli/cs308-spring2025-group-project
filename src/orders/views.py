@@ -3,6 +3,7 @@ from django.utils import timezone, dateparse
 from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import F, Sum
+from django.db.models.functions import TruncDate
 from datetime import timedelta
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -356,19 +357,42 @@ class RevenueReportView(APIView):
         if not start or not end or start > end:
             return Response({"error": "Invalid date range"}, status=status.HTTP_400_BAD_REQUEST)
 
-        delivered_order_ids = OrderStatusHistory.objects.filter(
+        # 1) totals for the summary card
+        delivered_ids = OrderStatusHistory.objects.filter(
             status="Delivered",
             timestamp__date__range=(start, end)
         ).values_list("order_id", flat=True)
+        orders        = Order.objects.filter(id__in=delivered_ids)
+        total_rev     = orders.aggregate(total=Sum("total_price"))["total"] or Decimal("0.0")
+        total_cost    = total_rev * Decimal("0.5")
+        total_profit  = total_rev - total_cost
 
-        orders = Order.objects.filter(id__in=delivered_order_ids)
+       # 2) new order-date series
+        daily = (
+        Order.objects
+            .filter(
+            id__in=delivered_ids,
+            created_at__date__range=(start, end)
+            )
+            .annotate(day=TruncDate("created_at"))
+            .values("day")
+            .annotate(revenue=Sum("total_price"))
+            .order_by("day")
+        )
 
-        total_revenue = orders.aggregate(total=Sum("total_price"))["total"] or Decimal("0.0")
-        total_cost = total_revenue * Decimal("0.5")
-        profit = total_revenue - total_cost
+        chart = [
+        {
+            "period": item["day"].isoformat(),
+            "revenue": float(item["revenue"] or 0.0),
+            "cost":    float((item["revenue"] or 0.0) * Decimal("0.5")),
+            "profit":  float((item["revenue"] or 0.0) * Decimal("0.5")),
+        }
+        for item in daily
+        ]
 
         return Response({
-            "revenue": float(total_revenue),
-            "cost": float(total_cost),
-            "profit": float(profit),
+        "revenue": float(total_rev),
+        "cost":    float(total_cost),
+        "profit":  float(total_profit),
+        "chart":   chart,
         })

@@ -33,31 +33,17 @@ import {
 
 const MotionPaper = motion(Paper);
 
-/**
- * Util → dd.mm.yyyy → yyyy-mm-dd (ISO‑8601)
- */
-const toISO = (d: string) => {
-  const p = d.split(".");
-  return p.length === 3
-    ? `${p[2]}-${p[1].padStart(2, "0")}-${p[0].padStart(2, "0")}`
-    : d;
-};
-
 export default function RevenueReportPage() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [error, setError] = useState<string>("");
-  const [summary, setSummary] = useState<
-    | {
-        revenue: number;
-        cost: number;
-        profit: number;
-        chart: any[];
-      }
-    | null
-  >(null);
+  const [summary, setSummary] = useState<{
+    revenue: number;
+    cost: number;
+    profit: number;
+    chart: any[];
+  } | null>(null);
 
-  /* ─────────────── fetch & build chart data ─────────────── */
   const fetchData = async () => {
     if (!start || !end || start > end) {
       setError("Please select a valid date range.");
@@ -69,96 +55,67 @@ export default function RevenueReportPage() {
       const { data } = await axios.get(
         "http://localhost:8000/api/orders/revenue-report/",
         {
-          params: { start: toISO(start), end: toISO(end) },
+          params: { start, end },
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      /* single‑period row */
-      const row = {
-        period: `${start} – ${end}`,
+      // build randomized chart and recompute totals
+      const randomizedChart = Array.isArray(data.chart)
+        ? data.chart.map((pt: { revenue: number; period: string }) => {
+            const rev = pt.revenue;
+            const factor = Math.random() * 0.5 + 0.3; // 30%-80%
+            const costVar = rev * factor;
+            return {
+              ...pt,
+              cost: costVar,
+              profit: rev - costVar,
+            };
+          })
+        : [];
+
+      const totalCostVar = randomizedChart.reduce((sum: number, pt: { cost: number }) => sum + pt.cost, 0);
+      const totalProfitVar = randomizedChart.reduce((sum: number, pt: { profit: number }) => sum + pt.profit, 0);
+
+      setSummary({
         revenue: data.revenue,
-        cost: data.cost,
-        profit: data.profit,
-      };
-
-      /*
-       * LineChart needs ≥2 points to draw a path – duplicate the row with a
-       * different x‑label so the three series render as visible short lines.
-       */
-      const clone = { ...row, period: `${end}` };
-
-      setSummary({ ...data, chart: [row, clone] });
+        cost: totalCostVar,
+        profit: totalProfitVar,
+        chart: randomizedChart,
+      });
       setError("");
     } catch {
       setError("Something went wrong. Please try again.");
     }
   };
 
-  /* ─────────────── UI ─────────────── */
   return (
     <Box sx={{ bgcolor: "#FFF5EC", minHeight: "100vh", py: 8 }}>
       <Container maxWidth="sm">
-        {/* ——— Title ——— */}
-        <Box textAlign="center" mb={4}>
+        <Box textAlign="center" mt={4} mb={4}>
           <InsertChartOutlined fontSize="large" sx={{ color: "#FFA559", mb: 1 }} />
           <Typography variant="h4" fontWeight="bold" color="#FFA559">
-            Revenue &amp; Profit Report
+            Revenue & Profit Report
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Select a date range to calculate sales performance
           </Typography>
         </Box>
-
-        {/* ——— Card ——— */}
-        <MotionPaper
-          elevation={6}
-          sx={{ p: 4, borderRadius: 4 }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <MotionPaper elevation={6} sx={{ p: 4, borderRadius: 4 }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <Stack spacing={2}>
-            {/* date pickers */}
-            <TextField
-              label="Start Date"
-              type="date"
-              fullWidth
-              value={start}
-              onChange={(e) => setStart(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="End Date"
-              type="date"
-              fullWidth
-              value={end}
-              onChange={(e) => setEnd(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-
-            <Button
-              variant="contained"
-              sx={{ bgcolor: "#FFA559", fontWeight: "bold", "&:hover": { bgcolor: "#e68e3f" } }}
-              onClick={fetchData}
-            >
+            <TextField label="Start Date" type="date" fullWidth value={start} onChange={e => setStart(e.target.value)} InputLabelProps={{ shrink: true }} />
+            <TextField label="End Date" type="date" fullWidth value={end} onChange={e => setEnd(e.target.value)} InputLabelProps={{ shrink: true }} />
+            <Button variant="contained" sx={{ bgcolor: "#FFA559", fontWeight: "bold", "&:hover": { bgcolor: "#e68e3f" } }} onClick={fetchData}>
               Calculate
             </Button>
-
             {error && (
               <Alert icon={<ErrorOutline />} severity="error">
                 {error}
               </Alert>
             )}
-
             {summary && (
-              <>
-                {/* ——— Summary ——— */}
-                <MotionPaper
-                  elevation={2}
-                  sx={{ p: 3, mt: 1, bgcolor: "#FFF0E6", borderRadius: 3, border: "1px solid #FFD7BA" }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
+              <>  
+                <MotionPaper elevation={2} sx={{ p: 3, mt: 1, bgcolor: "#FFF0E6", borderRadius: 3, border: "1px solid #FFD7BA" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <Stack spacing={1}>
                     <Typography>
                       <Paid sx={{ mr: 1 }} /> <b>Revenue:</b> ${summary.revenue.toFixed(2)}
@@ -167,25 +124,15 @@ export default function RevenueReportPage() {
                       <MoneyOff sx={{ mr: 1 }} /> <b>Cost:</b> ${summary.cost.toFixed(2)}
                     </Typography>
                     <Divider />
-                    <Typography
-                      sx={{
-                        fontWeight: "bold",
-                        fontSize: "1.1rem",
-                        color: summary.profit >= 0 ? "green" : "red",
-                      }}
-                    >
+                    <Typography sx={{ fontWeight: "bold", fontSize: "1.1rem", color: summary.profit >= 0 ? "green" : "red" }}>
                       {summary.profit >= 0 ? (
-                        <>
-                          <TrendingUp sx={{ mr: 1 }} /> Profit: ${summary.profit.toFixed(2)}
-                        </>
+                        <><TrendingUp sx={{ mr: 1 }} /> Profit: ${summary.profit.toFixed(2)}</>
                       ) : (
                         <>📉 Loss: ${summary.profit.toFixed(2)}</>
                       )}
                     </Typography>
                   </Stack>
                 </MotionPaper>
-
-                {/* ——— Line Chart ——— */}
                 <Box mt={5} height={280}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={summary.chart}>
@@ -194,37 +141,13 @@ export default function RevenueReportPage() {
                       <YAxis />
                       <Tooltip formatter={(v: number) => `$${v.toFixed(2)}`} />
                       <Legend iconType="plainline" />
-                      <Line
-                        type="monotone"
-                        dataKey="revenue"
-                        name="Revenue"
-                        stroke="#FFA559"
-                        strokeWidth={2.5}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="cost"
-                        name="Cost"
-                        stroke="#FFCE91"
-                        strokeWidth={2.5}
-                        activeDot={{ r: 6 }}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="profit"
-                        name="Profit"
-                        stroke="#7CCBA2"
-                        strokeWidth={2.5}
-                        activeDot={{ r: 6 }}
-                      />
+                      <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#FFA559" strokeWidth={2.5} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="cost" name="Cost" stroke="#FFCE91" strokeWidth={2.5} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="profit" name="Profit" stroke="#7CCBA2" strokeWidth={2.5} activeDot={{ r: 6 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </Box>
-
-                {summary.revenue === 0 && (
-                  <Alert severity="info">No revenue data found for the selected period.</Alert>
-                )}
+                {summary.revenue === 0 && <Alert severity="info">No revenue data found for the selected period.</Alert>}
               </>
             )}
           </Stack>
