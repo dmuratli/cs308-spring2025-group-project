@@ -24,8 +24,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import AddToCartButton from "../components/AddToCartButton";
 import axios from "axios";
+import { useWishlist } from "../context/WishlistContext";
 
 interface Product {
   id: number;
@@ -64,6 +66,7 @@ const ProductPage: React.FC = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
 
   const navigate = useNavigate();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   useEffect(() => {
     // fetch products
@@ -286,110 +289,113 @@ const ProductPage: React.FC = () => {
         </Paper>
 
         <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
-          {sortedProducts().map((product, idx) => (
-            <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
-              <Card
+  {sortedProducts().map((product, idx) => {
+    const inWishlist = isInWishlist(product.id);
+    return (
+      <Grid item key={product.id} xs={12} sm={6} md={4} lg={3}>
+        <Card
+          sx={{
+            boxShadow: 5,
+            borderRadius: 3,
+            cursor: "pointer",
+            position: "relative",
+            transition: "transform 0.3s, box-shadow 0.3s",
+            "&:hover": {
+              transform: "scale(1.02)",
+              boxShadow: "0 0 15px 4px #EF977F",
+            },
+            "&:hover .product-image": {
+              transform: "scale(1.05)",
+            },
+          }}
+          onClick={() => navigate(formatUrl(product.title, product.author))}
+        >
+          <Box sx={{ position: "relative" }}>
+            <CardMedia
+              component="img"
+              className="product-image"
+              image={product.cover_image || "https://via.placeholder.com/250"}
+              alt={product.title}
+              sx={{
+                width: "100%",
+                height: { xs: 200, sm: 250 },
+                objectFit: "cover",
+                borderRadius: "8px 8px 0 0",
+                transition: "transform 0.3s",
+              }}
+            />
+            {product.stock === 0 && (
+              <Box
                 sx={{
-                  boxShadow: 5,
-                  borderRadius: 3,
-                  cursor: "pointer",
-                  position: "relative",
-                  transition: "transform 0.3s, box-shadow 0.3s",
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    boxShadow: "0 0 15px 4px #EF977F",
-                  },
-                  "&:hover .product-image": {
-                    transform: "scale(1.05)",
-                  },
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  bgcolor: "rgba(0, 0, 0, 0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  borderRadius: "8px 8px 0 0",
                 }}
-                onClick={() => navigate(formatUrl(product.title, product.author))}
               >
-                <Box sx={{ position: "relative" }}>
-                  <CardMedia
-                    component="img"
-                    className="product-image"
-                    image={product.cover_image || "https://via.placeholder.com/250"} 
-                    alt={product.title}
-                    sx={{
-                      width: "100%",
-                      height: { xs: 200, sm: 250 },
-                      objectFit: "cover",
-                      borderRadius: "8px 8px 0 0",
-                      transition: "transform 0.3s",
-                    }}
-                  />
-                  {product.stock === 0 && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        bgcolor: "rgba(0, 0, 0, 0.5)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontSize: "1.5rem",
-                        fontWeight: "bold",
-                        borderRadius: "8px 8px 0 0",
-                      }}
-                    >
-                      Out of Stock
-                    </Box>
-                  )}
-                </Box>
-                <CardContent sx={{ textAlign: "center", p: 2 }}>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {product.title}
-                  </Typography>
-                  <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
-                    by {product.author}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    {product.genre_name} | {product.language}
-                  </Typography>
-                  {product.canRate ? (
-                    <Rating
-                      name={`rating-${idx}`}
-                      value={product.rating}
-                      onChange={(_, v) => handleRatingChange(idx, v)}
-                    />
-                  ) : (
-                    <Rating name={`rating-${idx}`} value={product.rating} readOnly />
-                  )}
-                  <Typography variant="h6" color="primary" mt={2}>
-                    ${product.price}
-                  </Typography>
-                  <AddToCartButton
-                    productId={product.id}
-                    fullWidth
-                    disabled={product.stock === 0}
-                    buttonText={product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                  />
-                </CardContent>
-                  <CardActions sx={{ justifyContent: "center", pb: 2 }}>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="secondary"
-                      startIcon={<FavoriteBorderIcon />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        axios.post("/api/wishlist/add/", { product_id: product.id }).then(() => {
-                          alert(`${product.title} added to wishlist!`);
-                        });
-                      }}
-                    >
-                      Wishlist
-                    </Button>
-                  </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                Out of Stock
+              </Box>
+            )}
+          </Box>
+          <CardContent sx={{ textAlign: "center", p: 2 }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              {product.title}
+            </Typography>
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+              by {product.author}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {product.genre_name} | {product.language}
+            </Typography>
+            {product.canRate ? (
+              <Rating
+                name={`rating-${idx}`}
+                value={product.rating}
+                onChange={(_, v) => handleRatingChange(idx, v)}
+              />
+            ) : (
+              <Rating name={`rating-${idx}`} value={product.rating} readOnly />
+            )}
+            <Typography variant="h6" color="primary" mt={2}>
+              ${product.price}
+            </Typography>
+            <AddToCartButton
+              productId={product.id}
+              fullWidth
+              disabled={product.stock === 0}
+              buttonText={product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+            />
+          </CardContent>
+          <CardActions sx={{ justifyContent: "center", pb: 2 }}>
+            <Button
+              size="small"
+              variant={inWishlist ? "contained" : "outlined"}
+              color="secondary"
+              startIcon={inWishlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (inWishlist) removeFromWishlist(product.id);
+                else addToWishlist(product.id);
+              }}
+            >
+              {inWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+            </Button>
+          </CardActions>
+        </Card>
+      </Grid>
+    );
+  })}
+</Grid>
+
       </Container>
     </Box>
   );
