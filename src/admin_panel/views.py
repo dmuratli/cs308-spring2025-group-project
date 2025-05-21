@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils.dateparse import parse_datetime
 from rest_framework.parsers import JSONParser
 
 from .models import Product, User
@@ -16,6 +17,8 @@ from orders.serializers import OrderSerializer
 from cart.models import Cart
 
 from users.permissions import IsProductManager, IsSalesManager, IsCustomer, IsProductManagerOrSalesManager
+
+from decimal import Decimal
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ProductViewSet(viewsets.ModelViewSet):
@@ -39,6 +42,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         "partial_update": [permissions.IsAuthenticated, IsProductManager],
         "destroy":    [permissions.IsAuthenticated, IsProductManager],
         "adjust_stock": [permissions.IsAuthenticated, IsProductManager],
+        "apply_discount": [permissions.IsAuthenticated, IsSalesManager],
+
     }
 
     def get_permissions(self):
@@ -111,3 +116,29 @@ def product_detail_by_slug(request, slug):
     product = get_object_or_404(Product, slug=slug)
     serializer = ProductSerializer(product)
     return Response(serializer.data)
+
+
+
+@action(detail=False, methods = ['post'], permission_classes = [IsAuthenticated])
+def apply_discount(self, request):
+        """
+        Payload: {
+          "product_ids": [1,2,3],
+          "discount_rate": 0.15,
+          "start": "2025-05-01T00:00:00Z",
+          "end":   "2025-05-07T23:59:59Z"
+        }
+        """
+        ids = request.data.get('product_ids', [])
+        rate = Decimal(request.data.get('discount_rate', 0))
+        start = parse_datetime(request.data.get('start'))
+        end   = parse_datetime(request.data.get('end'))
+        updated = Product.objects.filter(id__in=ids).update(
+            discount_rate=rate,
+            discount_start=start,
+            discount_end=end
+        )
+        return Response(
+            {"updated": updated},
+            status=status.HTTP_200_OK
+        )

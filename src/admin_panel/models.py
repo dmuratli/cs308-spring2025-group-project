@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
-
+from django.utils import timezone
 # Create your models here.
 
 # Order Model
@@ -46,6 +46,31 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(unique=True, blank=True)
     ordered_number = models.PositiveIntegerField(default=0)
+
+    discount_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0.00,
+        help_text="Discount rate as a percentage (0-100)"
+    )
+    discount_start = models.DateTimeField(null=True, blank=True)
+    discount_end = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def is_discount_active(self):
+        now = timezone.now()
+        return (
+            self.discount_rate > 0 and
+            self.discount_start and self.discount_end and
+            self.discount_start <= now <= self.discount_end
+        )
+    
+    @property
+    def current_price(self):
+        if self.is_discount_active:
+            return self.price * (1 - self.discount_rate / 100)
+        return self.price
+
 
     def decrease_stock(self, quantity):
         if quantity > self.stock:
