@@ -1,322 +1,235 @@
+// src/pages/admin/RevenueReportPage.tsx
 import React, { useState } from "react";
 import {
   Box,
+  Container,
+  Stack,
+  Paper,
   Typography,
   TextField,
   Button,
-  Paper,
-  Container,
-  Stack,
   Alert,
   Divider,
 } from "@mui/material";
+import {
+  InsertChartOutlined,
+  Paid,
+  MoneyOff,
+  TrendingUp,
+  ErrorOutline,
+} from "@mui/icons-material";
 import { motion } from "framer-motion";
 import axios from "axios";
-import {
-  TrendingUp,
-  MoneyOff,
-  Paid,
-  ErrorOutline,
-  InsertChartOutlined,
-} from "@mui/icons-material";
-
 import {
   ResponsiveContainer,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
-  Bar,
-  ComposedChart,
   Legend,
+  LineChart,
   Line,
-  PieChart,
-  Pie,
-  Cell,
-  Label,
 } from "recharts";
 
 const MotionPaper = motion(Paper);
 
-/* ------------------------------------------------------------------ */
-/* yardımcı                                                            */
-/* ------------------------------------------------------------------ */
-
-const toISODate = (dateStr: string) => {
-  const parts = dateStr.split(".");
-  if (parts.length === 3) {
-    const [day, month, year] = parts;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  }
-  return dateStr;
+/**
+ * Util → dd.mm.yyyy → yyyy-mm-dd (ISO‑8601)
+ */
+const toISO = (d: string) => {
+  const p = d.split(".");
+  return p.length === 3
+    ? `${p[2]}-${p[1].padStart(2, "0")}-${p[0].padStart(2, "0")}`
+    : d;
 };
 
-interface ChartDatum {
-  name: string;
-  value: number;
-  amt?: number; // çizgi için
-}
+export default function RevenueReportPage() {
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [error, setError] = useState<string>("");
+  const [summary, setSummary] = useState<
+    | {
+        revenue: number;
+        cost: number;
+        profit: number;
+        chart: any[];
+      }
+    | null
+  >(null);
 
-const COLORS = ["#FFA559", "#FFCE91", "#7CCBA2"]; // pie paleti
-
-/* ------------------------------------------------------------------ */
-/* sayfa                                                               */
-/* ------------------------------------------------------------------ */
-
-const RevenueReportPage: React.FC = () => {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [result, setResult] = useState<{
-    revenue: number;
-    cost: number;
-    profit: number;
-    chart: ChartDatum[];
-  } | null>(null);
-  const [error, setError] = useState("");
-
-  /* -------------------------------------------------------------- */
-  /* istek --------------------------------------------------------- */
-  /* -------------------------------------------------------------- */
-  const handleCalculate = async () => {
-    if (!startDate || !endDate || startDate > endDate) {
+  /* ─────────────── fetch & build chart data ─────────────── */
+  const fetchData = async () => {
+    if (!start || !end || start > end) {
       setError("Please select a valid date range.");
-      setResult(null);
       return;
     }
 
     try {
-      const token =
-        localStorage.getItem("access_token") ||
-        localStorage.getItem("accessToken");
-
-      const res = await axios.get(
+      const token = localStorage.getItem("access_token") || "";
+      const { data } = await axios.get(
         "http://localhost:8000/api/orders/revenue-report/",
         {
-          params: { start: toISODate(startDate), end: toISODate(endDate) },
+          params: { start: toISO(start), end: toISO(end) },
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      const chartData: ChartDatum[] = [
-        { name: "Revenue", value: res.data.revenue },
-        { name: "Cost", value: res.data.cost },
-        {
-          name: res.data.profit >= 0 ? "Profit" : "Loss",
-          value: Math.abs(res.data.profit),
-        },
-      ];
+      /* single‑period row */
+      const row = {
+        period: `${start} – ${end}`,
+        revenue: data.revenue,
+        cost: data.cost,
+        profit: data.profit,
+      };
 
-      // çizgi için ‘amt’ ekle (cumulative)
-      let cumulative = 0;
-      chartData.forEach((d) => {
-        cumulative += d.value;
-        d.amt = cumulative;
-      });
+      /*
+       * LineChart needs ≥2 points to draw a path – duplicate the row with a
+       * different x‑label so the three series render as visible short lines.
+       */
+      const clone = { ...row, period: `${end}` };
 
-      setResult({ ...res.data, chart: chartData });
+      setSummary({ ...data, chart: [row, clone] });
       setError("");
     } catch {
       setError("Something went wrong. Please try again.");
-      setResult(null);
     }
   };
 
-  /* -------------------------------------------------------------- */
-  /* render -------------------------------------------------------- */
-  /* -------------------------------------------------------------- */
+  /* ─────────────── UI ─────────────── */
   return (
-    <Box sx={{ backgroundColor: "#FFF5EC", minHeight: "100vh", py: 8 }}>
+    <Box sx={{ bgcolor: "#FFF5EC", minHeight: "100vh", py: 8 }}>
       <Container maxWidth="sm">
-        {/* başlık */}
+        {/* ——— Title ——— */}
         <Box textAlign="center" mb={4}>
           <InsertChartOutlined fontSize="large" sx={{ color: "#FFA559", mb: 1 }} />
           <Typography variant="h4" fontWeight="bold" color="#FFA559">
-            Revenue & Profit Report
+            Revenue &amp; Profit Report
           </Typography>
-          <Typography variant="body2" color="text.secondary" mt={1}>
+          <Typography variant="body2" color="text.secondary">
             Select a date range to calculate sales performance
           </Typography>
         </Box>
 
-        {/* kart */}
+        {/* ——— Card ——— */}
         <MotionPaper
           elevation={6}
+          sx={{ p: 4, borderRadius: 4 }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          whileHover={{ y: -2 }}
-          transition={{ duration: 0.45 }}
-          sx={{ p: 4, borderRadius: 4 }}
         >
           <Stack spacing={2}>
-            {/* tarih girişleri */}
+            {/* date pickers */}
             <TextField
               label="Start Date"
               type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
               fullWidth
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              InputLabelProps={{ shrink: true }}
             />
             <TextField
               label="End Date"
               type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
               fullWidth
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+              InputLabelProps={{ shrink: true }}
             />
 
-            {/* buton */}
             <Button
               variant="contained"
-              sx={{
-                backgroundColor: "#FFA559",
-                color: "#fff",
-                fontWeight: "bold",
-                "&:hover": { backgroundColor: "#e68e3f" },
-              }}
-              onClick={handleCalculate}
+              sx={{ bgcolor: "#FFA559", fontWeight: "bold", "&:hover": { bgcolor: "#e68e3f" } }}
+              onClick={fetchData}
             >
               Calculate
             </Button>
 
-            {/* hata */}
             {error && (
-              <Alert icon={<ErrorOutline fontSize="inherit" />} severity="error">
+              <Alert icon={<ErrorOutline />} severity="error">
                 {error}
               </Alert>
             )}
 
-            {/* sonuç */}
-            {result && (
+            {summary && (
               <>
-                {/* özet kutusu */}
+                {/* ——— Summary ——— */}
                 <MotionPaper
                   elevation={2}
+                  sx={{ p: 3, mt: 1, bgcolor: "#FFF0E6", borderRadius: 3, border: "1px solid #FFD7BA" }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  sx={{
-                    mt: 1,
-                    p: 3,
-                    backgroundColor: "#FFF0E6",
-                    borderRadius: 3,
-                    border: "1px solid #FFD7BA",
-                  }}
                 >
                   <Stack spacing={1}>
                     <Typography>
-                      <Paid sx={{ verticalAlign: "middle", mr: 1 }} />
-                      <strong>Revenue:</strong> ${result.revenue.toFixed(2)}
+                      <Paid sx={{ mr: 1 }} /> <b>Revenue:</b> ${summary.revenue.toFixed(2)}
                     </Typography>
                     <Typography>
-                      <MoneyOff sx={{ verticalAlign: "middle", mr: 1 }} />
-                      <strong>Cost:</strong> ${result.cost.toFixed(2)}
+                      <MoneyOff sx={{ mr: 1 }} /> <b>Cost:</b> ${summary.cost.toFixed(2)}
                     </Typography>
                     <Divider />
                     <Typography
                       sx={{
-                        color: result.profit >= 0 ? "green" : "red",
                         fontWeight: "bold",
                         fontSize: "1.1rem",
+                        color: summary.profit >= 0 ? "green" : "red",
                       }}
                     >
-                      {result.profit >= 0 ? (
+                      {summary.profit >= 0 ? (
                         <>
-                          <TrendingUp sx={{ verticalAlign: "middle", mr: 1 }} />
-                          Profit: ${result.profit.toFixed(2)}
+                          <TrendingUp sx={{ mr: 1 }} /> Profit: ${summary.profit.toFixed(2)}
                         </>
                       ) : (
-                        <>📉 Loss: ${result.profit.toFixed(2)}</>
+                        <>📉 Loss: ${summary.profit.toFixed(2)}</>
                       )}
                     </Typography>
                   </Stack>
                 </MotionPaper>
 
-                {/* grafikler */}
-                {result.revenue > 0 && (
-                  <>
-                    {/* bar + line (composed) */}
-                    <Box mt={4} height={260}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={result.chart}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend
-                            iconType="circle"
-                            wrapperStyle={{ paddingTop: 8 }}
-                          />
-                          <Bar
-                            dataKey="value"
-                            name="Amount"
-                            fill="#FFA559"
-                            radius={[8, 8, 0, 0]}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="amt"
-                            name="Cumulative"
-                            stroke="#7CCBA2"
-                            strokeWidth={2}
-                            dot={{ r: 3 }}
-                            activeDot={{ r: 5 }}
-                          />
-                        </ComposedChart>
-                      </ResponsiveContainer>
-                    </Box>
+                {/* ——— Line Chart ——— */}
+                <Box mt={5} height={280}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={summary.chart}>
+                      <CartesianGrid strokeDasharray="4 4" />
+                      <XAxis dataKey="period" />
+                      <YAxis />
+                      <Tooltip formatter={(v: number) => `$${v.toFixed(2)}`} />
+                      <Legend iconType="plainline" />
+                      <Line
+                        type="monotone"
+                        dataKey="revenue"
+                        name="Revenue"
+                        stroke="#FFA559"
+                        strokeWidth={2.5}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="cost"
+                        name="Cost"
+                        stroke="#FFCE91"
+                        strokeWidth={2.5}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="profit"
+                        name="Profit"
+                        stroke="#7CCBA2"
+                        strokeWidth={2.5}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
 
-                    {/* pasta (donut) */}
-                    <Box mt={4} height={260}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Legend
-                            verticalAlign="top"
-                            height={36}
-                            iconType="circle"
-                          />
-                          <Tooltip />
-                          <Pie
-                            data={result.chart}
-                            dataKey="value"
-                            nameKey="name"
-                            innerRadius={55}
-                            outerRadius={90}
-                            paddingAngle={3}
-                            isAnimationActive
-                          >
-                            {result.chart.map((entry, index) => (
-                              <Cell
-                                key={`slice-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            ))}
-                            <Label
-                              value="USD"
-                              position="center"
-                              style={{ fontSize: "0.8rem", fill: "#888" }}
-                            />
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </Box>
-                  </>
+                {summary.revenue === 0 && (
+                  <Alert severity="info">No revenue data found for the selected period.</Alert>
                 )}
               </>
-            )}
-
-            {/* boş dönem */}
-            {result && result.revenue === 0 && (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                No revenue data found for the selected period.
-              </Alert>
             )}
           </Stack>
         </MotionPaper>
       </Container>
     </Box>
   );
-};
-
-export default RevenueReportPage;
+}
