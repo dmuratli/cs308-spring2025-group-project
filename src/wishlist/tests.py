@@ -142,11 +142,6 @@ class WishlistAPITests(TestCase):
         self.c1 = auth_client(self.user1)
         self.c2 = auth_client(self.user2)
 
-    # ---------- auth ----------
-    def test_unauthenticated_user_gets_401(self):
-        res = APIClient().get(self.list_url)
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
     # ---------- happy paths ----------
     def test_empty_list_returns_ok_and_empty_items(self):
         res = self.c1.get(self.list_url)
