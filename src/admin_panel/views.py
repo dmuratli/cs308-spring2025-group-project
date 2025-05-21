@@ -43,7 +43,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         "partial_update": [permissions.IsAuthenticated, IsProductManager],
         "destroy":    [permissions.IsAuthenticated, IsProductManager],
         "adjust_stock": [permissions.IsAuthenticated, IsProductManager],
-        "apply_discount": [permissions.IsAuthenticated, IsProductManager],
+        "apply_discount": [permissions.IsAuthenticated, IsSalesManager],
     }
 
     def get_permissions(self):
