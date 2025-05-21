@@ -7,15 +7,20 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils.dateparse import parse_datetime
 from rest_framework.parsers import JSONParser
 
-from .models import Product, User
+from .models import Product
+from users.models import User
 from .serializers import ProductSerializer, UserSerializer
 from orders.models import Order, OrderItem
 from orders.serializers import OrderSerializer
 from cart.models import Cart
 
 from users.permissions import IsProductManager, IsSalesManager, IsCustomer, IsProductManagerOrSalesManager
+
+from decimal import Decimal
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ProductViewSet(viewsets.ModelViewSet):
@@ -39,6 +44,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         "partial_update": [permissions.IsAuthenticated, IsProductManager],
         "destroy":    [permissions.IsAuthenticated, IsProductManager],
         "adjust_stock": [permissions.IsAuthenticated, IsProductManager],
+        "apply_discount": [permissions.IsAuthenticated, IsProductManager],
     }
 
     def get_permissions(self):
@@ -82,6 +88,30 @@ class ProductViewSet(viewsets.ModelViewSet):
         product.stock += change
         product.save()
         return Response({"message": "Stock updated", "stock": product.stock})
+    
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def apply_discount(self, request):
+        """
+        Payload: {
+          "product_ids": [1,2,3],
+          "discount_rate": 0.15,
+          "start": "2025-05-01T00:00:00Z",
+          "end":   "2025-05-07T23:59:59Z"
+        }
+        """
+        ids = request.data.get('product_ids', [])
+        rate = Decimal(request.data.get('discount_rate', 0))
+        start = parse_datetime(request.data.get('start'))
+        end   = parse_datetime(request.data.get('end'))
+        updated = Product.objects.filter(id__in=ids).update(
+            discount_rate=rate,
+            discount_start=start,
+            discount_end=end
+        )
+        return Response(
+            {"updated": updated},
+            status=status.HTTP_200_OK
+        )
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()

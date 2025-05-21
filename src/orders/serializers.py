@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from .models import Order, OrderItem
+from .models import Order, OrderItem, OrderStatusHistory
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    # Include the product's title for frontend display
+    # Include the product's title for convenience
     product_title = serializers.CharField(source='product.title', read_only=True)
 
     class Meta:
@@ -13,17 +13,18 @@ class OrderItemSerializer(serializers.ModelSerializer):
             'product_title',
             'quantity',
             'price_at_purchase',
+            # ─── Task 4: expose the snapshot discount_rate ───────────
+            'discount_rate',
         ]
 
+
 class OrderSerializer(serializers.ModelSerializer):
-    # Expose the actual username of the customer (the Order model uses a `user` FK)
     customer = serializers.CharField(source='user.username', read_only=True)
-    # Expose the total price as a decimal field
     total = serializers.DecimalField(
         source='total_price',
         max_digits=10,
         decimal_places=2,
-        read_only=True,
+        read_only=True
     )
     items = OrderItemSerializer(many=True, read_only=True)
 
@@ -38,7 +39,14 @@ class OrderSerializer(serializers.ModelSerializer):
             'created_at',
         ]
 
+
 class OrderStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Order
-        fields = ['status']
+        model = OrderStatusHistory
+        fields = [
+            'id',
+            'order',
+            'previous_status',
+            'new_status',
+            'changed_at',
+        ]

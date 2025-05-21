@@ -22,6 +22,7 @@ import TransactionHistoryPage from "./pages/TransactionHistoryPage";
 import RateReviewPage      from "./pages/RateReviewPage";
 import { CartProvider } from "./context/CartContext";
 import { Typography, Container } from "@mui/material";
+import Discount from "./pages/admin/Discount";
 
 function App() {
   useEffect(() => {
@@ -68,6 +69,7 @@ function App() {
         <Route path="/product-manager/comments"                element={<CommentsPage />} />
         <Route path="/product-manager/orders"                  element={<ManageOrders />} />
         <Route path="/product-manager/invoices"                element={<InvoicesPage />} />
+        <Route path="/product-manager/discounts" element={<Discount />} />
 
         {/* — SALES MANAGER — */}
         <Route path="/sales-manager"            element={<SalesManagerDashboard />} />

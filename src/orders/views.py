@@ -77,7 +77,7 @@ class PlaceOrderView(APIView):
                 order=order,
                 product=item.product,
                 quantity=item.quantity,
-                price_at_purchase=item.product.price,
+                price_at_purchase=item.product.current_price,
             )
             total += item.quantity * item.product.price
 

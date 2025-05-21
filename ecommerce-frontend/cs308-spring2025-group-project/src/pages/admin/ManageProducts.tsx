@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { getCookie } from "../../utils/cookies";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -22,12 +22,19 @@ import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
+import DiscountModal from "./DiscountModal";
+
+/**
+ * Note: API returns price and discounted_price as strings,
+ * so allow both number and string here.
+ */
 interface Product {
   id: number;
   slug: string;
   title: string;
   author: string;
-  price: number;
+  price: number | string;
+  discounted_price?: number | string | null;
   stock: number;
 }
 
@@ -38,82 +45,75 @@ interface ManageProductsProps {
 const ManageProducts: React.FC<ManageProductsProps> = ({ panel }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  const [modalProduct, setModalProduct] = useState<Product | null>(null);
   const [stockChanges, setStockChanges] = useState<Record<string, number>>({});
 
   const basePath = "/product-manager";
-  
+
+  const loadProducts = async () => {
+    try {
+      const res = await axios.get<Product[]>("/api/products/", {
+        withCredentials: true,
+      });
+      setProducts(res.data);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to load products.");
+    }
+  };
+
   useEffect(() => {
-    axios
-      .get<Product[]>("http://127.0.0.1:8000/api/products/")
-      .then((res) => setProducts(res.data))
-      .catch((err) => console.error("Error fetching products:", err));
+    loadProducts();
   }, []);
 
   const handleDelete = async (slug: string) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
-
+    if (!window.confirm("Delete this product?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/products/${slug}/`);
-      setProducts((prev) => prev.filter((p) => p.slug !== slug));
-      alert("✅ Product deleted successfully!");
-    } catch (error) {
-      console.error("❌ Error deleting product:", error);
-      alert("❌ Failed to delete product.");
+      await axios.delete(`/api/products/${slug}/`, {
+        withCredentials: true,
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+      });
+      setProducts(prev => prev.filter(p => p.slug !== slug));
+      alert("Product deleted");
+    } catch {
+      alert("Delete failed");
     }
   };
 
   const handleStockChange = (slug: string, change: number) => {
-    if (!change || change === 0) return;
-
-    axios
-      .post(
-        `http://127.0.0.1:8000/api/products/${slug}/adjust_stock/`,
-        { change },
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken"),
-          },
-        }
-      )
-      .then((res) => {
-        setProducts((prev) =>
-          prev.map((p) => (p.slug === slug ? { ...p, stock: res.data.stock } : p))
-        );
-        setStockChanges((prev) => ({ ...prev, [slug]: 0 }));
-      })
-      .catch((err) => {
-        console.error("Error adjusting stock:", err);
-        alert("❌ Stock update failed.");
-      });
+    axios.post(
+      `/api/products/${slug}/adjust_stock/`,
+      { change },
+      {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }
+      }
+    ).then(res => {
+      setProducts(prev => prev.map(p => p.slug === slug ? { ...p, stock: res.data.stock } : p));
+      setStockChanges(prev => ({ ...prev, [slug]: 0 }));
+    }).catch(err => {
+      console.error(err);
+      alert("Stock update failed");
+    });
   };
 
-  const handleInputChange = (slug: string, value: string) => {
-    const number = parseInt(value, 10);
-    setStockChanges((prev) => ({
-      ...prev,
-      [slug]: isNaN(number) ? 0 : number,
-    }));
-  };
+  const handleEdit = (slug: string) => navigate(`${basePath}/edit-product/${slug}`);
 
-  const handleEdit = (slug: string) => {
-    navigate(`${basePath}/edit-product/${slug}`);
-  };
+  const openDiscount = (product: Product) => setModalProduct(product);
 
   return (
-    <Container sx={{ mt: 12, minHeight: "80vh" }}>
-      <Typography variant="h4" fontWeight="bold" color="#EF977F" gutterBottom>
-        {panel === "admin" ? "Admin Panel - Manage Products" : "Product Manager - Manage Products"}
+    <Container sx={{ mt: 12, minHeight: '80vh' }}>
+      <Typography variant="h4" gutterBottom>
+        {panel === 'admin' ? 'Admin - Manage Products' : 'Product Manager - Manage Products'}
       </Typography>
 
       <Button
         variant="contained"
         startIcon={<AddIcon />}
-        sx={{ mb: 2, backgroundColor: "#4CAF50" }}
+        sx={{ mb: 2 }}
         onClick={() => navigate(`${basePath}/add-product`)}
       >
-        Add New Product
+        Add Product
       </Button>
 
       <TableContainer component={Paper}>
@@ -124,63 +124,57 @@ const ManageProducts: React.FC<ManageProductsProps> = ({ panel }) => {
               <TableCell>Title</TableCell>
               <TableCell>Author</TableCell>
               <TableCell>Price</TableCell>
+              <TableCell>Disc Price</TableCell>
               <TableCell>Stock</TableCell>
               <TableCell>Adjust Stock</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
-
           <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>{product.id}</TableCell>
-                <TableCell>{product.title}</TableCell>
-                <TableCell>{product.author}</TableCell>
-                <TableCell>${product.price}</TableCell>
-                <TableCell>{product.stock}</TableCell>
-
+            {products.map(p => (
+              <TableRow key={p.id} hover>
+                <TableCell>{p.id}</TableCell>
+                <TableCell>{p.title}</TableCell>
+                <TableCell>{p.author}</TableCell>
+                <TableCell>{Number(p.price).toFixed(2)}</TableCell>
                 <TableCell>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {p.discounted_price != null
+                    ? Number(p.discounted_price).toFixed(2)
+                    : '--'}
+                </TableCell>
+                <TableCell>{p.stock}</TableCell>
+                <TableCell>
+                  <Box display="flex" alignItems="center">
                     <TextField
                       size="small"
                       type="number"
-                      value={stockChanges[product.slug] || ""}
-                      onChange={(e) => handleInputChange(product.slug, e.target.value)}
-                      placeholder="0"
+                      value={stockChanges[p.slug] || ''}
+                      onChange={e => setStockChanges(s => ({ ...s, [p.slug]: parseInt(e.target.value) || 0 }))}
                       sx={{ width: 60 }}
                     />
-                    <IconButton
-                      color="success"
-                      onClick={() =>
-                        handleStockChange(product.slug, stockChanges[product.slug] || 0)
-                      }
-                    >
-                      <AddIcon />
-                    </IconButton>
-                    <IconButton
-                      color="warning"
-                      onClick={() =>
-                        handleStockChange(product.slug, -(stockChanges[product.slug] || 0))
-                      }
-                    >
-                      <RemoveIcon />
-                    </IconButton>
+                    <IconButton onClick={() => handleStockChange(p.slug, stockChanges[p.slug] || 0)}><AddIcon /></IconButton>
+                    <IconButton onClick={() => handleStockChange(p.slug, -(stockChanges[p.slug] || 0))}><RemoveIcon /></IconButton>
                   </Box>
                 </TableCell>
-
                 <TableCell>
-                  <IconButton color="primary" onClick={() => handleEdit(product.slug)}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton color="error" onClick={() => handleDelete(product.slug)}>
-                    <DeleteIcon />
-                  </IconButton>
+                  <IconButton onClick={() => handleEdit(p.slug)}><EditIcon /></IconButton>
+                  <IconButton onClick={() => handleDelete(p.slug)}><DeleteIcon /></IconButton>
+                  <Button size="small" onClick={() => openDiscount(p)}>Discount</Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+
+      {modalProduct && (
+        <DiscountModal
+          open={true}
+          product={modalProduct}
+          onClose={() => setModalProduct(null)}
+          onSuccess={() => { setModalProduct(null); loadProducts(); }}
+        />
+      )}
     </Container>
   );
 };
