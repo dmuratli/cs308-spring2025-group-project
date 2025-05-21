@@ -1,6 +1,50 @@
 from django.db import models
 from django.utils.text import slugify
+<<<<<<< Updated upstream
 from django.utils import timezone
+=======
+from django.db import transaction
+from django.db.models import F
+from django.utils import timezone
+# Create your models here.
+
+# Order Model
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ("Processing", "Processing"),
+        ("Shipped", "Shipped"),
+        ("Delivered", "Delivered"),
+        ("Refunded", "Refunded"),
+        ("Cancelled", "Cancelled"),
+    ]
+    
+    customer_name = models.CharField(max_length=255)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Processing")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Order {self.id} - {self.customer_name}"
+
+# User Model
+class User(models.Model):
+    name = models.CharField(max_length=255)
+    email = models.EmailField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class Genre(models.Model):
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="Unique, non-empty genre name"
+    )
+
+    def __str__(self):
+        return self.name
+>>>>>>> Stashed changes
 
 class Product(models.Model):
     title = models.CharField(max_length=255)
@@ -19,10 +63,18 @@ class Product(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     ordered_number = models.PositiveIntegerField(default=0)
 
+<<<<<<< Updated upstream
     # ─── Task 1: Discount fields ───────────────────────────────────────────
     discount_rate = models.DecimalField(
         max_digits=5, decimal_places=2, default=0.0,
         help_text="Discount rate as a percentage (e.g. 10 for 10%)"
+=======
+    discount_rate = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0.00,
+        help_text="Discount rate as a percentage (0-100)"
+>>>>>>> Stashed changes
     )
     discount_start = models.DateTimeField(null=True, blank=True)
     discount_end = models.DateTimeField(null=True, blank=True)
@@ -42,8 +94,11 @@ class Product(models.Model):
             return self.price * (1 - self.discount_rate / 100)
         return self.price
 
+<<<<<<< Updated upstream
     # ────────────────────────────────────────────────────────────────────────
 
+=======
+>>>>>>> Stashed changes
     def decrease_stock(self, quantity):
         if quantity > self.stock:
             raise ValueError("Not enough stock to fulfill the request")
