@@ -1,8 +1,5 @@
 from django.db import models
 from django.utils.text import slugify
-<<<<<<< Updated upstream
-from django.utils import timezone
-=======
 from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
@@ -44,7 +41,6 @@ class Genre(models.Model):
 
     def __str__(self):
         return self.name
->>>>>>> Stashed changes
 
 class Product(models.Model):
     title = models.CharField(max_length=255)
@@ -63,18 +59,11 @@ class Product(models.Model):
     slug = models.SlugField(unique=True, blank=True)
     ordered_number = models.PositiveIntegerField(default=0)
 
-<<<<<<< Updated upstream
-    # ─── Task 1: Discount fields ───────────────────────────────────────────
-    discount_rate = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0.0,
-        help_text="Discount rate as a percentage (e.g. 10 for 10%)"
-=======
     discount_rate = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=0.00,
         help_text="Discount rate as a percentage (0-100)"
->>>>>>> Stashed changes
     )
     discount_start = models.DateTimeField(null=True, blank=True)
     discount_end = models.DateTimeField(null=True, blank=True)
@@ -94,11 +83,6 @@ class Product(models.Model):
             return self.price * (1 - self.discount_rate / 100)
         return self.price
 
-<<<<<<< Updated upstream
-    # ────────────────────────────────────────────────────────────────────────
-
-=======
->>>>>>> Stashed changes
     def decrease_stock(self, quantity):
         if quantity > self.stock:
             raise ValueError("Not enough stock to fulfill the request")

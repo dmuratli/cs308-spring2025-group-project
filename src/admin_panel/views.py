@@ -21,10 +21,6 @@ from users.permissions import IsProductManager, IsSalesManager, IsCustomer, IsPr
 
 from decimal import Decimal
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 @method_decorator(csrf_exempt, name='dispatch')
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
