@@ -1,3 +1,5 @@
+// src/pages/admin/BookDetailsPage.tsx
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -53,7 +55,7 @@ interface Product {
 const BookDetailsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { addToCart } = useCart();
-  const { isInWishlist } = useWishlist();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
@@ -130,6 +132,25 @@ const BookDetailsPage: React.FC = () => {
     setLoading(false);
   };
 
+  const handleWishlistToggle = async () => {
+    if (!product) return;
+    if (isInWishlist(product.id)) {
+      await removeFromWishlist(product.id);
+      setNotification({
+        open: true,
+        message: "Removed from wishlist",
+        type: "info",
+      });
+    } else {
+      await addToWishlist(product.id);
+      setNotification({
+        open: true,
+        message: "Added to wishlist",
+        type: "success",
+      });
+    }
+  };
+
   if (!product) {
     return (
       <Typography textAlign="center" mt={5}>
@@ -162,13 +183,15 @@ const BookDetailsPage: React.FC = () => {
           />
 
           <CardContent sx={{ flex: 1, p: 5 }}>
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              justifyContent: 'space-between',
-              width: '100%',
-              mb: 2
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                width: "100%",
+                mb: 2,
+              }}
+            >
               <Box>
                 <Typography variant="h4" fontWeight="bold">
                   {product.title}
@@ -181,7 +204,6 @@ const BookDetailsPage: React.FC = () => {
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-
               <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Rating
                   value={product.rating}
@@ -284,33 +306,51 @@ const BookDetailsPage: React.FC = () => {
                 Hurry! Only {product.stock} left in stock.
               </Typography>
             )}
-             
-             <Button
-               variant="contained"
-               fullWidth
-               sx={{
-                 mt: 2,
-                 background: "linear-gradient(to right, #f6ad55, #fbd38d)",
-                 color: "white",
-                 fontWeight: "bold",
-                 fontSize: "1rem",
-                 py: 1.5,
-                 borderRadius: 3,
-                 transition: "all 0.3s ease",
-                 "&:hover": {
-                   background: "linear-gradient(to right, #f9a826, #f6ad55)",
-                   transform: "scale(1.03)",
-                 },
-               }}
-               disabled={product.stock === 0 || loading}
-               onClick={handleAddToCart}
-             >
-               {loading
-                 ? "Adding…"
-                 : product.stock > 0
-                 ? "ADD TO CART"
-                 : "OUT OF STOCK"}
-             </Button>
+
+            <Button
+              variant="contained"
+              fullWidth
+              sx={{
+                mt: 2,
+                background: "linear-gradient(to right, #f6ad55, #fbd38d)",
+                color: "white",
+                fontWeight: "bold",
+                fontSize: "1rem",
+                py: 1.5,
+                borderRadius: 3,
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  background: "linear-gradient(to right, #f9a826, #f6ad55)",
+                  transform: "scale(1.03)",
+                },
+              }}
+              disabled={product.stock === 0 || loading}
+              onClick={handleAddToCart}
+            >
+              {loading
+                ? "Adding…"
+                : product.stock > 0
+                ? "ADD TO CART"
+                : "OUT OF STOCK"}
+            </Button>
+
+            <Button
+              variant="outlined"
+              fullWidth
+              sx={{
+                mt: 1,
+                borderColor: "#FFA559",
+                color: "#FFA559",
+                fontWeight: "bold",
+                textTransform: "none",
+                "&:hover": { borderColor: "#e68e3f", color: "#e68e3f" },
+              }}
+              onClick={handleWishlistToggle}
+            >
+              {isInWishlist(product.id)
+                ? "Remove from Wishlist"
+                : "Add to Wishlist"}
+            </Button>
           </CardContent>
         </Card>
 
