@@ -92,7 +92,6 @@ function App() {
           <Route path="edit-product/:slug"      element={<EditProduct />} />
           <Route path="orders"                  element={<ManageOrders />} />
           <Route path="comments"                element={<CommentsPage />} />
-          <Route path="invoices"                element={<InvoicesPage />} />
         </Route>
 
         {/* Sales-Manager area */}

@@ -146,11 +146,6 @@ const ProductManagerDashboard: React.FC = () => {
             onClick={() => navigate("/product-manager/comments")}
           />
           <ActionCard
-            title="Manage Invoices"
-            description="Access and manage product invoices and history."
-            onClick={() => navigate("/product-manager/invoices")}
-          />
-          <ActionCard
             title="Manage Products"
             description="Add, edit, delete or update stock for all listed products."
             onClick={() => navigate("/product-manager/manage-products")}
