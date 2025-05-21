@@ -331,17 +331,20 @@ class ProcessRefundRequestView(APIView):
                 Order.objects.filter(pk=oi.order.pk).update(status="Refunded")
                 OrderStatusHistory.objects.create(order=oi.order, status="Refunded")
 
-            send_mail(
-                subject="Your refund is approved",
-                message=(
-                    f"Hello {rr.user.username},\n\n"
-                    f"Your refund for {rr.quantity}x “{oi.product.title}” has been APPROVED.\n"
-                    f"Amount refunded: {amount:.2f}\n\nThank you."
-                ),
-                from_email="no-reply@yourshop.com",
-                recipient_list=[rr.user.email],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    subject="Your refund is approved",
+                    message=(
+                        f"Hello {rr.user.username},\n\n"
+                        f"Your refund for {rr.quantity}x “{oi.product.title}” has been APPROVED.\n"
+                        f"Amount refunded: {amount:.2f}\n\nThank you."
+                    ),
+                    from_email="no-reply@yourshop.com",
+                    recipient_list=[rr.user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                print(f"MAIL FAILED: {e}")
 
         return Response(RefundRequestSerializer(rr).data, status=status.HTTP_200_OK)
 
