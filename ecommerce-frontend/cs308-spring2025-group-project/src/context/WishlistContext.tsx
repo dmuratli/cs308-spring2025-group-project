@@ -81,7 +81,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
   // İstek listesine ürün ekle
   const addToWishlist = async (productId: number): Promise<boolean> => {
     if (!isAuthenticated) {
-      alert("Lütfen istek listesine eklemek için giriş yapın");
+      alert("Please login to add a product to the wishlist.");
       return false;
     }
     
