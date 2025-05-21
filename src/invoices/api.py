@@ -34,9 +34,9 @@ class MyInvoicePDF(APIView):
 
     def get(self, request, pk: int):
         invoice = get_object_or_404(Invoice, pk=pk)
-        if invoice.customer != request.user and request.user.role != "sales manager":
+        if invoice.order.user != request.user and request.user.role != "sales manager":
             return Response(status=403)
-        pdf_bytes = generate_invoice_pdf(invoice)
+        pdf_bytes = generate_invoice_pdf(invoice.order)
         return HttpResponse(
             pdf_bytes,
             headers={"Content-Disposition": f'inline; filename="invoice_{pk}.pdf"'},
