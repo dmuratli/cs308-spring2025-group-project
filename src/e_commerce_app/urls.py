@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from orders.views import OrderProductInfoView
+from wishlist.views import WishlistViewSet
 
 # JWT auth
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -26,6 +27,7 @@ router.register(r'products', ProductViewSet, basename='product')
 router.register(r'orders',    OrderViewSet,   basename='order')
 router.register(r'users',     UserViewSet,    basename='user')
 router.register(r'genres',    GenreViewSet,   basename='genre')
+router.register(r'wishlist', WishlistViewSet, basename='wishlist')
 
 urlpatterns = [
     # 2) Reviews (you already had)

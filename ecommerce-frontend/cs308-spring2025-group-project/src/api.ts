@@ -20,6 +20,8 @@ export const login = async (username: string, password: string): Promise<AuthRes
     // Store tokens in localStorage
     localStorage.setItem("access", response.data.access);
     localStorage.setItem("refresh", response.data.refresh);
+    localStorage.setItem("access_token",  response.data.access);
+    localStorage.setItem("refresh_token", response.data.refresh);
     localStorage.setItem("username", response.data.username);
     
     return response.data;
@@ -57,7 +59,7 @@ export const logout = async (): Promise<void> => {
 };
 
 export const getAuthHeaders = (): { Authorization?: string } => {
-  const token = localStorage.getItem("access");
+  const token = localStorage.getItem("access") || localStorage.getItem("access_token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

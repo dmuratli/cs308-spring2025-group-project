@@ -35,8 +35,7 @@ const WishlistPage: React.FC = () => {
     fetchWishlist();
   }, []);
 
-  const handleProductClick = (productId: number, title: string) => {
-    const slug = title.toLowerCase().replace(/\s+/g, "-");
+  const handleProductClick = (slug: string) => {
     navigate(`/products/${slug}`);
   };
 
@@ -87,67 +86,77 @@ const WishlistPage: React.FC = () => {
           </Box>
         ) : (
           <Grid container spacing={4} justifyContent="center">
-            {wishlist.items.map((item, idx) => (
-              <Grid item xs={12} sm={6} md={4} key={item.id}>
-                <motion.div
-                  custom={idx}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, amount: 0.3 }}
-                  variants={fadeIn}
-                >
-                  <Card
-                    component={motion.div}
-                    whileHover={{ scale: 1.03 }}
-                    sx={{ 
-                      boxShadow: 4, 
-                      borderRadius: 3,
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      position: 'relative'
-                    }}
+            {wishlist.items.map((item, idx) => {
+              const p = item.product;
+              if (!p) return null;
+
+              return (
+                <Grid item xs={12} sm={6} md={4} key={item.id}>
+                  <motion.div
+                    custom={idx}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, amount: 0.3 }}
+                    variants={fadeIn}
                   >
-                    <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
-                      <AddToWishlistButton productId={item.product} />
-                    </Box>
-                    
-                    <CardMedia
-                      component="img"
-                      height="220"
-                      image={item.product_cover_image || "https://via.placeholder.com/250x350?text=No+Image"}
-                      alt={item.product_title}
-                      onClick={() => handleProductClick(item.product, item.product_title)}
-                      sx={{ cursor: 'pointer' }}
-                    />
-                    
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography 
-                        variant="h6" 
-                        fontWeight="bold" 
-                        noWrap
-                        sx={{ cursor: 'pointer' }}
-                        onClick={() => handleProductClick(item.product, item.product_title)}
-                      >
-                        {item.product_title}
-                      </Typography>
-                      
-                      <Typography variant="body1" fontWeight="bold" sx={{ my: 1 }}>
-                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(item.product_price)}
-                      </Typography>
-                      
-                      <Box sx={{ mt: 'auto' }}>
-                        <AddToCartButton
-                          productId={item.product}
-                          buttonText="Add to Cart"
-                          fullWidth
-                        />
+                    <Card
+                      component={motion.div}
+                      whileHover={{ scale: 1.03 }}
+                      sx={{ 
+                        boxShadow: 4, 
+                        borderRadius: 3,
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        position: 'relative'
+                      }}
+                    >
+                      <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
+                        <AddToWishlistButton productId={item.product?.id!} />
                       </Box>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
+
+                      <CardMedia
+                        component="img"
+                        height="220"
+                        image={p.product_cover_image || "https://via.placeholder.com/250x350?text=No+Image"}
+                        alt={p.title}
+                        onClick={() => handleProductClick(item.product?.slug)}
+                        sx={{ cursor: 'pointer' }}
+                      />
+
+                      <CardContent sx={{ flexGrow: 1 }}>
+                        <Typography 
+                          variant="h6" 
+                          fontWeight="bold" 
+                          noWrap
+                          sx={{ cursor: 'pointer' }}
+                          onClick={() => handleProductClick(item.product?.slug)}
+                        >
+                          {p.title}
+                        </Typography>
+
+                        <Typography variant="body1" fontWeight="bold" sx={{ my: 1 }}>
+                          {p.product_price != null
+                            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+                                parseFloat(String(p.product_price))
+                              )
+                            : "$0.00"}
+                        </Typography>
+
+                        <Box sx={{ mt: 'auto' }}>
+                          <AddToCartButton
+                            productId={p.id}
+                            buttonText="Add to Cart"
+                            fullWidth
+                          />
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </Grid>
+              );
+            })}
+
           </Grid>
         )}
       </Container>

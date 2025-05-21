@@ -1,18 +1,18 @@
 // src/context/WishlistContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import api from "../axios";
 import { useAuth } from "./AuthContext";
-
-// API base URL
-const API_BASE_URL = "http://localhost:8000";
 
 // Ürün tipi
 export interface WishlistItem {
   id: number;
-  product: number;
-  product_title: string;
-  product_price: number;
-  product_cover_image?: string;
+  product: {
+    id: number;
+    title: string;
+    slug: string;
+    product_price: number;
+    product_cover_image: string;
+  };
 }
 
 // Wishlist interface
@@ -61,7 +61,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
     
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE_URL}/wishlist/`, { withCredentials: true });
+      const res = await api.get("/wishlist/");
       
       if (res.data && typeof res.data === 'object') {
         setWishlist(res.data);
@@ -87,11 +87,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
     
     try {
       setLoading(true);
-      const response = await axios.post(
-        `${API_BASE_URL}/wishlist/add/`,
-        { product_id: productId },
-        { withCredentials: true }
-      );
+      const response = await api.post("/wishlist/add/", { product_id: productId });
       
       if (response.data) {
         // İstek listesini güncelle
@@ -117,11 +113,7 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
     
     try {
       setLoading(true);
-      const response = await axios.post(
-        `${API_BASE_URL}/wishlist/remove/`,
-        { product_id: productId },
-        { withCredentials: true }
-      );
+      const response = await api.post("/wishlist/remove/", { product_id: productId });
       
       if (response.data) {
         setWishlist(response.data);
@@ -141,10 +133,8 @@ export const WishlistProvider: React.FC<WishlistProviderProps> = ({ children }) 
   };
   
   // Ürünün istek listesinde olup olmadığını kontrol et
-  const isInWishlist = (productId: number): boolean => {
-    if (!wishlist || !wishlist.items) return false;
-    return wishlist.items.some(item => item.product === productId);
-  };
+  const isInWishlist = (productId: number): boolean =>
+  !!wishlist?.items?.some((it) => it.product?.id === productId);
 
   // Kullanıcı kimlik doğrulaması değiştiğinde istek listesini yeniden getir
   useEffect(() => {

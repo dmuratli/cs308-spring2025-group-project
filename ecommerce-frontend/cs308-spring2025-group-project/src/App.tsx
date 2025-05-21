@@ -37,7 +37,8 @@ import SalesPricing from "./pages/admin/SalesPricing";
 
 function App() {
   useEffect(() => {
-    axios.get("http://localhost:8000/api/csrf/", { withCredentials: true }).catch(console.error);
+    axios.get("/api/csrf/")
+      .catch(console.error);
   }, []);
 
   return (

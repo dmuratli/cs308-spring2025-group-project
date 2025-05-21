@@ -6,6 +6,7 @@ import axios from "axios";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 
 // 1) Point at backend
 axios.defaults.baseURL = "http://127.0.0.1:8000";
@@ -30,9 +31,11 @@ root.render(
   <React.StrictMode>
     <AuthProvider>
       <CartProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <WishlistProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   </React.StrictMode>
