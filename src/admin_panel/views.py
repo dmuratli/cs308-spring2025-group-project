@@ -107,14 +107,13 @@ class ProductViewSet(viewsets.ModelViewSet):
         if discount > Decimal("0"):
             # email everyone who has this in their wishlist
             wish_items = WishlistItem.objects.filter(product=product).select_related("user")
-            
+
             for item in wish_items:
-                display_name = item.user.profile.name or item.user.username
                 try:
                     send_mail(
                         subject="Product Discounted 🎉",
                         message=(
-                            f"Hi {item.user.name},\n\n"
+                            f"Hi {item.user.username},\n\n"
                             f"The product “{product.title}” you wish-listed "
                             f"is now discounted by {discount}%.\n"
                             f"New price: ${new_price}.\n\n"

@@ -17,7 +17,7 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
     sales‑manager endpoint: /api/invoices/?start=2025‑04‑01&end=2025‑04‑18
     """
     serializer_class  = InvoiceSerializer
-    permission_classes = [IsSalesManager]
+    permission_classes = [IsAuthenticated, IsSalesManager]
 
     def get_queryset(self):
         qs = Invoice.objects.all().order_by("-created_at")
@@ -34,7 +34,7 @@ class MyInvoicePDF(APIView):
 
     def get(self, request, pk: int):
         invoice = get_object_or_404(Invoice, pk=pk)
-        if invoice.order.user != request.user and request.user.role != "sales manager":
+        if invoice.order.user != request.user and request.user.groups.filter(name="sales manager").exists() == False:
             return Response(status=403)
         pdf_bytes = generate_invoice_pdf(invoice.order)
         return HttpResponse(
@@ -47,9 +47,15 @@ class InvoiceHTMLView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk: int):
-        invoice = get_object_or_404(
-            Invoice, pk=pk, order__user=request.user
-        )
+        # always fetch by PK
+        invoice = get_object_or_404(Invoice, pk=pk)
+
+        # then enforce owner OR sales-manager
+        is_sales = request.user.groups.filter(name="sales manager").exists()
+        if invoice.order.user != request.user and not is_sales:
+            return Response(status=403)
+
+        # now render HTML
         html = render_to_string(
             "invoices/invoice.html",
             {"order": invoice.order}
