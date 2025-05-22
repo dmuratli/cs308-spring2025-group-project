@@ -88,7 +88,7 @@ const SalesDiscounts: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="md" sx={{ mt: 12, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
         Set Discount Campaigns
       </Typography>
@@ -159,13 +159,18 @@ const SalesDiscounts: React.FC = () => {
                       </Grid>
 
                       <Grid item>
-                        <Button
-                          variant="contained"
-                          onClick={() => handleDiscount(p.slug)}
-                        >
-                          Set Discount
-                        </Button>
-                      </Grid>
+                          <Button
+                            variant="contained"
+                            onClick={() => handleDiscount(p.slug)}
+                            sx={{
+                              backgroundColor: "#FFA559",
+                              color: "#fff",
+                              "&:hover": { backgroundColor: "#e68e3f" },
+                            }}
+                          >
+                            Set Discount
+                          </Button>
+                        </Grid>
                     </Grid>
                   </CardContent>
                 </Card>
