@@ -17,6 +17,7 @@ import { useNavigate } from 'react-router-dom';
 import { useWishlist } from '../context/WishlistContext';
 import AddToCartButton from '../components/AddToCartButton';
 import AddToWishlistButton from '../components/AddToWishlistButton';
+const API_BASE_URL = process.env.REACT_APP_API_URL ?? 'http://localhost:8000';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 40 },
@@ -118,7 +119,14 @@ const WishlistPage: React.FC = () => {
                       <CardMedia
                         component="img"
                         height="220"
-                        image={p.product_cover_image || "https://via.placeholder.com/250x350?text=No+Image"}
+                        image={
+                          p.product_cover_image
+                            ? // absolute already?
+                              p.product_cover_image.startsWith('http')
+                                ? p.product_cover_image
+                                : `${API_BASE_URL}${p.product_cover_image}`
+                            : 'https://via.placeholder.com/250x350?text=No+Image'
+                        }
                         alt={p.title}
                         onClick={() => handleProductClick(item.product?.slug)}
                         sx={{ cursor: 'pointer' }}
