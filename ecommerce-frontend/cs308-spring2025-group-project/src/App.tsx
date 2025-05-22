@@ -34,7 +34,7 @@ import SalesManagerDashboard   from "./pages/admin/SalesManagerDashboard";
 import SalesManagerRefundPage  from "./pages/admin/SalesManagerRefundPage";
 import RevenueReportPage from "./pages/admin/RevenueReportPage";
 import SalesPricing from "./pages/admin/SalesPricing";
-import DiscountCampaignsPage from "./pages/admin/SalesDiscounts";
+import SalesDiscounts from "./pages/admin/SalesDiscounts";
 
 function App() {
   useEffect(() => {
@@ -109,7 +109,7 @@ function App() {
           <Route path="refunds"       element={<SalesManagerRefundPage />} />
           <Route path="revenue"       element={<RevenueReportPage />} />
           <Route path="pricing"       element={<SalesPricing />} />
-          <Route path="discounts"     element={<DiscountCampaignsPage />} />
+          <Route path="discounts"     element={<SalesDiscounts />} />
         </Route>
 
         {/* 404 catch-all */}
