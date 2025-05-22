@@ -12,6 +12,8 @@ export interface WishlistItem {
     slug: string;
     product_price: number;
     product_cover_image: string;
+    discount_percent: number;
+    discounted_price: string;
   };
 }
 

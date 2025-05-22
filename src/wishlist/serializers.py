@@ -2,14 +2,35 @@ from rest_framework import serializers
 from .models import WishlistItem
 from .models import Product
 from admin_panel.serializers import ProductSerializer   # reuse your existing product schema
+from decimal import Decimal
 
 class ProductMiniSerializer(serializers.ModelSerializer):
     product_price = serializers.DecimalField(source="price", max_digits=10, decimal_places=2)
     product_cover_image = serializers.ImageField(source="cover_image")
+    discount_percent = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        read_only=True
+    )
+    discounted_price = serializers.SerializerMethodField()
 
     class Meta:
         model  = Product
-        fields = ("id", "title", "slug", "product_price", "product_cover_image")
+        fields = (
+            "id",
+            "title",
+            "slug",
+            "product_price",
+            "product_cover_image",
+            "discount_percent",
+            "discounted_price",
+        )
+ 
+    def get_discounted_price(self, product):
+        discount = product.discount_percent or Decimal("0")
+        price    = product.price
+        sale     = price * (Decimal("100") - discount) / Decimal("100")
+        return sale.quantize(Decimal("0.01"))
 
 class WishlistItemSerializer(serializers.ModelSerializer):
     product    = ProductMiniSerializer(read_only=True)

@@ -143,13 +143,43 @@ const WishlistPage: React.FC = () => {
                           {p.title}
                         </Typography>
 
-                        <Typography variant="body1" fontWeight="bold" sx={{ my: 1 }}>
-                          {p.product_price != null
-                            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
-                                parseFloat(String(p.product_price))
-                              )
-                            : "$0.00"}
-                        </Typography>
+                        {p.discount_percent > 0 ? (
+                          <Box sx={{ my: 1 }}>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ textDecoration: "line-through" }}
+                            >
+                              {new Intl.NumberFormat("en-US", {
+                               style: "currency",
+                                currency: "USD",
+                              }).format(p.product_price)}
+                            </Typography>
+                            <Typography variant="body1" fontWeight="bold">
+                              {new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                              }).format(
+                                // compute the sale price
+                                parseFloat(
+                                  (
+                                    p.product_price *
+                                    (1 - p.discount_percent / 100)
+                                  ).toFixed(2)
+                                )
+                              )}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography variant="body1" fontWeight="bold" sx={{ my: 1 }}>
+                            {p.product_price != null
+                              ? new Intl.NumberFormat("en-US", {
+                                  style: "currency",
+                                  currency: "USD",
+                                }).format(p.product_price)
+                              : "$0.00"}
+                          </Typography>
+                        )}
 
                         <Box sx={{ mt: 'auto' }}>
                           <AddToCartButton
