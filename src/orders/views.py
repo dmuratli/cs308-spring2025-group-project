@@ -73,6 +73,7 @@ class PlaceOrderView(APIView):
         if not cart or not cart.items.exists():
             return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # check stock availability
         for item in cart.items.select_related("product"):
             if item.quantity > item.product.stock:
                 return Response(
@@ -80,6 +81,7 @@ class PlaceOrderView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+        # create the order
         order = Order.objects.create(
             user=request.user,
             total_price=0,
@@ -92,14 +94,20 @@ class PlaceOrderView(APIView):
         )
         
         total = Decimal("0")
-        for item in cart.items.all():
+        for item in cart.items.select_related("product"):
+            purchase_price = (
+                item.product.price
+                * (Decimal("100") - item.product.discount_percent)
+                / Decimal("100")
+            ).quantize(Decimal("0.01"))
+
             OrderItem.objects.create(
                 order=order,
                 product=item.product,
                 quantity=item.quantity,
-                price_at_purchase=item.product.price,
+                price_at_purchase=purchase_price,  # ▶︎ MODIFIED
             )
-            total += item.quantity * item.product.price
+            total += purchase_price * item.quantity
 
         order.total_price = total
         order.save()

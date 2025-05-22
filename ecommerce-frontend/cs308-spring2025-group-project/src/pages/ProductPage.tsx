@@ -38,6 +38,7 @@ interface Product {
   language: string;
   description: string;
   price: number;
+  discount_percent: number;
   stock: number;
   cover_image?: string;
   rating: number;
@@ -73,7 +74,11 @@ const ProductPage: React.FC = () => {
     axios
       .get("/api/products/?ordering=-ordered_number")
       .then((res) => {
-        const list: Product[] = res.data;
+        const list = (res.data as any[]).map((p) => ({
+          ...p,
+          price: parseFloat(p.price),
+          discount_percent: parseFloat(p.discount_percent),
+        })) as Product[];
         setProducts(list);
         if (list.length) {
           const prices = list.map((p) => p.price);
@@ -365,9 +370,24 @@ const ProductPage: React.FC = () => {
             ) : (
               <Rating name={`rating-${idx}`} value={product.rating} readOnly />
             )}
-            <Typography variant="h6" color="primary" mt={2}>
-              ${product.price}
-            </Typography>
+            {product.discount_percent > 0 ? (
+              <Box mt={2}>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  sx={{ textDecoration: "line-through" }}
+                >
+                  ${product.price.toFixed(2)}
+                </Typography>
+                <Typography variant="h6" color="primary">
+                  ${(product.price * (1 - product.discount_percent / 100)).toFixed(2)}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography variant="h6" color="primary" mt={2}>
+                ${product.price}
+              </Typography>
+            )}
             <AddToCartButton
               productId={product.id}
               fullWidth

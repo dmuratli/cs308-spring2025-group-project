@@ -37,6 +37,8 @@ interface CartItem {
   total_price: number;
   cover_image?: string;
   stock?: number;
+  discount_percent: number;
+  discounted_price: string;
 }
 
 interface Cart {
@@ -308,13 +310,28 @@ const CartPage = () => {
                       >
                         {item.product_title}
                       </Typography>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ mb: 1 }}
-                      >
-                        Unit Price: ${formatPrice(item.product_price)}
-                      </Typography>
+                      {item.discount_percent > 0 ? (
+                        <Box sx={{ mb: 1 }}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ textDecoration: "line-through" }}
+                          >
+                            Unit Price: ${formatPrice(item.product_price)}
+                          </Typography>
+                          <Typography variant="body2" fontWeight="bold">
+                            Discounted Unit Price: ${formatPrice(parseFloat(item.discounted_price))}
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mb: 1 }}
+                        >
+                          Unit Price: ${formatPrice(item.product_price)}
+                        </Typography>
+                      )}
                       <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Typography variant="body2" sx={{ mr: 1 }}>
                           Quantity:
@@ -339,16 +356,31 @@ const CartPage = () => {
                         )}
                       </Box>
                     </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: "bold",
-                        color: "#2d3748",
-                        mx: 2,
-                      }}
-                    >
-                      ${formatPrice(item.total_price)}
-                    </Typography>
+                    <Box sx={{ mx: 2, textAlign: "right" }}>
+                      {item.discount_percent > 0 ? (
+                        <>
+                          <Typography
+                            component="span"
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ textDecoration: "line-through", mr: 1 }}
+                          >
+                            ${formatPrice(item.product_price * item.quantity)}
+                          </Typography>
+                          <Typography
+                            component="span"
+                            variant="h6"
+                            fontWeight="bold"
+                          >
+                            ${formatPrice(parseFloat(item.discounted_price) * item.quantity)}
+                          </Typography>
+                        </>
+                      ) : (
+                        <Typography variant="h6" fontWeight="bold">
+                          ${formatPrice(item.total_price)}
+                       </Typography>
+                      )}
+                    </Box>
                     <Button
                       onClick={() => handleRemoveItem(item.product)}
                       disabled={updatingItems.includes(item.product)}
@@ -459,7 +491,13 @@ const CartPage = () => {
                 variant="h5"
                 sx={{ fontWeight: "bold", color: "#2d3748" }}
               >
-                Total: ${formatPrice(cart.total)}
+                Total: $
+                {formatPrice(
+                  cart.items.reduce(
+                    (sum, it) => sum + parseFloat(it.discounted_price) * it.quantity,
+                    0
+                  )
+                )}
               </Typography>
               <Button
                 variant="contained"

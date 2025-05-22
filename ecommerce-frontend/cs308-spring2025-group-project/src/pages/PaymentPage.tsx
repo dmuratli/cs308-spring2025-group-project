@@ -114,8 +114,13 @@ const PaymentPage: React.FC = () => {
     }
   };
 
+  // ▶ Compute total based on server‐provided discounted_price
   const total = cart
-    ? cart.items.reduce((sum, item) => sum + item.product_price * item.quantity, 0)
+    ? cart.items.reduce(
+        (sum, item) =>
+          sum + parseFloat(item.discounted_price as string) * item.quantity,
+        0
+      )
     : 0;
 
   return (
@@ -155,16 +160,21 @@ const PaymentPage: React.FC = () => {
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
                   Order Summary
                 </Typography>
-                {cart.items.map((item) => (
-                  <Box key={item.id} display="flex" justifyContent="space-between" mb={1}>
-                    <Typography>
-                      {item.product_title} x{item.quantity}
-                    </Typography>
-                    <Typography>
-                      ${(item.product_price * item.quantity).toFixed(2)}
-                    </Typography>
-                  </Box>
-                ))}
+                {cart.items.map((item) => {
+                  // ▶ Use discounted_price for display
+                  const linePrice =
+                    parseFloat(item.discounted_price as string) * item.quantity;
+                  return (
+                    <Box key={item.id} display="flex" justifyContent="space-between" mb={1}>
+                      <Typography>
+                        {item.product_title} x{item.quantity}
+                      </Typography>
+                      <Typography>
+                        ${linePrice.toFixed(2)}
+                      </Typography>
+                    </Box>
+                  );
+                })}
                 <Typography variant="h6" fontWeight="bold" mt={2} textAlign="right">
                   Total: ${total.toFixed(2)}
                 </Typography>

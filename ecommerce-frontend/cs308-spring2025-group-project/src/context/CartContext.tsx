@@ -12,6 +12,8 @@ export interface CartItem {
   product_price: number;
   quantity: number;
   total_price: number;
+  discount_percent: number;
+  discounted_price: string;
 }
 
 // Cart interface

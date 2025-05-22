@@ -10,12 +10,16 @@ from django.utils.decorators import method_decorator
 from rest_framework.parsers import JSONParser
 from django.db import transaction
 from django.db.models import F
+from decimal import Decimal
+from django.core.mail import send_mail
+from django.conf import settings
 
 from .models import Product, User, Genre
 from .serializers import ProductSerializer, UserSerializer, GenreSerializer, ProductPriceSerializer
 from orders.models import Order, OrderItem
 from orders.serializers import OrderSerializer
 from cart.models import Cart
+from wishlist.models import WishlistItem
 
 from users.permissions import IsProductManager, IsSalesManager, IsCustomer, IsProductManagerOrSalesManager
 
@@ -73,6 +77,57 @@ class ProductViewSet(viewsets.ModelViewSet):
         product.save(update_fields=["price"])
         return Response(ProductSerializer(product).data)
     
+    @action(
+         detail=True,
+         methods=["post"],
+         permission_classes=[permissions.IsAuthenticated, IsSalesManager],
+         url_path="set_discount"
+     )
+    
+    def set_discount(self, request, slug=None):
+        """
+        POST /api/products/{slug}/set_discount/  { "discount": <number 0–100> }
+        Records a percentage discount on the product and emails all wishlisters.
+        """
+        product = self.get_object()
+        discount = Decimal(request.data.get("discount", 0))
+        if discount < 0 or discount > 100:
+            return Response(
+                {"detail": "Discount must be between 0 and 100."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # store the discount pct
+        product.discount_percent = discount
+        product.save(update_fields=["discount_percent"])
+
+        # compute the new price for notification
+        new_price = (product.price * (Decimal("100") - discount) / Decimal("100")).quantize(product.price)
+
+        if discount > Decimal("0"):
+            # email everyone who has this in their wishlist
+            wish_items = WishlistItem.objects.filter(product=product).select_related("user")
+            
+            for item in wish_items:
+                display_name = item.user.profile.name or item.user.username
+                try:
+                    send_mail(
+                        subject="Product Discounted 🎉",
+                        message=(
+                            f"Hi {item.user.name},\n\n"
+                            f"The product “{product.title}” you wish-listed "
+                            f"is now discounted by {discount}%.\n"
+                            f"New price: ${new_price}.\n\n"
+                            "Happy shopping!"
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[item.user.email],
+                    )
+                except Exception as e:
+                    print(f"MAIL FAILED: {e}")
+
+        return Response(ProductSerializer(product).data)
+
     def perform_create(self, serializer):
         serializer.save()
 
@@ -87,6 +142,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         # If cover_image is present but not an uploaded file, remove it
         cover_val = data.get('cover_image', None)
         from django.core.files.uploadedfile import UploadedFile
+
         if cover_val is not None and not isinstance(cover_val, UploadedFile):
             data.pop('cover_image', None)
 

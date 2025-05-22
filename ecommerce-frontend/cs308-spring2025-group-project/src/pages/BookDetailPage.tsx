@@ -43,6 +43,7 @@ interface Product {
   language: string;
   description: string;
   price: number;
+  discount_percent: number;
   stock: number;
   cover_image?: string;
   isbn?: string;
@@ -76,7 +77,12 @@ const BookDetailsPage: React.FC = () => {
         `http://localhost:8000/api/products/${slug}/`,
         { withCredentials: true }
       );
-      setProduct(res.data);
+      const raw = res.data as any;
+      setProduct({
+        ...raw,
+        price: parseFloat(raw.price),
+        discount_percent: parseFloat(raw.discount_percent),
+      });
     } catch (err) {
       console.error("Error fetching product:", err);
     }
@@ -226,9 +232,24 @@ const BookDetailsPage: React.FC = () => {
               | <strong>Language:</strong> {product.language}
             </Typography>
 
-            <Typography variant="h5" color="primary" mt={2}>
-              ${product.price}
-            </Typography>
+            {product.discount_percent > 0 ? (
+              <Box mt={2}>
+                <Typography
+                  variant="subtitle2"
+                  color="text.secondary"
+                  sx={{ textDecoration: "line-through" }}
+                >
+                  ${product.price.toFixed(2)}
+                </Typography>
+                <Typography variant="h5" color="primary">
+                  ${(product.price * (1 - product.discount_percent / 100)).toFixed(2)}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography variant="h5" color="primary" mt={2}>
+                ${product.price}
+              </Typography>
+            )}
 
             <Divider sx={{ my: 2 }} />
 
