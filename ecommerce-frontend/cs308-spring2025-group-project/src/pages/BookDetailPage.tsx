@@ -354,24 +354,6 @@ const BookDetailsPage: React.FC = () => {
                 ? "ADD TO CART"
                 : "OUT OF STOCK"}
             </Button>
-
-            <Button
-              variant="outlined"
-              fullWidth
-              sx={{
-                mt: 1,
-                borderColor: "#FFA559",
-                color: "#FFA559",
-                fontWeight: "bold",
-                textTransform: "none",
-                "&:hover": { borderColor: "#e68e3f", color: "#e68e3f" },
-              }}
-              onClick={handleWishlistToggle}
-            >
-              {isInWishlist(product.id)
-                ? "Remove from Wishlist"
-                : "Add to Wishlist"}
-            </Button>
           </CardContent>
         </Card>
 
