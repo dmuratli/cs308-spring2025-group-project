@@ -1,7 +1,7 @@
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from admin_panel.models import Product
+from admin_panel.models import Product, Genre
 from cart.models import Cart, CartItem
 from datetime import date
 
@@ -16,13 +16,15 @@ class CartTests(APITestCase):
 
         self.client_guest = APIClient()
 
+        self.genre, _ = Genre.objects.get_or_create(name="Fiction")
+
         self.product = Product.objects.create(
             title="Test Book",
             author="Author",
             price=50.00,
             stock=10,
             isbn="1234567890123",
-            genre="Fiction",
+            genre=self.genre,
             description="A test book.",
             publisher="Test Pub",
             publication_date=date(2020, 1, 1),

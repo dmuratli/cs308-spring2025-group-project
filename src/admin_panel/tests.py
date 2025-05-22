@@ -1,6 +1,6 @@
 from rest_framework.test import APITestCase, APIClient
 from django.urls import reverse
-from admin_panel.models import Product, User
+from admin_panel.models import Product, Genre
 from orders.models import Order
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -15,13 +15,15 @@ class AdminPanelTests(APITestCase):
         pm_group, _ = Group.objects.get_or_create(name="product manager")
         self.pm_user.groups.add(pm_group)
 
+        self.genre, _ = Genre.objects.get_or_create(name="Test Genre")
+
         self.product = Product.objects.create(
             title="Test Book",
             author="Test Author",
             price=30.00,
             stock=5,
             isbn="1234567890123",
-            genre="Test Genre",
+            genre=self.genre,
             description="Test Description",
             publisher="Test Publisher",
             publication_date="2025-01-01",
