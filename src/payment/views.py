@@ -115,11 +115,14 @@ class ProcessPaymentView(APIView):
         # -------------------
         invoice = Invoice.objects.create(order=order)
         pdf_bytes = generate_invoice_pdf(invoice.order)
-        send_invoice_email(
-            invoice.order.user.email,
-            pdf_bytes,
-            invoice.order.id
-        )
+        try:
+            send_invoice_email(
+                invoice.order.user.email,
+                pdf_bytes,
+                invoice.order.id
+            )
+        except Exception as e:
+            print(f"MAIL FAILED: {e}")
         invoice_html = render_to_string(
             "invoices/invoice.html", {"order": order}
         )
