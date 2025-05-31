@@ -101,10 +101,22 @@ pip3 install Django
 pip3 install pycryptodome
 python -m pip install Pillow
 python3 manage.py runserver
+pip install celery
+pip install dotenv
+pip install djangorestframework
+pip install django-cors-headers
+pip install weasyprint
+pip install -r requirement.txt
+./reset_db.sh
+ 
 
 # for dummy data:
 pip install Faker
 python generate_dummy_data.py
+
+# for assigning roles:
+python manage.py assign_group "user" "product manager"
+python manage.py assign_group "user" "sales manager"
 ```
 
 ### Frontend setup:
