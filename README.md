@@ -100,7 +100,6 @@ source venv/bin/activate  # for Windows 11: .\venv\Scripts\Activate.ps1
 pip3 install Django
 pip3 install pycryptodome
 python -m pip install Pillow
-python3 manage.py runserver
 pip install celery
 pip install dotenv
 pip install djangorestframework
@@ -108,6 +107,7 @@ pip install django-cors-headers
 pip install weasyprint
 pip install -r requirement.txt
 ./reset_db.sh
+python3 manage.py runserver
  
 
 # for dummy data:
